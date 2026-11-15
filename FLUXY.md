@@ -5,7 +5,7 @@ Fluxy is a fork of [GetX](https://github.com/jonataslaw/getx) (from commit `a294
 | Package | What it holds | Depends on |
 |---|---|---|
 | [`fluxy_core`](packages/fluxy_core) | `Get` singleton, logging, engine, `Equality` | — |
-| [`fluxy_state`](packages/fluxy_state) | Rx, `Obx`, controllers, workers, DI | core |
+| [`fluxy_state`](packages/fluxy_state) | Rx, `Obx`, `Computed`, `RxFuture`, controllers, workers, DI, copy-on-write edits | core |
 | [`fluxy_i18n`](packages/fluxy_i18n) | `Translations`, `.tr`, locale state | core, state |
 | [`fluxy_utils`](packages/fluxy_utils) | `GetPlatform`, validators, extensions, queue | core |
 | [`fluxy_nav`](packages/fluxy_nav) | router, `Get.to/back`, dialogs, sheets, snackbars | core, state, i18n, utils |
@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.4.0
+    ref: v0.5.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.4.0
+    ref: v0.5.0
     path: packages/fluxy_state
 ```
 
@@ -46,10 +46,31 @@ fluxy_state:
   - `RxList` / `RxMap` / `RxSet` bulk operations (`insert`, `removeAt`, `removeRange`, `replaceRange`, `setAll`, `fillRange`, `addAll`, `updateAll`, `addEntries`, `assignAll` ...) notify once per call; `addAll` / `insertAll` with the collection itself no longer throws.
   - DI keys are the `Type` (or a `(Type, tag)` record) instead of `type.toString()`: two classes with the same name no longer collide, and neither do `Foo` + tag `Bar` and `FooBar`. The `key:` parameters of `delete`, `reload` and `markAsDirty` are now `Object?`.
   - Fixed `RxnDouble -` (it added).
-- Unreleased (fluxy_i18n, ideas from Sint):
-  - `.tr` is reactive: an `Obx` showing translated text rebuilds when the locale or dictionaries change. `Get.translationVersion` exposes the signal. fluxy_i18n now depends on fluxy_state for this.
-  - `.tr` looks in a cached list of dictionaries for the current locale (same lookup order as before), rebuilt only after a change, instead of scanning all dictionaries on a miss.
-  - `appendTranslations` copies instead of modifying, so it works after `const` dictionaries; `addTranslations` stores copies too.
-  - `.trParams` makes one pass: a placeholder only matches a whole name (`@admin` no longer eats `@admin_email`), inserted values are not replaced again, names may contain `-`.
-  - `Get.updateLocale(l, rebuildAll: false)` skips the full-app reassemble. The default stays `true`: widgets that read `.tr` in a plain `build` need it.
-  - A device-language change no longer overrides a locale the app set itself. `GetMaterialApp` / `GetCupertinoApp` follow the device only when no `locale:` is given, or when `followDeviceLocale: true`; `followDeviceLocale: false` never follows.
+- v0.5.0:
+  - Translations (fluxy_i18n, ideas from Sint):
+    - `.tr` is reactive: an `Obx` showing translated text rebuilds when the locale or dictionaries change. `Get.translationVersion` exposes the signal. fluxy_i18n now depends on fluxy_state for this.
+    - `.tr` looks in a cached list of dictionaries for the current locale (same lookup order as before), rebuilt only after a change, instead of scanning all dictionaries on a miss.
+    - `appendTranslations` copies instead of modifying, so it works after `const` dictionaries; `addTranslations` stores copies too.
+    - `.trParams` makes one pass: a placeholder only matches a whole name (`@admin` no longer eats `@admin_email`), inserted values are not replaced again, names may contain `-`.
+    - `Get.updateLocale(l, rebuildAll: false)` skips the full-app reassemble. The default stays `true`: widgets that read `.tr` in a plain `build` need it.
+    - A device-language change no longer overrides a locale the app set itself. `GetMaterialApp` / `GetCupertinoApp` follow the device only when no `locale:` is given, or when `followDeviceLocale: true`; `followDeviceLocale: false` never follows.
+  - Navigation (fluxy_nav):
+    - Routes match the whole path: an unknown address (`/nope`, `/Home/x`) used to show its closest registered parent and never reached `unknownRoute`.
+    - `GetMaterialApp.router` / `GetCupertinoApp.router` take `initialRoute`, and an explicit `initialRoute` wins over a registered `/`.
+    - The `Get.routing` observer (`Get.isDialogOpen`, `Get.currentRoute` ...) is added to an app-provided `routerDelegate` too.
+    - Web uses hash URLs by default (Flutter's default); path URLs need `setUrlStrategy()` before `runApp`, and a late call logs a message instead of asserting. Fixed an infinite recursion in `removeLastHistory`.
+    - Transitions curve with `animation.drive(CurveTween(...))` instead of a `CurvedAnimation` per build (which left a listener on the route animation each time).
+    - `Get.showOverlay` removes its overlay when the task throws any error, not only an `Exception`.
+    - Path parameters win over query parameters (`/item/42?id=7` keeps `id = 42`).
+    - `Get.reset()` moved here from the umbrella package (it resets state and translations).
+  - State (fluxy_state):
+    - `ever` / `listen` / workers keep working after all of an Rx's workers were disposed (the stream used to unhook forever).
+    - Copy-on-write edit helpers: `mapWith`, `listWith`, `listWithout`, `listReplaced`, `updatedIn`, `RxList.patch / replaceItem / reorder`, `RxMap.patch / addEntry / removeEntry...`, documents `setIn / updateIn / patchIn / editListIn`, `RxSlice`, `watchRx`.
+    - Debug builds warn when an Rx is given the same Map / List / Set object it already holds (an in-place edit that will not notify).
+    - `Computed`: a cached derived value that follows what it reads and notifies only when its result changes.
+    - `RxFuture`: an async load as an Rx (`loading` / `success` / `error`), keeping `lastData`; only the newest load counts.
+  - Repo: tests live in each package (`packages/*/test`), CI analyzes and tests every package on its own, Fluxy README.
+
+## Tests
+
+Each package has its own tests in `packages/*/test`; CI (`.github/workflows/main.yml`) runs `flutter analyze` and `flutter test` in every package, so no package can reach outside its listed dependencies. In fluxy_state alone, reset with `Get.resetInstance()`; `Get.reset()` (state and translations) is in fluxy_nav.
