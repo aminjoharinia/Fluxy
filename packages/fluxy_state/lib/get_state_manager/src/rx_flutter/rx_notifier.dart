@@ -115,15 +115,25 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
 
   StreamController<T>? _controller;
 
-  StreamController<T> get subject {
-    if (_controller == null) {
-      _controller =
-          StreamController<T>.broadcast(onCancel: addListener(_streamListener));
-      _controller?.add(_value);
+  Disposer? _removeStreamListener;
 
-      ///TODO: report to controller dispose
-    }
-    return _controller!;
+  /// The broadcast stream behind `listen`, `stream`, `ever` and the other
+  /// workers. It listens to this Rx while the stream has subscribers and
+  /// stops when the last one cancels; a later subscriber hooks it up again.
+  /// (Before, the stream was unhooked on the first "last cancel" and never
+  /// hooked back, so `ever` on an Rx whose workers had all been disposed once
+  /// never fired again.)
+  StreamController<T> get subject {
+    return _controller ??= StreamController<T>.broadcast(
+      onListen: () {
+        if (isDisposed) return;
+        _removeStreamListener ??= addListener(_streamListener);
+      },
+      onCancel: () {
+        _removeStreamListener?.call();
+        _removeStreamListener = null;
+      },
+    );
   }
 
   void _streamListener() {
@@ -133,7 +143,8 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
   @override
   @mustCallSuper
   void close() {
-    removeListener(_streamListener);
+    _removeStreamListener?.call();
+    _removeStreamListener = null;
     _controller?.close();
     dispose();
   }

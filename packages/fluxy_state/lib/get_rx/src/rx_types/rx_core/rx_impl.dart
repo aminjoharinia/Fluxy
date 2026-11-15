@@ -101,6 +101,17 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   set value(T val) {
     if (isDisposed) return;
     sentToStream = false;
+    assert(() {
+      if (!firstRebuild &&
+          identical(peek, val) &&
+          (val is Map || val is Iterable)) {
+        debugPrint('[Fluxy] An Rx was given the same ${val.runtimeType} '
+            'object it already holds, so it does not notify. If that object '
+            'was edited in place, write a copy instead (mapWith / listWith / '
+            'setIn ...).');
+      }
+      return true;
+    }());
     if (peek == val && !firstRebuild) return;
     firstRebuild = false;
     sentToStream = true;
