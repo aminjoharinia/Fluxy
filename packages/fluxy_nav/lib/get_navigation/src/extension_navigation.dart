@@ -1185,9 +1185,21 @@ extension GetNavigationExt on GetInterface {
   //   }
   // }
 
-  Future<void> updateLocale(Locale l) async {
+  /// Switches the app to [l].
+  ///
+  /// Every `Obx` showing `.tr` text updates on its own. With [rebuildAll]
+  /// (the default) the whole app is also rebuilt through
+  /// [forceAppUpdate], because a widget that reads `.tr` in a plain `build`
+  /// method has no other way to learn that the language changed. Pass
+  /// `rebuildAll: false` only when all translated text is inside `Obx` (or
+  /// rebuilt some other way).
+  Future<void> updateLocale(Locale l, {bool rebuildAll = true}) async {
     Get.locale = l;
-    await forceAppUpdate();
+    if (rebuildAll) {
+      await forceAppUpdate();
+    } else {
+      appUpdate();
+    }
   }
 
   /// As a rule, Flutter knows which widget to update,

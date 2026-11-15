@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   fluxy_core:
     path: ../fluxy_core
+  fluxy_state:
+    path: ../fluxy_state
 
 dev_dependencies:
   flutter_lints: ^6.0.0
