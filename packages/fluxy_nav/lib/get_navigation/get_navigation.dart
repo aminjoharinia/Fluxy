@@ -2,6 +2,7 @@ library;
 
 export 'src/bottomsheet/bottomsheet.dart';
 export 'src/extension_navigation.dart';
+export 'src/get_reset.dart';
 export 'src/root/get_cupertino_app.dart';
 export 'src/root/get_material_app.dart';
 export 'src/routes/custom_transition.dart';

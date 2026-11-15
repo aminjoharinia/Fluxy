@@ -12,4 +12,3 @@ export 'package:fluxy_state/fluxy_state.dart';
 export 'package:fluxy_ui/fluxy_ui.dart';
 export 'package:fluxy_utils/fluxy_utils.dart';
 
-export 'get_common/get_reset.dart';
