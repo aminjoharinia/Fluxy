@@ -34,6 +34,12 @@ class ConfigData {
   final Translations? translations;
   final Locale? locale;
   final Locale? fallbackLocale;
+
+  /// Whether a change of the device language (system settings) switches
+  /// the app to it through `Get.updateLocale`.
+  /// `null` (the default): only when no [locale] was given, so an app that
+  /// picks its own language keeps it.
+  final bool? followDeviceLocale;
   final String? initialRoute;
   final CustomTransition? customTransition;
   final Widget? home;
@@ -77,6 +83,7 @@ class ConfigData {
     required this.translations,
     required this.locale,
     required this.fallbackLocale,
+    this.followDeviceLocale,
     required this.initialRoute,
     required this.customTransition,
     required this.home,
@@ -120,6 +127,7 @@ class ConfigData {
     Translations? translations,
     Locale? locale,
     Locale? fallbackLocale,
+    bool? followDeviceLocale,
     String? initialRoute,
     CustomTransition? customTransition,
     Widget? home,
@@ -164,6 +172,7 @@ class ConfigData {
       translations: translations ?? this.translations,
       locale: locale ?? this.locale,
       fallbackLocale: fallbackLocale ?? this.fallbackLocale,
+      followDeviceLocale: followDeviceLocale ?? this.followDeviceLocale,
       initialRoute: initialRoute ?? this.initialRoute,
       customTransition: customTransition ?? this.customTransition,
       home: home ?? this.home,
@@ -216,6 +225,7 @@ class ConfigData {
         other.translations == translations &&
         other.locale == locale &&
         other.fallbackLocale == fallbackLocale &&
+        other.followDeviceLocale == followDeviceLocale &&
         other.initialRoute == initialRoute &&
         other.customTransition == customTransition &&
         other.home == home &&
@@ -261,6 +271,7 @@ class ConfigData {
         translations.hashCode ^
         locale.hashCode ^
         fallbackLocale.hashCode ^
+        followDeviceLocale.hashCode ^
         initialRoute.hashCode ^
         customTransition.hashCode ^
         home.hashCode ^
@@ -466,6 +477,8 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
 
   @override
   void didChangeLocales(List<Locale>? locales) {
+    final follow = config.followDeviceLocale ?? config.locale == null;
+    if (!follow) return;
     Get.asap(() {
       final locale = Get.deviceLocale;
       if (locale != null) {

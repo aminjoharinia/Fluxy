@@ -36,6 +36,12 @@ class GetMaterialApp extends StatelessWidget {
   final Translations? translations;
   final TextDirection? textDirection;
   final Locale? locale;
+
+  /// Whether a change of the device language (system settings) switches
+  /// the app to it through `Get.updateLocale`.
+  /// `null` (the default): only when no [locale] was given, so an app that
+  /// picks its own language keeps it.
+  final bool? followDeviceLocale;
   final Locale? fallbackLocale;
   final Iterable<LocalizationsDelegate<dynamic>>? localizationsDelegates;
   final LocaleListResolutionCallback? localeListResolutionCallback;
@@ -97,6 +103,7 @@ class GetMaterialApp extends StatelessWidget {
     this.darkTheme,
     this.themeMode = ThemeMode.system,
     this.locale,
+    this.followDeviceLocale,
     this.fallbackLocale,
     this.localizationsDelegates,
     this.localeListResolutionCallback,
@@ -156,6 +163,7 @@ class GetMaterialApp extends StatelessWidget {
     this.highContrastDarkTheme,
     this.themeMode = ThemeMode.system,
     this.locale,
+    this.followDeviceLocale,
     this.localizationsDelegates,
     this.localeListResolutionCallback,
     this.localeResolutionCallback,
@@ -213,6 +221,7 @@ class GetMaterialApp extends StatelessWidget {
         home: home,
         initialRoute: initialRoute,
         locale: locale,
+        followDeviceLocale: followDeviceLocale,
         logWriterCallback: logWriterCallback,
         navigatorKey: navigatorKey,
         navigatorObservers: navigatorObservers,

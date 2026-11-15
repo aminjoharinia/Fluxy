@@ -26,6 +26,12 @@ class GetCupertinoApp extends StatelessWidget {
   final Translations? translations;
   final TextDirection? textDirection;
   final Locale? locale;
+
+  /// Whether a change of the device language (system settings) switches
+  /// the app to it through `Get.updateLocale`.
+  /// `null` (the default): only when no [locale] was given, so an app that
+  /// picks its own language keeps it.
+  final bool? followDeviceLocale;
   final Locale? fallbackLocale;
   final Iterable<LocalizationsDelegate<dynamic>>? localizationsDelegates;
   final LocaleListResolutionCallback? localeListResolutionCallback;
@@ -89,6 +95,7 @@ class GetCupertinoApp extends StatelessWidget {
     this.onInit,
     this.onDispose,
     this.locale,
+    this.followDeviceLocale,
     this.binds = const [],
     this.scrollBehavior,
     this.fallbackLocale,
@@ -141,6 +148,7 @@ class GetCupertinoApp extends StatelessWidget {
     this.highContrastTheme,
     this.highContrastDarkTheme,
     this.locale,
+    this.followDeviceLocale,
     this.localizationsDelegates,
     this.localeListResolutionCallback,
     this.localeResolutionCallback,
@@ -198,6 +206,7 @@ class GetCupertinoApp extends StatelessWidget {
         home: home,
         initialRoute: initialRoute,
         locale: locale,
+        followDeviceLocale: followDeviceLocale,
         logWriterCallback: logWriterCallback,
         navigatorKey: navigatorKey,
         navigatorObservers: navigatorObservers,

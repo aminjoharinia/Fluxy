@@ -52,3 +52,4 @@ fluxy_state:
   - `appendTranslations` copies instead of modifying, so it works after `const` dictionaries; `addTranslations` stores copies too.
   - `.trParams` makes one pass: a placeholder only matches a whole name (`@admin` no longer eats `@admin_email`), inserted values are not replaced again, names may contain `-`.
   - `Get.updateLocale(l, rebuildAll: false)` skips the full-app reassemble. The default stays `true`: widgets that read `.tr` in a plain `build` need it.
+  - A device-language change no longer overrides a locale the app set itself. `GetMaterialApp` / `GetCupertinoApp` follow the device only when no `locale:` is given, or when `followDeviceLocale: true`; `followDeviceLocale: false` never follows.
