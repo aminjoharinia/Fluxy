@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.6.0
+    ref: v0.6.1
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.6.0
+    ref: v0.6.1
     path: packages/fluxy_state
 ```
 
@@ -84,6 +84,8 @@ fluxy_state:
   - `onReady` is skipped when the controller is deleted before the next frame, and `onInit` asks for a frame so `onReady` doesn't wait on an idle app.
   - `disposeId` / reading an unregistered group id no longer crash on a null check.
   - `rxn(null)` sets a nullable Rx to null (`call` used to ignore `null`); `rx()` still reads, `null` on a non-nullable Rx is still ignored, and a wrong-type argument throws `ArgumentError`.
+- v0.6.1:
+  - `rx(v)` is typed again: `T call(T v)` with a required argument. `count('abc')` and `count(null)` on a non-nullable Rx are compile errors (v0.6.0 only caught a wrong type at runtime), and `rxn(null)` still sets null. `rx()` no longer reads; use `rx.value`.
 
 ## Tests
 

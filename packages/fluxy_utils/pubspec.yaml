@@ -1,6 +1,6 @@
 name: fluxy_utils
 description: "Fluxy utils: platform checks, validators, string/num/context extensions, queue."
-version: 0.6.0
+version: 0.6.1
 publish_to: none
 repository: https://github.com/aminjoharinia/Fluxy
 

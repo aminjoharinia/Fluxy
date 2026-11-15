@@ -1,6 +1,6 @@
 name: fluxy_i18n
 description: "Fluxy i18n: Translations, locale state and the .tr / .trParams extensions."
-version: 0.6.0
+version: 0.6.1
 publish_to: none
 repository: https://github.com/aminjoharinia/Fluxy
 
