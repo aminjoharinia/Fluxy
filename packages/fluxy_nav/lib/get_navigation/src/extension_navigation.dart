@@ -106,9 +106,8 @@ extension ExtensionDialog on GetInterface {
       transitionDuration: transitionDuration ?? defaultDialogTransitionDuration,
       transitionBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: transitionCurve ?? defaultDialogTransitionCurve,
+          opacity: animation.drive(
+            CurveTween(curve: transitionCurve ?? defaultDialogTransitionCurve),
           ),
           child: child,
         );
@@ -1478,18 +1477,12 @@ extension OverlayExt on GetInterface {
     overlayState.insert(overlayEntryOpacity);
     overlayState.insert(overlayEntryLoader);
 
-    T data;
-
     try {
-      data = await asyncFunction();
-    } on Exception catch (_) {
+      return await asyncFunction();
+    } finally {
+      // Also when asyncFunction throws an Error (not only an Exception).
       overlayEntryLoader.remove();
       overlayEntryOpacity.remove();
-      rethrow;
     }
-
-    overlayEntryLoader.remove();
-    overlayEntryOpacity.remove();
-    return data;
   }
 }

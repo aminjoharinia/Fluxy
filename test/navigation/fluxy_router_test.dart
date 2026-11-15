@@ -107,4 +107,63 @@ void main() {
       expect(delegate.routingObserver, isNull);
     });
   });
+
+  group('navigation fixes', () {
+    testWidgets('path parameters win over query parameters', (tester) async {
+      await tester.pumpWidget(GetMaterialApp.router(getPages: [
+        ..._pages(),
+        GetPage(name: '/item/:id', page: () => const Text('item')),
+      ]));
+      await tester.pumpAndSettle();
+      Get.toNamed('/item/42?id=7&tab=2');
+      await tester.pumpAndSettle();
+      expect(find.text('item'), findsOneWidget);
+      expect(Get.parameters['id'], '42');
+      expect(Get.parameters['tab'], '2');
+    });
+
+    testWidgets('showOverlay removes its overlay when the task throws an Error',
+        (tester) async {
+      await tester.pumpWidget(GetMaterialApp.router(getPages: _pages()));
+      await tester.pumpAndSettle();
+      Object? caught;
+      Get.showOverlay<void>(
+        asyncFunction: () async {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+          throw StateError('boom');
+        },
+        loadingWidget: const Text('loading'),
+      ).catchError((Object e) => caught = e);
+      await tester.pump();
+      expect(find.text('loading'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pump();
+      expect(caught, isA<StateError>());
+      expect(find.text('loading'), findsNothing);
+    });
+
+    testWidgets('page transitions still run (curve via CurveTween)',
+        (tester) async {
+      await tester.pumpWidget(GetMaterialApp.router(getPages: [
+        ..._pages(),
+        GetPage(
+          name: '/zoom',
+          page: () => const Text('zoom'),
+          transition: Transition.zoom,
+          curve: Curves.easeOut,
+        ),
+      ]));
+      await tester.pumpAndSettle();
+      Get.toNamed('/zoom');
+      await tester.pump(); // push (async)
+      await tester.pump(); // first transition frame
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('zoom'), findsOneWidget, reason: 'mid-transition');
+      expect(tester.takeException(), isNull);
+      await tester.pumpAndSettle();
+      Get.back();
+      await tester.pumpAndSettle();
+      expect(find.text('zoom'), findsNothing);
+    });
+  });
 }

@@ -177,10 +177,7 @@ class SizeTransitions {
     return Align(
       alignment: Alignment.center,
       child: SizeTransition(
-        sizeFactor: CurvedAnimation(
-          parent: animation,
-          curve: curve,
-        ),
+        sizeFactor: animation.drive(CurveTween(curve: curve)),
         child: child,
       ),
     );

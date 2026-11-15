@@ -379,7 +379,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
     if (route.fullscreenDialog && route.transition == null) {
       return CupertinoFullscreenDialogTransition(
         primaryRouteAnimation: hasCurve
-            ? CurvedAnimation(parent: animation, curve: finalCurve)
+            ? animation.drive(CurveTween(curve: finalCurve))
             : animation,
         secondaryRouteAnimation: secondaryAnimation,
         linearTransition: linearTransition,
@@ -411,7 +411,10 @@ Cannot read the previousTitle for a route that has not yet been installed''',
 
       /// Apply the curve by default...
       final iosAnimation = animation;
-      animation = CurvedAnimation(parent: animation, curve: finalCurve);
+      // drive(CurveTween) instead of CurvedAnimation: built on every
+      // rebuild, a CurvedAnimation adds a listener to the route animation
+      // that is never removed.
+      animation = animation.drive(CurveTween(curve: finalCurve));
 
       switch (route.transition ?? Get.defaultTransition) {
         case Transition.leftToRight:

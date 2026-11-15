@@ -725,7 +725,8 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     final parameters = arguments.params.isEmpty
         ? arguments.query
         : arguments.params;
-    arguments.params.addAll(arguments.query);
+    // Path parameters win: '/item/42?id=7' keeps id = 42.
+    arguments.query.forEach((k, v) => arguments.params.putIfAbsent(k, () => v));
     if (decoder.parameters.isEmpty) {
       decoder.parameters.addAll(parameters);
     }
