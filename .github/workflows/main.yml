@@ -1,34 +1,37 @@
-#The name of your workflow.
-name: build
-# Trigger the workflow on push or pull request
+name: ci
+
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
-#A workflow run is made up of one or more jobs. Jobs run in parallel by default.
+    branches: [main]
+
 jobs:
   test:
-    #The type of machine to run the job on. [windows,macos, ubuntu , self-hosted]
-    defaults:
-      run:
-        working-directory: ./
     runs-on: ubuntu-latest
-    #sequence of tasks called
     steps:
-      # The branch or tag ref that triggered the workflow will be checked out.
-      # https://github.com/actions/checkout
       - uses: actions/checkout@v6
-      # Setup a flutter environment.
-      # https://github.com/marketplace/actions/flutter-action
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.47.8"
-          channel: "stable"
-      - run: flutter pub get
-      #- run: flutter analyze
-      # run  flutter widgets tests  and unit tests
-      - run: flutter test --coverage
-      # Upload coverage reports to Codecov
-      # https://github.com/marketplace/actions/codecov
-      - uses: codecov/codecov-action@v7
+          flutter-version: "3.50.0"
+          channel: stable
+          cache: true
+
+      # Each package on its own: it must not reach outside its own
+      # dependencies, and its own tests must pass.
+      - name: Packages (analyze + test)
+        run: |
+          set -e
+          for p in packages/*/; do
+            echo "::group::$p"
+            (cd "$p" && flutter pub get && flutter analyze)
+            if [ -d "$p/test" ]; then (cd "$p" && flutter test); fi
+            echo "::endgroup::"
+          done
+
+      # The umbrella package (re-exports everything) and its tests.
+      - name: Umbrella (analyze + test)
+        run: |
+          flutter pub get
+          flutter analyze lib test
+          if [ -d test ]; then flutter test; fi
