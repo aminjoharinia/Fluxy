@@ -130,18 +130,21 @@ class GetRouterOutlet extends RouterOutlet<GetDelegate, RouteDecoder> {
               return InheritedNavigator(
                 navigatorKey: navigatorKey ??
                     Get.rootController.rootDelegate.navigatorKey,
-                child: GetNavigator(
-                  restorationScopeId: restorationScopeId,
-                  onPopPage: onPopPage ??
-                      (route, result) {
-                        final didPop = route.didPop(result);
-                        if (!didPop) {
-                          return false;
-                        }
-                        return true;
-                      },
-                  pages: pageRes.toList(),
-                  key: navigatorKey,
+                child: GetHeroScope(
+                  nested: true,
+                  child: GetNavigator(
+                    restorationScopeId: restorationScopeId,
+                    onPopPage: onPopPage ??
+                        (route, result) {
+                          final didPop = route.didPop(result);
+                          if (!didPop) {
+                            return false;
+                          }
+                          return true;
+                        },
+                    pages: pageRes.toList(),
+                    key: navigatorKey,
+                  ),
                 ),
               );
             }

@@ -1,5 +1,16 @@
 import 'package:flutter/widgets.dart';
 
+/// A [Navigator] for GetX pages.
+///
+/// It does **not** add a [HeroController] to its observers. A Navigator takes
+/// its hero controller from the closest [HeroControllerScope]:
+/// `MaterialApp` / `CupertinoApp` already provide one with a stable instance.
+/// Adding a second controller here gave every hero two flights for the same
+/// tag, and creating it per build swapped it out mid-flight on rebuilds.
+///
+/// Wrap a navigator in [GetHeroScope] when it has no app scope above it, or
+/// when it is nested under another navigator (a scope's controller can serve
+/// only one navigator at a time).
 class GetNavigator extends Navigator {
   GetNavigator({
     super.key,
@@ -21,11 +32,54 @@ class GetNavigator extends Navigator {
                 return true;
               },
           observers: [
-            // GetObserver(null, Get.routing),
-            HeroController(),
             ...?observers,
           ],
           transitionDelegate:
               transitionDelegate ?? const DefaultTransitionDelegate<dynamic>(),
         );
+}
+
+/// Gives [child]'s navigator a [HeroController] that is created once and kept
+/// for the life of this widget.
+///
+/// With [nested] false (the root navigator), an existing [HeroControllerScope]
+/// above, such as the one `MaterialApp` provides, is used as is, and a
+/// controller is created only when there is none. With [nested] true, the
+/// navigator always gets its own controller, because the parent navigator
+/// already holds the outer one.
+class GetHeroScope extends StatefulWidget {
+  const GetHeroScope({
+    super.key,
+    required this.child,
+    this.nested = false,
+    this.createRectTween,
+  });
+
+  final Widget child;
+  final bool nested;
+  final CreateRectTween? createRectTween;
+
+  @override
+  State<GetHeroScope> createState() => _GetHeroScopeState();
+}
+
+class _GetHeroScopeState extends State<GetHeroScope> {
+  HeroController? _controller;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.nested && HeroControllerScope.maybeOf(context) != null) {
+      return widget.child;
+    }
+    final controller = _controller ??= HeroController(
+      createRectTween: widget.createRectTween,
+    );
+    return HeroControllerScope(controller: controller, child: widget.child);
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
 }

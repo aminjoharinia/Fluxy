@@ -318,13 +318,15 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     if (pages.isEmpty) {
       return ColoredBox(color: Theme.of(context).scaffoldBackgroundColor);
     }
-    return GetNavigator(
-      key: navigatorKey,
-      onPopPage: _onPopVisualRoute,
-      pages: pages,
-      observers: navigatorObservers,
-      transitionDelegate:
-          transitionDelegate ?? const DefaultTransitionDelegate<dynamic>(),
+    return GetHeroScope(
+      child: GetNavigator(
+        key: navigatorKey,
+        onPopPage: _onPopVisualRoute,
+        pages: pages,
+        observers: navigatorObservers,
+        transitionDelegate:
+            transitionDelegate ?? const DefaultTransitionDelegate<dynamic>(),
+      ),
     );
   }
 
