@@ -30,14 +30,59 @@ class RxMap<K, V> extends GetListenable<Map<K, V>>
 
   @override
   void operator []=(K key, V value) {
-    this.value[key] = value;
+    peek[key] = value;
     refresh();
   }
 
   @override
   void clear() {
-    value.clear();
+    peek.clear();
     refresh();
+  }
+
+  // The methods below would otherwise come from MapMixin, which calls `[]=`
+  // once per key and so notifies once per key. Each one here notifies once.
+
+  @override
+  void addAll(Map<K, V> other) {
+    peek.addAll(identical(other, this) || identical(other, peek)
+        ? Map.of(other)
+        : other);
+    refresh();
+  }
+
+  @override
+  void addEntries(Iterable<MapEntry<K, V>> newEntries) {
+    final entries = newEntries.toList(growable: false);
+    peek.addEntries(entries);
+    refresh();
+  }
+
+  @override
+  V update(K key, V Function(V value) update, {V Function()? ifAbsent}) {
+    final result = peek.update(key, update, ifAbsent: ifAbsent);
+    refresh();
+    return result;
+  }
+
+  @override
+  void updateAll(V Function(K key, V value) update) {
+    peek.updateAll(update);
+    refresh();
+  }
+
+  @override
+  void removeWhere(bool Function(K key, V value) test) {
+    peek.removeWhere(test);
+    refresh();
+  }
+
+  @override
+  V putIfAbsent(K key, V Function() ifAbsent) {
+    if (peek.containsKey(key)) return peek[key] as V;
+    final result = peek[key] = ifAbsent();
+    refresh();
+    return result;
   }
 
   @override
@@ -45,7 +90,7 @@ class RxMap<K, V> extends GetListenable<Map<K, V>>
 
   @override
   V? remove(Object? key) {
-    final val = value.remove(key);
+    final val = peek.remove(key);
     refresh();
     return val;
   }
@@ -78,9 +123,7 @@ extension MapExtension<K, V> on Map<K, V> {
 
   void assign(K key, V val) {
     if (this is RxMap) {
-      final map = (this as RxMap);
-      // map._value;
-      map.value.clear();
+      (this as RxMap<K, V>).peek.clear();
       this[key] = val;
     } else {
       clear();
@@ -90,14 +133,13 @@ extension MapExtension<K, V> on Map<K, V> {
 
   void assignAll(Map<K, V> val) {
     if (val is RxMap && this is RxMap) {
-      if ((val as RxMap).value == (this as RxMap).value) return;
+      if (identical((val as RxMap).peek, (this as RxMap).peek)) return;
     }
     if (this is RxMap) {
-      final map = (this as RxMap);
-      if (map.value == val) return;
+      final map = (this as RxMap<K, V>);
+      if (identical(map.peek, val)) return;
+      // The setter notifies once; no extra refresh().
       map.value = val;
-      // ignore: invalid_use_of_protected_member
-      map.refresh();
     } else {
       if (this == val) return;
       clear();

@@ -30,7 +30,7 @@ mixin ListNotifierSingleMixin on Listenable {
   Disposer addListener(GetStateUpdate listener) {
     assert(_debugAssertNotDisposed());
     _updaters!.add(listener);
-    return () => _updaters!.remove(listener);
+    return () => _updaters?.remove(listener);
   }
 
   bool containsListener(GetStateUpdate listener) {
@@ -60,18 +60,20 @@ mixin ListNotifierSingleMixin on Listenable {
   }
 
   void _notifyUpdate() {
-    // if (_microtaskVersion == _version) {
-    //   _microtaskVersion++;
-    //   scheduleMicrotask(() {
-    //     _version++;
-    //     _microtaskVersion = _version;
-    final list = _updaters?.toList() ?? [];
+    final notifier = Notifier.instance;
+    if (notifier._batchDepth > 0) {
+      // Inside [Notifier.batch]: notify once, when the outermost batch ends.
+      notifier._pending.add(this);
+      return;
+    }
+    _notifyUpdateNow();
+  }
 
-    for (var element in list) {
+  void _notifyUpdateNow() {
+    final list = _updaters?.toList() ?? const [];
+    for (final element in list) {
       element();
     }
-    //   });
-    // }
   }
 
   bool get isDisposed => _updaters == null;
@@ -172,39 +174,169 @@ class Notifier {
 
   NotifyData? _notifyData;
 
+  int _batchDepth = 0;
+  final _pending = LinkedHashSet<ListNotifierSingleMixin>.identity();
+
+  /// True while code runs inside an observer build ([Obx], [GetX]), so reads
+  /// of an Rx subscribe that observer.
+  bool get isTracking => _notifyData != null;
+
+  /// True inside [batch].
+  bool get isBatching => _batchDepth > 0;
+
   void add(VoidCallback listener) {
     _notifyData?.disposers.add(listener);
   }
 
   void read(ListNotifierSingleMixin updaters) {
-    final listener = _notifyData?.updater;
-    if (listener != null && !updaters.containsListener(listener)) {
+    final data = _notifyData;
+    if (data == null) return;
+    final subscriptions = data.subscriptions;
+    if (subscriptions != null) {
+      subscriptions._read(updaters, data.updater);
+      return;
+    }
+    final listener = data.updater;
+    if (!updaters.containsListener(listener)) {
       updaters.addListener(listener);
       add(() => updaters.removeListener(listener));
     }
   }
 
   T append<T>(NotifyData data, T Function() builder) {
+    final previous = _notifyData;
     _notifyData = data;
-    final result = builder();
-    if (data.disposers.isEmpty && data.throwException) {
-      throw const ObxError();
+    data.subscriptions?._begin();
+    try {
+      final result = builder();
+      // Only after a build that finished: a build that threw keeps its old
+      // subscriptions, so the widget still rebuilds once the error is fixed.
+      data.subscriptions?._end();
+      if (data.throwException && data._isEmpty) {
+        throw const ObxError();
+      }
+      return result;
+    } finally {
+      _notifyData = previous;
     }
+  }
+
+  /// Runs [fn] without subscribing the current observer to the Rx values it
+  /// reads. See also `Rx.peek`.
+  T untrack<T>(T Function() fn) {
+    final previous = _notifyData;
     _notifyData = null;
-    return result;
+    try {
+      return fn();
+    } finally {
+      _notifyData = previous;
+    }
+  }
+
+  /// Runs [fn] and holds every Rx / notifier change made inside it until the
+  /// outermost [batch] returns. Then each changed notifier notifies **once**,
+  /// so listeners, workers and streams see only the final value.
+  ///
+  /// Batches can nest. If [fn] throws, the changes already made are still
+  /// notified.
+  T batch<T>(T Function() fn) {
+    _batchDepth++;
+    try {
+      return fn();
+    } finally {
+      if (--_batchDepth == 0) _flush();
+    }
+  }
+
+  void _flush() {
+    Object? firstError;
+    StackTrace? firstStack;
+    while (_pending.isNotEmpty) {
+      final list = _pending.toList(growable: false);
+      _pending.clear();
+      for (final notifier in list) {
+        if (notifier.isDisposed) continue;
+        try {
+          notifier._notifyUpdateNow();
+        } catch (e, st) {
+          firstError ??= e;
+          firstStack ??= st;
+        }
+      }
+    }
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError, firstStack!);
+    }
   }
 }
 
 class NotifyData {
-  const NotifyData(
+  NotifyData(
       {required this.updater,
       required this.disposers,
+      this.subscriptions,
       this.throwException = true});
   final GetStateUpdate updater;
+
+  /// Cleanup callbacks owned by the observer (for example `bindStream`
+  /// subscriptions). Without [subscriptions], Rx subscriptions go here too
+  /// and are only removed on unmount.
   final List<VoidCallback> disposers;
+
+  /// When set, the observer's Rx subscriptions are kept in sync with what
+  /// each build reads; see [ObserverSubscriptions].
+  final ObserverSubscriptions? subscriptions;
   final bool throwException;
+
+  bool get _isEmpty =>
+      disposers.isEmpty && (subscriptions == null || subscriptions!.isEmpty);
 }
 
+/// The notifiers (Rx values) an observer widget read on its last build, each
+/// with the disposer that unsubscribes it.
+///
+/// After every build, notifiers that were not read again are unsubscribed, so
+/// an [Obx] whose `if` stops reading an Rx no longer rebuilds when that Rx
+/// changes. A notifier read on consecutive builds keeps its one subscription.
+///
+/// Keyed by identity, because `Rx` overrides `==` to compare values.
+class ObserverSubscriptions {
+  final _active = LinkedHashMap<ListNotifierSingleMixin, Disposer>.identity();
+  final _seen = HashSet<ListNotifierSingleMixin>.identity();
+
+  int get length => _active.length;
+  bool get isEmpty => _active.isEmpty;
+
+  /// Whether [notifier] is currently subscribed.
+  bool contains(ListNotifierSingleMixin notifier) =>
+      _active.containsKey(notifier);
+
+  void _begin() => _seen.clear();
+
+  void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater) {
+    if (!_seen.add(notifier)) return;
+    if (!_active.containsKey(notifier)) {
+      _active[notifier] = notifier.addListener(updater);
+    }
+  }
+
+  void _end() {
+    if (_seen.length == _active.length) return;
+    _active.removeWhere((notifier, disposer) {
+      if (_seen.contains(notifier)) return false;
+      disposer();
+      return true;
+    });
+  }
+
+  void dispose() {
+    for (final disposer in _active.values) {
+      disposer();
+    }
+    _active.clear();
+    _seen.clear();
+  }
+}
 class ObxError {
   const ObxError();
   @override

@@ -63,6 +63,7 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   T call([T? v]) {
     if (v != null) {
       value = v;
+      return peek;
     }
     return value;
   }
@@ -100,7 +101,7 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   set value(T val) {
     if (isDisposed) return;
     sentToStream = false;
-    if (value == val && !firstRebuild) return;
+    if (peek == val && !firstRebuild) return;
     firstRebuild = false;
     sentToStream = true;
     super.value = val;
@@ -168,8 +169,7 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   /// print( person );
   /// ```
   void update(T Function(T? val) fn) {
-    value = fn(value);
-    // subject.add(value);
+    value = fn(peek);
   }
 
   /// Following certain practices on Rx data, we might want to react to certain
@@ -238,8 +238,7 @@ extension RxBoolExt on Rx<bool> {
   /// Toggles the bool [value] between false and true.
   /// A shortcut for `flag.value = !flag.value;`
   void toggle() {
-    call(!value);
-    // return this;
+    call(!peek);
   }
 }
 
@@ -270,9 +269,9 @@ extension RxnBoolExt on Rx<bool?> {
   /// Toggles the bool [value] between false and true.
   /// A shortcut for `flag.value = !flag.value;`
   void toggle() {
-    if (value != null) {
-      call(!value!);
-      // return this;
+    final current = peek;
+    if (current != null) {
+      call(!current);
     }
   }
 }

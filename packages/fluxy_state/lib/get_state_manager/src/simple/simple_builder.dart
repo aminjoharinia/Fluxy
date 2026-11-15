@@ -97,6 +97,10 @@ abstract class ObxStatelessWidget extends StatelessWidget {
 mixin StatelessObserverComponent on StatelessElement {
   List<Disposer>? disposers = <Disposer>[];
 
+  /// The Rx values read on the last build; values no longer read are
+  /// unsubscribed after each build.
+  final ObserverSubscriptions subscriptions = ObserverSubscriptions();
+
   void getUpdate() {
     // if (disposers != null && !dirty) {
     //   markNeedsBuild();
@@ -109,12 +113,17 @@ mixin StatelessObserverComponent on StatelessElement {
   @override
   Widget build() {
     return Notifier.instance.append(
-        NotifyData(disposers: disposers!, updater: getUpdate), super.build);
+        NotifyData(
+            disposers: disposers!,
+            subscriptions: subscriptions,
+            updater: getUpdate),
+        super.build);
   }
 
   @override
   void unmount() {
     super.unmount();
+    subscriptions.dispose();
     for (final disposer in disposers!) {
       disposer();
     }

@@ -35,7 +35,7 @@ class RxSet<E> extends GetListenable<Set<E>>
 
   @override
   bool add(E value) {
-    final hasAdded = this.value.add(value);
+    final hasAdded = peek.add(value);
     if (hasAdded) {
       refresh();
     }
@@ -60,7 +60,7 @@ class RxSet<E> extends GetListenable<Set<E>>
 
   @override
   bool remove(Object? value) {
-    var hasRemoved = this.value.remove(value);
+    final hasRemoved = peek.remove(value);
     if (hasRemoved) {
       refresh();
     }
@@ -74,31 +74,40 @@ class RxSet<E> extends GetListenable<Set<E>>
 
   @override
   void addAll(Iterable<E> elements) {
-    value.addAll(elements);
+    final items = identical(elements, this) || identical(elements, peek)
+        ? elements.toList(growable: false)
+        : elements;
+    peek.addAll(items);
     refresh();
   }
 
   @override
   void clear() {
-    value.clear();
+    peek.clear();
     refresh();
   }
 
   @override
   void removeAll(Iterable<Object?> elements) {
-    value.removeAll(elements);
+    peek.removeAll(elements.toList(growable: false));
     refresh();
   }
 
   @override
   void retainAll(Iterable<Object?> elements) {
-    value.retainAll(elements);
+    peek.retainAll(elements.toList(growable: false));
+    refresh();
+  }
+
+  @override
+  void removeWhere(bool Function(E) test) {
+    peek.removeWhere(test);
     refresh();
   }
 
   @override
   void retainWhere(bool Function(E) test) {
-    value.retainWhere(test);
+    peek.retainWhere(test);
     refresh();
   }
 }
@@ -131,21 +140,23 @@ extension SetExtension<E> on Set<E> {
   }
 
   /// Replaces all existing items of this list with [item]
-  void assign(E item) {
-    // if (this is RxSet) {
-    //   (this as RxSet)._value;
-    // }
+  /// For an [RxSet] this notifies once.
+  void assign(E item) => assignAll([item]);
 
-    clear();
-    add(item);
-  }
-
-  /// Replaces all existing items of this list with [items]
+  /// Replaces all existing items of this set with [items].
+  /// For an [RxSet] this notifies once.
   void assignAll(Iterable<E> items) {
-    // if (this is RxSet) {
-    //   (this as RxSet)._value;
-    // }
+    final next = items.toSet();
+    if (this is RxSet<E>) {
+      final rx = this as RxSet<E>;
+      rx.peek
+        ..clear()
+        ..addAll(next);
+      // ignore: invalid_use_of_protected_member
+      rx.refresh();
+      return;
+    }
     clear();
-    addAll(items);
+    addAll(next);
   }
 }

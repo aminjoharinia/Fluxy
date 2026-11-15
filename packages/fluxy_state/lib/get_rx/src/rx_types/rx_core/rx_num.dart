@@ -590,18 +590,18 @@ class RxnNum extends Rx<num?> {
   RxnNum([super.initial]);
 
   num? operator +(num other) {
-    if (value != null) {
-      value = value! + other;
-      return value;
+    if (peek != null) {
+      value = peek! + other;
+      return peek;
     }
     return null;
   }
 
   /// Subtraction operator.
   num? operator -(num other) {
-    if (value != null) {
-      value = value! - other;
-      return value;
+    if (peek != null) {
+      value = peek! - other;
+      return peek;
     }
     return null;
   }
@@ -610,13 +610,13 @@ class RxnNum extends Rx<num?> {
 extension RxDoubleExt on Rx<double> {
   /// Addition operator.
   Rx<double> operator +(num other) {
-    value = value + other;
+    value = peek + other;
     return this;
   }
 
   /// Subtraction operator.
   Rx<double> operator -(num other) {
-    value = value - other;
+    value = peek - other;
     return this;
   }
 
@@ -718,8 +718,8 @@ extension RxDoubleExt on Rx<double> {
 extension RxnDoubleExt on Rx<double?> {
   /// Addition operator.
   Rx<double?>? operator +(num other) {
-    if (value != null) {
-      value = value! + other;
+    if (peek != null) {
+      value = peek! + other;
       return this;
     }
     return null;
@@ -727,8 +727,8 @@ extension RxnDoubleExt on Rx<double?> {
 
   /// Subtraction operator.
   Rx<double?>? operator -(num other) {
-    if (value != null) {
-      value = value! + other;
+    if (peek != null) {
+      value = peek! - other;
       return this;
     }
     return null;
@@ -869,13 +869,13 @@ class RxInt extends Rx<int> {
 
   /// Addition operator.
   RxInt operator +(int other) {
-    value = value + other;
+    value = peek + other;
     return this;
   }
 
   /// Subtraction operator.
   RxInt operator -(int other) {
-    value = value - other;
+    value = peek - other;
     return this;
   }
 }
@@ -885,16 +885,16 @@ class RxnInt extends Rx<int?> {
 
   /// Addition operator.
   RxnInt operator +(int other) {
-    if (value != null) {
-      value = value! + other;
+    if (peek != null) {
+      value = peek! + other;
     }
     return this;
   }
 
   /// Subtraction operator.
   RxnInt operator -(int other) {
-    if (value != null) {
-      value = value! - other;
+    if (peek != null) {
+      value = peek! - other;
     }
     return this;
   }

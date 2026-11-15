@@ -1,6 +1,8 @@
 // ignore_for_file: avoid_classes_with_only_static_members
 
 import 'package:flutter_test/flutter_test.dart';
+import 'same_name/a.dart' as same_a;
+import 'same_name/b.dart' as same_b;
 import 'package:get/get.dart';
 
 import 'util/matcher.dart' as m;
@@ -29,6 +31,8 @@ class Api implements Service {
 }
 
 void main() {
+  fluxyKeyTests();
+
   TestWidgetsFlutterBinding.ensureInitialized();
   test('Get.put test', () async {
     final instance = Get.put<Controller>(Controller());
@@ -289,4 +293,31 @@ class Controller extends DisposableController {
   void increment() {
     count++;
   }
+}
+
+class _Foo {}
+
+class _FooBar {}
+
+void fluxyKeyTests() {
+  group('instance keys are Types, not type names', () {
+    tearDown(Get.reset);
+
+    test('two classes with the same name from different libraries', () {
+      Get.put(same_a.Controller());
+      Get.put(same_b.Controller());
+      expect(Get.find<same_a.Controller>().from, 'a');
+      expect(Get.find<same_b.Controller>().from, 'b');
+    });
+
+    test('a tag can no longer collide with another type name', () {
+      // Old keys: '_Foo' + 'Bar' == '_FooBar'.
+      final fooBar = _FooBar();
+      Get.put(fooBar);
+      Get.put(_Foo(), tag: 'Bar');
+      expect(Get.find<_FooBar>(), same(fooBar));
+      expect(Get.isRegistered<_Foo>(tag: 'Bar'), isTrue);
+      expect(Get.isRegistered<_Foo>(), isFalse);
+    });
+  });
 }

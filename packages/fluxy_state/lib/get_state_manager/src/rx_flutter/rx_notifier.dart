@@ -150,6 +150,11 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
     return _value;
   }
 
+  /// The current value, **without** subscribing the observer that is
+  /// building ([Obx], [GetX]). Use it inside mutators and when a build needs
+  /// a value but should not rebuild when it changes.
+  T get peek => _value;
+
   void _notify() {
     refresh();
   }
@@ -199,6 +204,9 @@ class Value<T> extends ListNotifier
     return _value as T;
   }
 
+  /// The current value without subscribing the building observer.
+  T get peek => _value as T;
+
   @override
   set value(T newValue) {
     if (_value == newValue) return;
@@ -214,8 +222,7 @@ class Value<T> extends ListNotifier
   }
 
   void update(T Function(T? value) fn) {
-    value = fn(value);
-    // refresh();
+    value = fn(peek);
   }
 
   @override

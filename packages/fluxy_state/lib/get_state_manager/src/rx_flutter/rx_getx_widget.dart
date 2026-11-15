@@ -110,6 +110,7 @@ class GetXState<T extends GetLifeCycleMixin> extends State<GetX<T>> {
       }
     }
 
+    subscriptions.dispose();
     for (final disposer in disposers) {
       disposer();
     }
@@ -128,10 +129,12 @@ class GetXState<T extends GetLifeCycleMixin> extends State<GetX<T>> {
   }
 
   final disposers = <Disposer>[];
+  final subscriptions = ObserverSubscriptions();
 
   @override
   Widget build(BuildContext context) => Notifier.instance.append(
-      NotifyData(disposers: disposers, updater: _update),
+      NotifyData(
+          disposers: disposers, subscriptions: subscriptions, updater: _update),
       () => widget.builder(controller!));
 
   @override

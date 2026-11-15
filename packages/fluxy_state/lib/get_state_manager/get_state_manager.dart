@@ -1,5 +1,6 @@
 library;
 
+export 'src/rx_flutter/rx_batch.dart';
 export 'src/rx_flutter/rx_getx_widget.dart';
 export 'src/rx_flutter/rx_notifier.dart';
 export 'src/rx_flutter/rx_obx_widget.dart';

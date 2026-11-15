@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.3.0
+    ref: v0.4.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.3.0
+    ref: v0.4.0
     path: packages/fluxy_state
 ```
 
@@ -39,5 +39,10 @@ fluxy_state:
 - v0.1.0: no per-build `HeroController` in `GetNavigator` (heroes flew twice); `GetHeroScope` for nested or scope-less navigators.
 - v0.2.0: `get_connect` (HTTP / sockets) removed.
 - v0.3.0: split into packages. `Get.asap` and `Equality` moved to core; `RouterReportManager` moved to state; responsive views moved to ui; `hp`/`wp` no longer need navigation.
-
-Tests live in the root `test/` folder and run through the umbrella package. Run `flutter analyze` in each `packages/*` folder to check that no package reaches outside its listed dependencies.
+- v0.4.0 (fluxy_state, ideas from [Sint](https://github.com/Open-Neom/sint), MIT):
+  - `Obx` / `GetX` keep only the subscriptions their last build read; an Rx no longer read stops rebuilding them.
+  - `Get.batch(() { ... })`: each changed Rx notifies once, with its final value, when the outermost batch ends.
+  - `rx.peek` and `Get.untrack(() => ...)` read without subscribing. Setters, `toggle()`, `+` / `-` and collection writes use `peek`, so writing inside a build doesn't subscribe to the written Rx.
+  - `RxList` / `RxMap` / `RxSet` bulk operations (`insert`, `removeAt`, `removeRange`, `replaceRange`, `setAll`, `fillRange`, `addAll`, `updateAll`, `addEntries`, `assignAll` ...) notify once per call; `addAll` / `insertAll` with the collection itself no longer throws.
+  - DI keys are the `Type` (or a `(Type, tag)` record) instead of `type.toString()`: two classes with the same name no longer collide, and neither do `Foo` + tag `Bar` and `FooBar`. The `key:` parameters of `delete`, `reload` and `markAsDirty` are now `Object?`.
+  - Fixed `RxnDouble -` (it added).

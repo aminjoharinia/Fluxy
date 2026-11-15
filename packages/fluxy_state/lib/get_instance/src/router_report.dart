@@ -6,7 +6,7 @@ import 'package:fluxy_state/fluxy_state.dart';
 class RouterReportManager<T> {
   /// Holds a reference to `Get.reference` when the Instance was
   /// created to manage the memory.
-  final Map<T?, List<String>> _routesKey = {};
+  final Map<T?, List<Object>> _routesKey = {};
 
   /// Stores the onClose() references of instances created with `Get.create()`
   /// using the `Get.reference`.
@@ -38,12 +38,12 @@ class RouterReportManager<T> {
 
   /// Links a Class instance [S] (or [tag]) to the current route.
   /// Requires usage of `GetMaterialApp`.
-  void reportDependencyLinkedToRoute(String dependencyKey) {
+  void reportDependencyLinkedToRoute(Object dependencyKey) {
     if (_current == null) return;
     if (_routesKey.containsKey(_current)) {
       _routesKey[_current!]!.add(dependencyKey);
     } else {
-      _routesKey[_current] = <String>[dependencyKey];
+      _routesKey[_current] = <Object>[dependencyKey];
     }
   }
 
@@ -68,7 +68,7 @@ class RouterReportManager<T> {
   }
 
   void reportRouteWillDispose(T disposed) {
-    final keysToRemove = <String>[];
+    final keysToRemove = <Object>[];
 
     _routesKey[disposed]?.forEach(keysToRemove.add);
 
@@ -97,7 +97,7 @@ class RouterReportManager<T> {
   /// [SmartManagement.keepFactory]
   /// Meant for internal usage of `GetPageRoute` and `GetDialogRoute`
   void _removeDependencyByRoute(T routeName) {
-    final keysToRemove = <String>[];
+    final keysToRemove = <Object>[];
 
     _routesKey[routeName]?.forEach(keysToRemove.add);
 

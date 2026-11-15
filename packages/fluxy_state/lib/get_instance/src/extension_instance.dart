@@ -50,7 +50,11 @@ extension Inst on GetInterface {
 
   /// Holds references to every registered Instance when using
   /// `Get.put()`
-  static final Map<String, _InstanceBuilderFactory> _singl = {};
+  /// Registered instances, keyed by `Type` (or a `(Type, tag)` record).
+  /// Keys used to be `type.toString()`, which mixes up two classes with the
+  /// same name from different libraries and depends on how the compiler
+  /// names types (minified web, `--obfuscate`).
+  static final Map<Object, _InstanceBuilderFactory> _singl = {};
 
   /// Holds a reference to every registered callback when using
   /// `Get.lazyPut()`
@@ -221,7 +225,7 @@ extension Inst on GetInterface {
     );
   }
 
-  _InstanceBuilderFactory? _getDependency<S>({String? tag, String? key}) {
+  _InstanceBuilderFactory? _getDependency<S>({String? tag, Object? key}) {
     final newKey = key ?? _getKey(S, tag);
 
     if (!_singl.containsKey(newKey)) {
@@ -232,7 +236,7 @@ extension Inst on GetInterface {
     }
   }
 
-  void markAsDirty<S>({String? tag, String? key}) {
+  void markAsDirty<S>({String? tag, Object? key}) {
     final newKey = key ?? _getKey(S, tag);
     if (_singl.containsKey(newKey)) {
       final dep = _singl[newKey];
@@ -334,8 +338,8 @@ extension Inst on GetInterface {
 
   /// Generates the key based on [type] (and optionally a [name])
   /// to register an Instance Builder in the hashmap.
-  String _getKey(Type type, String? name) {
-    return name == null ? type.toString() : type.toString() + name;
+  Object _getKey(Type type, String? name) {
+    return name == null ? type : (type, name);
   }
 
   /// Delete registered Class Instance [S] (or [tag]) and, closes any open
@@ -354,7 +358,7 @@ extension Inst on GetInterface {
   /// - [key] For internal usage, is the processed key used to register
   ///   the Instance. **don't use** it unless you know what you are doing.
   /// - [force] Will delete an Instance even if marked as `permanent`.
-  bool delete<S>({String? tag, String? key, bool force = false}) {
+  bool delete<S>({String? tag, Object? key, bool force = false}) {
     final newKey = key ?? _getKey(S, tag);
 
     if (!_singl.containsKey(newKey)) {
@@ -438,7 +442,7 @@ extension Inst on GetInterface {
 
   void reload<S>({
     String? tag,
-    String? key,
+    Object? key,
     bool force = false,
   }) {
     final newKey = key ?? _getKey(S, tag);

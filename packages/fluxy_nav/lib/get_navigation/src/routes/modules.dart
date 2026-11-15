@@ -33,7 +33,7 @@ class Dependencies {
 
   void reloadAll({bool force = false}) => Get.reloadAll(force: force);
 
-  void reload<S>({String? tag, String? key, bool force = false}) =>
+  void reload<S>({String? tag, Object? key, bool force = false}) =>
       Get.reload<S>(tag: tag, key: key, force: force);
 
   bool isRegistered<S>({String? tag}) => Get.isRegistered<S>(tag: tag);

@@ -41,7 +41,7 @@ class RxList<E> extends GetListenable<List<E>>
 
   @override
   void operator []=(int index, E val) {
-    value[index] = val;
+    peek[index] = val;
     refresh();
   }
 
@@ -61,32 +61,105 @@ class RxList<E> extends GetListenable<List<E>>
 
   @override
   void add(E element) {
-    value.add(element);
+    peek.add(element);
     refresh();
   }
 
+  /// A copy when [iterable] is this list (or its backing list), so
+  /// `list.addAll(list)` doesn't modify the list while iterating it.
+  Iterable<E> _snapshot(Iterable<E> iterable) =>
+      identical(iterable, this) || identical(iterable, peek)
+          ? iterable.toList(growable: false)
+          : iterable;
+
   @override
   void addAll(Iterable<E> iterable) {
-    value.addAll(iterable);
+    peek.addAll(_snapshot(iterable));
     refresh();
   }
 
   @override
   bool remove(Object? element) {
-    final removed = value.remove(element);
+    final removed = peek.remove(element);
     refresh();
     return removed;
   }
 
   @override
   void removeWhere(bool Function(E element) test) {
-    value.removeWhere(test);
+    peek.removeWhere(test);
     refresh();
   }
 
   @override
   void retainWhere(bool Function(E element) test) {
-    value.retainWhere(test);
+    peek.retainWhere(test);
+    refresh();
+  }
+
+  // The methods below would otherwise come from ListMixin, which works
+  // through `[]=` and `length=` and so notifies several times per call.
+  // Each one here changes the backing list directly and notifies once.
+
+  @override
+  void insert(int index, E element) {
+    peek.insert(index, element);
+    refresh();
+  }
+
+  @override
+  E removeAt(int index) {
+    final removed = peek.removeAt(index);
+    refresh();
+    return removed;
+  }
+
+  @override
+  E removeLast() {
+    final removed = peek.removeLast();
+    refresh();
+    return removed;
+  }
+
+  @override
+  void removeRange(int start, int end) {
+    peek.removeRange(start, end);
+    refresh();
+  }
+
+  @override
+  void setAll(int index, Iterable<E> iterable) {
+    peek.setAll(index, _snapshot(iterable));
+    refresh();
+  }
+
+  @override
+  void setRange(int start, int end, Iterable<E> iterable, [int skipCount = 0]) {
+    peek.setRange(start, end, _snapshot(iterable), skipCount);
+    refresh();
+  }
+
+  @override
+  void replaceRange(int start, int end, Iterable<E> newContents) {
+    peek.replaceRange(start, end, _snapshot(newContents));
+    refresh();
+  }
+
+  @override
+  void fillRange(int start, int end, [E? fill]) {
+    peek.fillRange(start, end, fill);
+    refresh();
+  }
+
+  @override
+  void clear() {
+    peek.clear();
+    refresh();
+  }
+
+  @override
+  void shuffle([Random? random]) {
+    peek.shuffle(random);
     refresh();
   }
 
@@ -102,13 +175,13 @@ class RxList<E> extends GetListenable<List<E>>
 
   @override
   set length(int newLength) {
-    value.length = newLength;
+    peek.length = newLength;
     refresh();
   }
 
   @override
   void insertAll(int index, Iterable<E> iterable) {
-    value.insertAll(index, iterable);
+    peek.insertAll(index, _snapshot(iterable));
     refresh();
   }
 
@@ -133,7 +206,7 @@ class RxList<E> extends GetListenable<List<E>>
 
   @override
   void sort([int Function(E a, E b)? compare]) {
-    value.sort(compare);
+    peek.sort(compare);
     refresh();
   }
 }
@@ -165,17 +238,22 @@ extension ListExtension<E> on List<E> {
     // }
 
     if (this is RxList) {
-      (this as RxList).value.clear();
+      (this as RxList<E>).peek.clear();
+    } else {
+      clear();
     }
     add(item);
   }
 
   /// Replaces all existing items of this list with [items]
+  /// For an [RxList] this notifies once.
   void assignAll(Iterable<E> items) {
+    final copy = items.toList(growable: false);
     if (this is RxList) {
-      (this as RxList).value.clear();
+      (this as RxList<E>).peek.clear();
+    } else {
+      clear();
     }
-    //clear();
-    addAll(items);
+    addAll(copy);
   }
 }

@@ -182,7 +182,7 @@ abstract class Bind<T> extends StatelessWidget {
 
   static void reloadAll({bool force = false}) => Get.reloadAll(force: force);
 
-  static void reload<S>({String? tag, String? key, bool force = false}) =>
+  static void reload<S>({String? tag, Object? key, bool force = false}) =>
       Get.reload<S>(tag: tag, key: key, force: force);
 
   static bool isRegistered<S>({String? tag}) => Get.isRegistered<S>(tag: tag);

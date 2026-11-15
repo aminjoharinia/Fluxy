@@ -1,6 +1,6 @@
 name: fluxy_state
 description: "Fluxy state: Rx observables, Obx, controllers, workers and dependency injection."
-version: 0.3.0
+version: 0.4.0
 publish_to: none
 repository: https://github.com/aminjoharinia/Fluxy
 
