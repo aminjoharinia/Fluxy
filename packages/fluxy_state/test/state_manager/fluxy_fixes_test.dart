@@ -135,18 +135,16 @@ void main() {
       expect(other, [6]);
     });
 
-    test('call: rxn(null) sets null, rx() reads, null ignored on non-null',
-        () {
+    test('call: rxn(null) sets null and returns the new value', () {
       final name = Rxn<String>('a');
       var calls = 0;
       name.addListener(() => calls++);
-      expect(name(), 'a');
       expect(name(null), isNull);
       expect(name.value, isNull);
       expect(calls, 1);
+      expect(name('b'), 'b');
 
       final count = 3.obs;
-      expect(count(null), 3);
       expect(count(4), 4);
 
       final v = Value<int?>(1);
@@ -154,12 +152,11 @@ void main() {
       expect(v.peek, isNull);
     });
 
-    test('call: an Rx still works as a ValueChanged, wrong type throws', () {
+    test('call: an Rx still works as a ValueChanged', () {
       final text = ''.obs;
       final ValueChanged<String> onChanged = text.call;
       onChanged('hi');
       expect(text.value, 'hi');
-      expect(() => (text as dynamic)(1), throwsArgumentError);
     });
 
     test('update that edits in place still notifies', () async {

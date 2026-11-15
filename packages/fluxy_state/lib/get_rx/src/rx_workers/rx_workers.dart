@@ -125,7 +125,7 @@ Worker everAll(
 ///   Future<void> onInit() async {
 ///     worker = once(count, (value) {
 ///       print("counter reached $value before 3 seconds.");
-///     }, condition: () => count() > 2);
+///     }, condition: () => count.value > 2);
 ///     3.delay(worker.dispose);
 ///   }
 ///   void increment() => count + 1;

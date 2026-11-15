@@ -113,19 +113,6 @@ mixin StateMixin<T> on ListNotifier {
   }
 }
 
-class _NoValue {
-  const _NoValue();
-}
-
-/// Default for the `call` parameter of Rx values: tells an omitted argument
-/// apart from an explicit `null`.
-const Object _noValue = _NoValue();
-
-T _rxArgument<T>(Object? v) {
-  if (v is T) return v;
-  throw ArgumentError.value(v, 'v', 'is not a $T');
-}
-
 typedef FuturizeCallback<T> = Future<T> Function(VoidCallback fn);
 
 typedef VoidCallback = void Function();
@@ -196,17 +183,15 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
     _notify();
   }
 
-  /// `rx()` reads the value (subscribing the building observer, like
-  /// [value]); `rx(v)` sets it and returns it. `rxn(null)` sets a nullable
-  /// Rx to null; on a non-nullable Rx a `null` argument is ignored, as
-  /// before.
+  /// `rx(v)` sets the value and returns it, so an Rx can be passed where a
+  /// `ValueChanged<T>` is expected: `TextField(onChanged: myText)`.
+  /// `rxn(null)` sets a nullable Rx to null.
   ///
-  /// The parameter is `Object?` so an omitted argument can be told apart
-  /// from an explicit `null`; a value of the wrong type throws an
-  /// [ArgumentError].
-  T call([Object? v = _noValue]) {
-    if (identical(v, _noValue) || (v == null && null is! T)) return value;
-    value = _rxArgument<T>(v);
+  /// The argument is required and typed: `count('abc')` and `count(null)`
+  /// on a non-nullable Rx are compile errors. To read, use [value] (or
+  /// `peek`); `rx()` no longer reads.
+  T call(T v) {
+    value = v;
     return peek;
   }
 
@@ -252,17 +237,15 @@ class Value<T> extends ListNotifier
     refresh();
   }
 
-  /// `rx()` reads the value (subscribing the building observer, like
-  /// [value]); `rx(v)` sets it and returns it. `rxn(null)` sets a nullable
-  /// Rx to null; on a non-nullable Rx a `null` argument is ignored, as
-  /// before.
+  /// `rx(v)` sets the value and returns it, so an Rx can be passed where a
+  /// `ValueChanged<T>` is expected: `TextField(onChanged: myText)`.
+  /// `rxn(null)` sets a nullable Rx to null.
   ///
-  /// The parameter is `Object?` so an omitted argument can be told apart
-  /// from an explicit `null`; a value of the wrong type throws an
-  /// [ArgumentError].
-  T call([Object? v = _noValue]) {
-    if (identical(v, _noValue) || (v == null && null is! T)) return value;
-    value = _rxArgument<T>(v);
+  /// The argument is required and typed: `count('abc')` and `count(null)`
+  /// on a non-nullable Rx are compile errors. To read, use [value] (or
+  /// `peek`); `rx()` no longer reads.
+  T call(T v) {
+    value = v;
     return peek;
   }
 
