@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.5.0
+    ref: v0.6.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.5.0
+    ref: v0.6.0
     path: packages/fluxy_state
 ```
 
@@ -70,6 +70,20 @@ fluxy_state:
     - `Computed`: a cached derived value that follows what it reads and notifies only when its result changes.
     - `RxFuture`: an async load as an Rx (`loading` / `success` / `error`), keeping `lastData`; only the newest load counts.
   - Repo: tests live in each package (`packages/*/test`), CI analyzes and tests every package on its own, Fluxy README.
+- v0.6.0 (fluxy_state fixes):
+  - `Obx` no longer calls `markNeedsBuild` on an unmounted element when an Rx changes in the frame that removes it.
+  - `GetBuilder` follows a changed `id` (it kept listening to the old one unless `global: false`).
+  - `Bind.put` / `Bind.spawn`: `permanent: false` now removes the instance on unmount; the flag was inverted.
+  - `rx.bindStream` returns its `StreamSubscription` and is cancelled on `close()` or when the stream is done, also when bound outside a build (for example in `onInit`).
+  - `rx.trigger(sameValue)` notifies every listener (Obx, GetBuilder, workers), not only the stream.
+  - `listenAndPump` pumps the current value to its own subscriber only.
+  - `rx.update` / `Value.update` notify when the callback edits the object in place and returns it.
+  - `debounce` / `interval`: a callback still waiting for its delay is dropped on `dispose()`.
+  - `StateMixin.futurize`: only the newest call counts, one notification per result, and the error keeps the thrown object (or `errorMessage` if given). Setting `status` inside a build no longer subscribes it.
+  - `Computed`: a throwing compute no longer breaks the source's other listeners (the error is thrown at the next read), and it unsubscribes from its sources when its last listener leaves.
+  - `onReady` is skipped when the controller is deleted before the next frame, and `onInit` asks for a frame so `onReady` doesn't wait on an idle app.
+  - `disposeId` / reading an unregistered group id no longer crash on a null check.
+  - `rxn(null)` sets a nullable Rx to null (`call` used to ignore `null`); `rx()` still reads, `null` on a non-nullable Rx is still ignored, and a wrong-type argument throws `ArgumentError`.
 
 ## Tests
 
