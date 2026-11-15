@@ -1,6 +1,5 @@
-///Get Navigator allows you to navigate routes, open snackbars,
-///dialogs and bottomsheets easily, and without the need for context.
+/// Navigation, dialogs, bottom sheets and snackbars. Same as package:fluxy_nav.
 library;
 
-export 'get_core/get_core.dart';
-export 'get_navigation/get_navigation.dart';
+export 'package:fluxy_core/fluxy_core.dart';
+export 'package:fluxy_nav/fluxy_nav.dart';

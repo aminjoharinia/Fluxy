@@ -1,0 +1,25 @@
+name: fluxy_ui
+description: "Fluxy UI: responsive views, screen-percent sizing and widget animation extensions."
+version: 0.3.0
+publish_to: none
+repository: https://github.com/aminjoharinia/Fluxy
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  material_ui: ^1.8.0
+  fluxy_core:
+    path: ../fluxy_core
+  fluxy_utils:
+    path: ../fluxy_utils
+  fluxy_state:
+    path: ../fluxy_state
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

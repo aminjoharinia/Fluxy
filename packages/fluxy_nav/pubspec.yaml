@@ -1,0 +1,31 @@
+name: fluxy_nav
+description: "Fluxy navigation: router, Get.to/back, transitions, dialogs, bottom sheets and snackbars."
+version: 0.3.0
+publish_to: none
+repository: https://github.com/aminjoharinia/Fluxy
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  web: ">=1.1.0 <2.0.0"
+  material_ui: ^1.8.0
+  cupertino_ui: ^1.1.4
+  fluxy_core:
+    path: ../fluxy_core
+  fluxy_utils:
+    path: ../fluxy_utils
+  fluxy_i18n:
+    path: ../fluxy_i18n
+  fluxy_state:
+    path: ../fluxy_state
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

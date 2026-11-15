@@ -1,0 +1,20 @@
+name: fluxy_i18n
+description: "Fluxy i18n: Translations, locale state and the .tr / .trParams extensions."
+version: 0.3.0
+publish_to: none
+repository: https://github.com/aminjoharinia/Fluxy
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  fluxy_core:
+    path: ../fluxy_core
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

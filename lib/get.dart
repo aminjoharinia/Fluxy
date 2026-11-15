@@ -1,14 +1,15 @@
-/// GetX is an extra-light and powerful multi-platform framework.
-/// It combines high performance state management, intelligent dependency
-/// injection, and route management in a quick and practical way.
+/// Fluxy umbrella package: re-exports every Fluxy package, so existing
+/// `import 'package:get/get.dart'` code keeps working.
+///
+/// New projects can depend on only the packages they need:
+/// fluxy_core, fluxy_state, fluxy_nav, fluxy_i18n, fluxy_utils, fluxy_ui.
 library;
 
-export 'get_animations/index.dart';
+export 'package:fluxy_core/fluxy_core.dart';
+export 'package:fluxy_i18n/fluxy_i18n.dart';
+export 'package:fluxy_nav/fluxy_nav.dart';
+export 'package:fluxy_state/fluxy_state.dart';
+export 'package:fluxy_ui/fluxy_ui.dart';
+export 'package:fluxy_utils/fluxy_utils.dart';
+
 export 'get_common/get_reset.dart';
-export 'get_core/get_core.dart';
-export 'get_instance/get_instance.dart';
-export 'get_navigation/get_navigation.dart';
-export 'get_rx/get_rx.dart';
-export 'get_state_manager/get_state_manager.dart';
-export 'get_utils/get_utils.dart';
-export 'route_manager.dart';

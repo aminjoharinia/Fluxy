@@ -1,6 +1,5 @@
-/// Get Instance Manager is a modern and intelligent dependency injector
-/// that injects and removes dependencies seasonally.
+/// Dependency injection ( Get.put / find ... ). Same as package:fluxy_state.
 library;
 
-export 'get_core/get_core.dart';
-export 'get_instance/get_instance.dart';
+export 'package:fluxy_core/fluxy_core.dart';
+export 'package:fluxy_state/fluxy_state.dart';

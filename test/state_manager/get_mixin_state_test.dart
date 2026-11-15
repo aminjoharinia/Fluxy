@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/simple/mixin_builder.dart';
+import 'package:fluxy_state/get_state_manager/src/simple/mixin_builder.dart';
 
 void main() {
   testWidgets("MixinBuilder with reactive and not reactive", (tester) async {

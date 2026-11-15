@@ -1,0 +1,22 @@
+name: fluxy_utils
+description: "Fluxy utils: platform checks, validators, string/num/context extensions, queue."
+version: 0.3.0
+publish_to: none
+repository: https://github.com/aminjoharinia/Fluxy
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  web: ">=1.1.0 <2.0.0"
+  material_ui: ^1.8.0
+  fluxy_core:
+    path: ../fluxy_core
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

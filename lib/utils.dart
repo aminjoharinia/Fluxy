@@ -1,6 +1,5 @@
-/// Get utils is a set of tools that allows you to access high-level
-/// APIs and obtain validation tools for Flutter and GetX
+/// Platform checks, validators and extensions. Same as package:fluxy_utils.
 library;
 
-export 'get_core/get_core.dart';
-export 'get_utils/get_utils.dart';
+export 'package:fluxy_core/fluxy_core.dart';
+export 'package:fluxy_utils/fluxy_utils.dart';
