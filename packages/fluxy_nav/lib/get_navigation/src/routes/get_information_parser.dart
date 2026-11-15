@@ -5,15 +5,26 @@ import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
 class GetInformationParser extends RouteInformationParser<RouteDecoder> {
-  factory GetInformationParser.createInformationParser(
-      {String initialRoute = '/'}) {
-    return GetInformationParser(initialRoute: initialRoute);
+  factory GetInformationParser.createInformationParser({
+    String initialRoute = '/',
+    bool redirectRootToInitialRoute = false,
+  }) {
+    return GetInformationParser(
+      initialRoute: initialRoute,
+      redirectRootToInitialRoute: redirectRootToInitialRoute,
+    );
   }
 
+  /// Where the app starts when it is opened at `/` (or with no address).
   final String initialRoute;
+
+  /// When true, `/` always goes to [initialRoute]. When false (the default),
+  /// only when `/` is not a registered page.
+  final bool redirectRootToInitialRoute;
 
   GetInformationParser({
     required this.initialRoute,
+    this.redirectRootToInitialRoute = false,
   }) {
     Get.log('GetInformationParser is created !');
   }
@@ -24,9 +35,9 @@ class GetInformationParser extends RouteInformationParser<RouteDecoder> {
     final uri = routeInformation.uri;
     var location = uri.toString();
     if (location == '/') {
-      //check if there is a corresponding page
-      //if not, relocate to initialRoute
-      if (!(Get.rootController.rootDelegate)
+      // Go to initialRoute when asked to, or when '/' is not a page.
+      if (redirectRootToInitialRoute ||
+          !(Get.rootController.rootDelegate)
           .registeredRoutes
           .any((element) => element.name == '/')) {
         location = initialRoute;

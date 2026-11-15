@@ -41,6 +41,13 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   final GetPage notFoundRoute;
 
   final List<NavigatorObserver>? navigatorObservers;
+
+  /// The observer that keeps `Get.routing` (and so `Get.isDialogOpen`,
+  /// `Get.isBottomSheetOpen`, `Get.currentRoute`) up to date. `GetRoot` sets
+  /// it on the root delegate, including one the app passes in, unless the
+  /// app already listed a [GetObserver] in [navigatorObservers].
+  GetObserver? routingObserver;
+
   final TransitionDelegate<dynamic>? transitionDelegate;
 
   final Iterable<GetPage> Function(RouteDecoder currentNavStack)?
@@ -88,7 +95,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
         PreventDuplicateHandlingMode.reorderRoutes,
     this.pickPagesForRootNavigator,
     this.restorationScopeId,
-    bool showHashOnUrl = false,
+    bool showHashOnUrl = true,
     GlobalKey<NavigatorState>? navigatorKey,
     required List<GetPage> pages,
   }) : navigatorKey = navigatorKey ?? GlobalKey<NavigatorState>(),
@@ -97,6 +104,9 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
          page: () =>
              const Scaffold(body: Center(child: Text('Route not found'))),
        ) {
+    // Hash URLs (`/#/Home`) are Flutter's default, so nothing is changed
+    // unless path URLs are asked for. That only works before runApp; see
+    // setUrlStrategy().
     if (!showHashOnUrl && GetPlatform.isWeb) setUrlStrategy();
     addPages(pages);
     addPage(notFoundRoute);
@@ -323,7 +333,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
         key: navigatorKey,
         onPopPage: _onPopVisualRoute,
         pages: pages,
-        observers: navigatorObservers,
+        observers: [?routingObserver, ...?navigatorObservers],
         transitionDelegate:
             transitionDelegate ?? const DefaultTransitionDelegate<dynamic>(),
       ),

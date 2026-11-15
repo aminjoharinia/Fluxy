@@ -1,5 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 void removeHash() {
-  setUrlStrategy(PathUrlStrategy());
+  try {
+    setUrlStrategy(PathUrlStrategy());
+  } on AssertionError catch (_) {
+    debugPrint('[Fluxy] Path URLs must be set before runApp; '
+        'keeping hash URLs. Call setUrlStrategy() / create the GetDelegate '
+        '(showHashOnUrl: false) before runApp.');
+  }
 }

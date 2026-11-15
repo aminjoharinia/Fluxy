@@ -110,7 +110,10 @@ class ParseRouteTree {
         .toList();
 
     final params = Map<String, String>.from(uri.queryParameters);
-    if (treeBranch.isNotEmpty) {
+    // Only a route for the whole path is a match. Without this check an
+    // unknown address matched its closest registered parent ('/nope' showed
+    // '/', '/Home/x' showed '/Home') and never reached the unknown route.
+    if (treeBranch.isNotEmpty && treeBranch.last.key == cumulativePaths.last) {
       //route is found, do further parsing to get nested query params
       final lastRoute = treeBranch.last;
       final parsedParams = _parseParams(name, lastRoute.value.path);
@@ -138,7 +141,7 @@ class ParseRouteTree {
     arguments?.params.addAll(params);
 
     //route not found
-    return RouteDecoder(treeBranch.map((e) => e.value).toList(), arguments);
+    return RouteDecoder(<GetPage>[], arguments);
   }
 
   void addRoutes<T>(List<GetPage<T>> getPages) {

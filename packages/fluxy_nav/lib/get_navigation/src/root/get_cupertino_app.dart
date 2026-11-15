@@ -134,6 +134,8 @@ class GetCupertinoApp extends StatelessWidget {
 
   const GetCupertinoApp.router({
     super.key,
+    /// Where the app opens when started at `/`, even when `/` is a page.
+    this.initialRoute,
     this.theme,
     this.routeInformationProvider,
     this.routeInformationParser,
@@ -188,8 +190,7 @@ class GetCupertinoApp extends StatelessWidget {
         home = null,
         onGenerateInitialRoutes = null,
         onUnknownRoute = null,
-        routes = null,
-        initialRoute = null;
+        routes = null;
 
   @override
   Widget build(BuildContext context) {

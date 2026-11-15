@@ -389,16 +389,20 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
             ],
         notFoundRoute: config.unknownRoute,
         navigatorKey: config.navigatorKey,
-        navigatorObservers: (config.navigatorObservers == null
-            ? <NavigatorObserver>[
-                GetObserver(config.routingCallback, Get.routing)
-              ]
-            : <NavigatorObserver>[
-                GetObserver(config.routingCallback, config.routing),
-                ...config.navigatorObservers!
-              ]),
+        navigatorObservers: config.navigatorObservers,
       );
       config = config.copyWith(routerDelegate: newDelegate);
+    }
+
+    // Keep Get.routing current for the root navigator, whether GetRoot made
+    // the delegate or the app passed its own.
+    final delegate = config.routerDelegate;
+    if (delegate is GetDelegate &&
+        delegate.routingObserver == null &&
+        !(delegate.navigatorObservers?.any((o) => o is GetObserver) ??
+            false)) {
+      delegate.routingObserver =
+          GetObserver(config.routingCallback, config.routing);
     }
 
     if (config.routeInformationParser == null) {
@@ -407,6 +411,8 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
         initialRoute: config.initialRoute ??
             config.getPages?.first.name ??
             cleanRouteName("/${config.home.runtimeType}"),
+        // An initialRoute the app asked for wins, even when '/' is a page.
+        redirectRootToInitialRoute: config.initialRoute != null,
       );
 
       config =
