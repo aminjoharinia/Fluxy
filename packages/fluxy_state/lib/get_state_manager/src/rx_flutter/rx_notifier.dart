@@ -27,6 +27,8 @@ mixin StateMixin<T> on ListNotifier {
   T? _value;
   GetStatus<T>? _status;
 
+  int _futurizeGeneration = 0;
+
   void _fillInitialStatus() {
     _status = (_value == null || _value!._isEmpty())
         ? GetStatus<T>.loading()
@@ -35,13 +37,15 @@ mixin StateMixin<T> on ListNotifier {
 
   GetStatus<T> get status {
     reportRead();
-    return _status ??= _status = GetStatus.loading();
+    return _status ??= GetStatus<T>.loading();
   }
 
   T get state => value;
 
   set status(GetStatus<T> newStatus) {
-    if (newStatus == status) return;
+    // Compared without reportRead, so setting the status inside a build
+    // does not subscribe that build.
+    if (newStatus == (_status ??= GetStatus<T>.loading())) return;
     _status = newStatus;
     if (newStatus is SuccessStatus<T>) {
       _value = newStatus.data;
@@ -64,9 +68,7 @@ mixin StateMixin<T> on ListNotifier {
 
   @protected
   void change(GetStatus<T> status) {
-    if (status != this.status) {
-      this.status = status;
-    }
+    this.status = status;
   }
 
   void setSuccess(T data) {
@@ -85,25 +87,43 @@ mixin StateMixin<T> on ListNotifier {
     change(GetStatus<T>.empty());
   }
 
+  /// Runs [body] and moves through loading, then success / empty / error.
+  ///
+  /// - Only the newest call counts: a slower, older call that finishes later
+  ///   is ignored.
+  /// - Each result notifies once.
+  /// - The error keeps the object that was thrown; if [errorMessage] is
+  ///   given, it is used instead.
   void futurize(Future<T> Function() body,
       {T? initialData, String? errorMessage, bool useEmpty = true}) {
-    final compute = body;
+    final generation = ++_futurizeGeneration;
     _value ??= initialData;
     status = GetStatus<T>.loading();
-    compute().then((newValue) {
+    Future<T>.sync(body).then((newValue) {
+      if (generation != _futurizeGeneration || isDisposed) return;
       if ((newValue == null || newValue._isEmpty()) && useEmpty) {
         status = GetStatus<T>.empty();
       } else {
         status = GetStatus<T>.success(newValue);
       }
-
-      refresh();
-    }, onError: (err) {
-      status = GetStatus.error(
-          err is Exception ? err : Exception(errorMessage ?? err.toString()));
-      refresh();
+    }, onError: (Object err) {
+      if (generation != _futurizeGeneration || isDisposed) return;
+      status = GetStatus<T>.error(errorMessage ?? err);
     });
   }
+}
+
+class _NoValue {
+  const _NoValue();
+}
+
+/// Default for the `call` parameter of Rx values: tells an omitted argument
+/// apart from an explicit `null`.
+const Object _noValue = _NoValue();
+
+T _rxArgument<T>(Object? v) {
+  if (v is T) return v;
+  throw ArgumentError.value(v, 'v', 'is not a $T');
 }
 
 typedef FuturizeCallback<T> = Future<T> Function(VoidCallback fn);
@@ -176,11 +196,18 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
     _notify();
   }
 
-  T? call([T? v]) {
-    if (v != null) {
-      value = v;
-    }
-    return value;
+  /// `rx()` reads the value (subscribing the building observer, like
+  /// [value]); `rx(v)` sets it and returns it. `rxn(null)` sets a nullable
+  /// Rx to null; on a non-nullable Rx a `null` argument is ignored, as
+  /// before.
+  ///
+  /// The parameter is `Object?` so an omitted argument can be told apart
+  /// from an explicit `null`; a value of the wrong type throws an
+  /// [ArgumentError].
+  T call([Object? v = _noValue]) {
+    if (identical(v, _noValue) || (v == null && null is! T)) return value;
+    value = _rxArgument<T>(v);
+    return peek;
   }
 
   @override
@@ -225,15 +252,30 @@ class Value<T> extends ListNotifier
     refresh();
   }
 
-  T? call([T? v]) {
-    if (v != null) {
-      value = v;
-    }
-    return value;
+  /// `rx()` reads the value (subscribing the building observer, like
+  /// [value]); `rx(v)` sets it and returns it. `rxn(null)` sets a nullable
+  /// Rx to null; on a non-nullable Rx a `null` argument is ignored, as
+  /// before.
+  ///
+  /// The parameter is `Object?` so an omitted argument can be told apart
+  /// from an explicit `null`; a value of the wrong type throws an
+  /// [ArgumentError].
+  T call([Object? v = _noValue]) {
+    if (identical(v, _noValue) || (v == null && null is! T)) return value;
+    value = _rxArgument<T>(v);
+    return peek;
   }
 
+  /// If [fn] returns the same object it was given (it edited it in place),
+  /// listeners are still notified.
   void update(T Function(T? value) fn) {
-    value = fn(peek);
+    final current = peek;
+    final next = fn(current);
+    if (identical(next, current)) {
+      refresh();
+    } else {
+      value = next;
+    }
   }
 
   @override

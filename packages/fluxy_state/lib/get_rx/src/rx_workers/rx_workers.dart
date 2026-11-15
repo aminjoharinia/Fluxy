@@ -183,20 +183,26 @@ Worker interval<T>(
   void Function()? onDone,
   bool? cancelOnError,
 }) {
-  var debounceActive = false;
+  Timer? pending;
   StreamSubscription sub = listener.listen(
-    (event) async {
-      if (debounceActive || !_conditional(condition)) return;
-      debounceActive = true;
-      await Future.delayed(time);
-      debounceActive = false;
-      callback(event);
+    (event) {
+      if (pending != null || !_conditional(condition)) return;
+      pending = Timer(time, () {
+        pending = null;
+        callback(event);
+      });
     },
     onError: onError,
     onDone: onDone,
     cancelOnError: cancelOnError,
   );
-  return Worker(sub.cancel, '[interval]');
+  // Disposing also drops a callback still waiting for its delay, so it never
+  // runs after the worker (or its controller) is gone.
+  return Worker(() {
+    pending?.cancel();
+    pending = null;
+    return sub.cancel();
+  }, '[interval]');
 }
 
 /// [debounce] is similar to [interval], but sends the last value.
@@ -238,7 +244,11 @@ Worker debounce<T>(
     onDone: onDone,
     cancelOnError: cancelOnError,
   );
-  return Worker(sub.cancel, '[debounce]');
+  // Disposing also drops a callback still waiting for its delay.
+  return Worker(() {
+    newDebouncer.cancel();
+    return sub.cancel();
+  }, '[debounce]');
 }
 
 class Worker {

@@ -106,7 +106,12 @@ mixin StatelessObserverComponent on StatelessElement {
     //   markNeedsBuild();
     // }
     if (disposers != null) {
-      scheduleMicrotask(markNeedsBuild);
+      // Checked again when the microtask runs: the element may have been
+      // unmounted in between, and markNeedsBuild on a defunct element
+      // asserts.
+      scheduleMicrotask(() {
+        if (disposers != null && mounted) markNeedsBuild();
+      });
     }
   }
 

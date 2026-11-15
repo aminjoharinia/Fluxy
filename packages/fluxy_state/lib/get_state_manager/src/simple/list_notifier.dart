@@ -114,7 +114,9 @@ mixin ListNotifierGroupMixin on Listenable {
   @protected
   void notifyGroupChildrens(Object id) {
     assert(_debugAssertNotDisposed());
-    Notifier.instance.read(_updatersGroupIds![id]!);
+    // Created on demand: reading an id nothing has registered yet used to
+    // crash on a null check.
+    Notifier.instance.read(_updatersGroupIds![id] ??= ListNotifierSingle());
   }
 
   bool containsId(Object id) {
@@ -161,8 +163,7 @@ mixin ListNotifierGroupMixin on Listenable {
   /// by `GetBuilder()` or similar, so is a way to unlink the state change with
   /// the Widget from the Controller.
   void disposeId(Object id) {
-    _updatersGroupIds?[id]?.dispose();
-    _updatersGroupIds!.remove(id);
+    _updatersGroupIds?.remove(id)?.dispose();
   }
 }
 

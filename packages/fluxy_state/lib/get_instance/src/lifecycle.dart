@@ -17,7 +17,15 @@ mixin GetLifeCycleMixin {
   @protected
   @mustCallSuper
   void onInit() {
-    Engine.instance.addPostFrameCallback((_) => onReady());
+    final binding = Engine.instance;
+    binding.addPostFrameCallback((_) {
+      // Deleted before the frame: onReady would run on a closed controller.
+      if (!_isClosed) onReady();
+    });
+    // A post-frame callback does not ask for a frame; without one (an idle
+    // app, a controller made from a timer) onReady would wait for the next
+    // unrelated redraw.
+    binding.ensureVisualUpdate();
   }
 
   /// Called 1 frame after onInit(). It is the perfect place to enter

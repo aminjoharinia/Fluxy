@@ -126,7 +126,7 @@ abstract class Bind<T> extends StatelessWidget {
   }) {
     Get.put<S>(dependency, tag: tag, permanent: permanent);
     return _FactoryBind<S>(
-      autoRemove: permanent,
+      autoRemove: !permanent,
       assignId: true,
       tag: tag,
     );
@@ -168,7 +168,7 @@ abstract class Bind<T> extends StatelessWidget {
     return _FactoryBind<S>(
       tag: tag,
       global: false,
-      autoRemove: permanent,
+      autoRemove: !permanent,
     );
   }
 
@@ -445,7 +445,6 @@ class BindElement<T> extends InheritedElement {
 
   bool? _isCreator = false;
   bool? _needStart = false;
-  bool _wasStarted = false;
   VoidCallback? _remove;
   Object? _filter;
 
@@ -501,7 +500,6 @@ class BindElement<T> extends InheritedElement {
     if (_needStart == true && localController is GetLifeCycleMixin) {
       localController.onStart();
       _needStart = false;
-      _wasStarted = true;
     }
 
     if (localController is GetxController) {
@@ -561,11 +559,14 @@ class BindElement<T> extends InheritedElement {
   void update(Binder<T> newWidget) {
     final oldNotifier = widget.id;
     final newNotifier = newWidget.id;
-    if (oldNotifier != newNotifier && _wasStarted) {
-      _subscribeToController();
-    }
     widget.didUpdateWidget?.call(widget, this);
     super.update(newWidget);
+    // Re-subscribe under the new id once the controller exists (global or
+    // not). Before, only `global: false` binders re-subscribed, so a
+    // GetBuilder whose id changed kept listening to the old id.
+    if (oldNotifier != newNotifier && _controller != null) {
+      _subscribeToController();
+    }
   }
 
   @override

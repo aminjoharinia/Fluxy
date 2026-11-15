@@ -43,30 +43,9 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   //   subject.add(_value = null);
   // }
 
-  /// Makes this Rx looks like a function so you can update a new
-  /// value using `rx(someOtherValue)`. Practical to assign the Rx directly
-  /// to some Widget that has a signature ::onChange( value )
-  ///
-  /// Example:
-  /// ```
-  /// final myText = 'GetX rocks!'.obs;
-  ///
-  /// // in your Constructor, just to check it works :P
-  /// ever( myText, print ) ;
-  ///
-  /// // in your build(BuildContext) {
-  /// TextField(
-  ///   onChanged: myText,
-  /// ),
-  ///```
-  @override
-  T call([T? v]) {
-    if (v != null) {
-      value = v;
-      return peek;
-    }
-    return value;
-  }
+  // `call` (`rx()` / `rx(v)` / `rxn(null)`) is defined on GetListenable.
+  // It lets an Rx be passed where a `ValueChanged` is expected:
+  // `TextField(onChanged: myText)`.
 
   bool firstRebuild = true;
   bool sentToStream = false;
@@ -122,30 +101,60 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   /// added benefit that it primes the stream with the current [value], rather
   /// than waiting for the next [value]. This should not be called in [onInit]
   /// or anywhere else during the build process.
+  ///
+  /// Only this subscription gets the current value; other listeners of this
+  /// Rx do not see it again. (Before, the current value was added to the
+  /// shared stream, so every `ever` / `listen` fired once more.)
   StreamSubscription<T> listenAndPump(void Function(T event) onData,
       {Function? onError, void Function()? onDone, bool? cancelOnError}) {
-    final subscription = listen(
+    final current = peek;
+    return Stream<T>.multi((controller) {
+      controller.add(current);
+      final sub = stream.listen(
+        controller.add,
+        onError: controller.addError,
+        onDone: controller.close,
+      );
+      controller.onCancel = sub.cancel;
+    }).listen(
       onData,
       onError: onError,
       onDone: onDone,
-      cancelOnError: cancelOnError,
+      cancelOnError: cancelOnError ?? false,
     );
-
-    subject.add(value);
-
-    return subscription;
   }
 
   /// Binds an existing `Stream<T>` to this `Rx<T>` to keep the values in sync.
   /// You can bind multiple sources to update the value.
-  /// Closing the subscription will happen automatically when the observer
-  /// Widget (`GetX` or `Obx`) gets unmounted from the Widget tree.
-  void bindStream(Stream<T> stream) {
-    // final listSubscriptions =
-    //     _subscriptions[subject] ??= <StreamSubscription>[];
-
-    final sub = stream.listen((va) => value = va);
+  ///
+  /// The subscription is cancelled when this Rx is closed, when [stream] is
+  /// done, or when you cancel the returned subscription. If it is bound while
+  /// an observer widget (`GetX` or `Obx`) builds, it is also cancelled when
+  /// that widget is unmounted. (Before, a binding made outside a build, for
+  /// example in `onInit`, was never cancelled.)
+  StreamSubscription<T> bindStream(Stream<T> stream) {
+    late final StreamSubscription<T> sub;
+    sub = stream.listen(
+      (va) => value = va,
+      onDone: () => _bindings?.remove(sub),
+    );
+    (_bindings ??= <StreamSubscription<T>>[]).add(sub);
     reportAdd(sub.cancel);
+    return sub;
+  }
+
+  List<StreamSubscription<T>>? _bindings;
+
+  @override
+  void close() {
+    final bindings = _bindings;
+    _bindings = null;
+    if (bindings != null) {
+      for (final sub in bindings) {
+        sub.cancel();
+      }
+    }
+    super.close();
   }
 }
 
@@ -179,8 +188,18 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   /// });
   /// print( person );
   /// ```
+  ///
+  /// If [fn] returns the same object it was given (it edited it in place),
+  /// listeners are still notified.
   void update(T Function(T? val) fn) {
-    value = fn(peek);
+    if (isDisposed) return;
+    final current = peek;
+    final next = fn(current);
+    if (identical(next, current) && !firstRebuild) {
+      refresh();
+    } else {
+      value = next;
+    }
   }
 
   /// Following certain practices on Rx data, we might want to react to certain
@@ -209,13 +228,12 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   /// ```
   ///
   void trigger(T v) {
-    var firstRebuild = this.firstRebuild;
+    if (isDisposed) return;
     value = v;
-    // If it's not the first rebuild, the listeners have been called already
-    // So we won't call them again.
-    if (!firstRebuild && !sentToStream) {
-      subject.add(v);
-    }
+    // Same value: the setter did not notify, so notify here. This reaches
+    // every listener (Obx, GetBuilder, workers), not only the stream as it
+    // used to.
+    if (!sentToStream) refresh();
   }
 }
 

@@ -78,13 +78,48 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
   void _sourceChanged() {
     if (isDisposed) return;
     if (listenersLength == 0) {
-      _stale = true;
+      _sleep();
       return;
     }
     final previous = _value;
-    _run();
+    try {
+      _run();
+    } catch (_) {
+      // Do not throw into the source's notify loop (its other listeners
+      // would be skipped). Stay stale and notify, so the listener's next
+      // read runs compute again and gets the error where it reads.
+      _stale = true;
+      refresh();
+      return;
+    }
     final same = equals?.call(previous, _value) ?? previous == _value;
     if (!same) refresh();
+  }
+
+  /// With nobody listening, drop the subscriptions to the sources (so they
+  /// do not keep this alive) and recompute on the next read.
+  void _sleep() {
+    _sources.dispose();
+    _stale = true;
+  }
+
+  void _maybeSleep() {
+    if (!isDisposed && listenersLength == 0) _sleep();
+  }
+
+  @override
+  Disposer addListener(GetStateUpdate listener) {
+    final remove = super.addListener(listener);
+    return () {
+      remove();
+      _maybeSleep();
+    };
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    _maybeSleep();
   }
 
   @override
