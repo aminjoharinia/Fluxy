@@ -105,8 +105,7 @@ class ParseRouteTree {
     final treeBranch = cumulativePaths
         .map((e) => MapEntry(e, _findRoute(e)))
         .where((element) => element.value != null)
-        ///Prevent page be disposed
-        .map((e) => MapEntry(e.key, e.value!.copyWith(key: ValueKey(e.key))))
+        .map((e) => MapEntry(e.key, e.value!))
         .toList();
 
     final params = Map<String, String>.from(uri.queryParameters);
@@ -120,10 +119,12 @@ class ParseRouteTree {
       if (parsedParams.isNotEmpty) {
         params.addAll(parsedParams);
       }
-      //copy parameters to all pages.
+      //copy parameters to all pages. The key is the matched path, so the
+      //page is not disposed while that path stays on the stack.
       final mappedTreeBranch = treeBranch
           .map(
             (e) => e.value.copyWith(
+              key: ValueKey(e.key),
               parameters: {
                 if (e.value.parameters != null) ...e.value.parameters!,
                 ...params,

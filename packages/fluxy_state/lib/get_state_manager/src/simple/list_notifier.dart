@@ -23,14 +23,24 @@ class ListNotifierGroup = ListNotifier with ListNotifierGroupMixin;
 mixin ListNotifierSingleMixin on Listenable {
   List<GetStateUpdate>? _updaters = <GetStateUpdate>[];
 
-  // final int _version = 0;
-  // final int _microtaskVersion = 0;
+  /// The list a notify is walking right now. Adding or removing a listener
+  /// while it is walked copies [_updaters] first, so a notify needs no copy
+  /// of its own (it used to copy the list on every change).
+  List<GetStateUpdate>? _notifying;
+
+  List<GetStateUpdate>? _writableUpdaters() {
+    final list = _updaters;
+    if (list != null && identical(list, _notifying)) {
+      return _updaters = List.of(list);
+    }
+    return list;
+  }
 
   @override
   Disposer addListener(GetStateUpdate listener) {
     assert(_debugAssertNotDisposed());
-    _updaters!.add(listener);
-    return () => _updaters?.remove(listener);
+    _writableUpdaters()!.add(listener);
+    return () => _writableUpdaters()?.remove(listener);
   }
 
   bool containsListener(GetStateUpdate listener) {
@@ -40,7 +50,7 @@ mixin ListNotifierSingleMixin on Listenable {
   @override
   void removeListener(VoidCallback listener) {
     assert(_debugAssertNotDisposed());
-    _updaters!.remove(listener);
+    _writableUpdaters()!.remove(listener);
   }
 
   @protected
@@ -70,9 +80,19 @@ mixin ListNotifierSingleMixin on Listenable {
   }
 
   void _notifyUpdateNow() {
-    final list = _updaters?.toList() ?? const [];
-    for (final element in list) {
-      element();
+    final list = _updaters;
+    if (list == null || list.isEmpty) return;
+    // Listeners added or removed during this notify go to a copy (see
+    // [_writableUpdaters]), so this walk sees the list as it was when the
+    // notify started, as before.
+    final previous = _notifying;
+    _notifying = list;
+    try {
+      for (var i = 0; i < list.length; i++) {
+        list[i]();
+      }
+    } finally {
+      _notifying = previous;
     }
   }
 

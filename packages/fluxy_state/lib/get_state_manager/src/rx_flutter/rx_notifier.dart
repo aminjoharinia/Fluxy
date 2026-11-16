@@ -45,7 +45,13 @@ mixin StateMixin<T> on ListNotifier {
   set status(GetStatus<T> newStatus) {
     // Compared without reportRead, so setting the status inside a build
     // does not subscribe that build.
-    if (newStatus == (_status ??= GetStatus<T>.loading())) return;
+    // A success always notifies: its data may be the same object edited in
+    // place (the deep comparison saw it as unchanged and skipped the
+    // update), and comparing large data on every set is costly.
+    if (newStatus is! SuccessStatus<T> &&
+        newStatus == (_status ??= GetStatus<T>.loading())) {
+      return;
+    }
     _status = newStatus;
     if (newStatus is SuccessStatus<T>) {
       _value = newStatus.data;

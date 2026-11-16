@@ -206,4 +206,26 @@ void main() {
       expect(Get.parameters['c'], 'd');
     },
   );
+
+  test('copyWith with a new name matches the new pattern', () {
+    final page = GetPage(name: '/user/:id', page: () => Container());
+    final copy = page.copyWith(name: '/shop/:item');
+    expect(copy.path.keys, ['item']);
+    expect(copy.path.regex.hasMatch('/shop/42'), isTrue);
+    expect(copy.path.regex.hasMatch('/user/42'), isFalse);
+    expect(page.copyWith(title: 't').path.keys, ['id']);
+  });
+
+  test('matched pages carry the path key and the parameters', () {
+    final tree = ParseRouteTree(routes: []);
+    tree.addRoutes([
+      GetPage(name: '/', page: () => Container()),
+      GetPage(name: '/user/:id', page: () => Container()),
+    ]);
+    final decoded = tree.matchRoute('/user/7?tab=a');
+    final last = decoded.currentTreeBranch.last;
+    expect(last.key, const ValueKey('/user/7'));
+    expect(last.name, '/user/7');
+    expect(last.parameters, {'id': '7', 'tab': 'a'});
+  });
 }

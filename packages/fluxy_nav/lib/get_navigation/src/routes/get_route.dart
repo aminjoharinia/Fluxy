@@ -46,7 +46,9 @@ class GetPage<T> extends Page<T> {
 
   final List<GetPage> children;
   final List<GetMiddleware> middlewares;
-  final PathDecoded path;
+  /// The route pattern, compiled on first use. Lazy because [copyWith]
+  /// builds a new page on every navigation and most copies never match.
+  late final PathDecoded path = _nameToRegex(name);
   final GetPage? unknownRoute;
   final bool showCupertinoParallax;
 
@@ -89,8 +91,7 @@ class GetPage<T> extends Page<T> {
     super.canPop,
     super.onPopInvoked = _defaultPopInvokedHandler,
     super.restorationId,
-  })  : path = _nameToRegex(name),
-        assert(name.startsWith('/'),
+  })  : assert(name.startsWith('/'),
             'It is necessary to start route name [$name] with a slash: /$name'),
         super(
           key: key ?? ValueKey(name),

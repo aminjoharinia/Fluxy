@@ -101,15 +101,18 @@ mixin StatelessObserverComponent on StatelessElement {
   /// unsubscribed after each build.
   final ObserverSubscriptions subscriptions = ObserverSubscriptions();
 
+  bool _updateScheduled = false;
+
   void getUpdate() {
-    // if (disposers != null && !dirty) {
-    //   markNeedsBuild();
-    // }
-    if (disposers != null) {
+    // One microtask per element however many Rx values change before it
+    // runs.
+    if (disposers != null && !_updateScheduled) {
+      _updateScheduled = true;
       // Checked again when the microtask runs: the element may have been
       // unmounted in between, and markNeedsBuild on a defunct element
       // asserts.
       scheduleMicrotask(() {
+        _updateScheduled = false;
         if (disposers != null && mounted) markNeedsBuild();
       });
     }
