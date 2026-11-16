@@ -127,7 +127,16 @@ class Computed<T> extends ListNotifierSingle
     return _valueVersion;
   }
 
+  /// The common case first (subscribed and up to date): three field checks,
+  /// small enough to inline into every read. The rest, with its try/catch
+  /// (which keeps a function from being inlined), is [_validateSlow].
+  @pragma('vm:prefer-inline')
   void _validate() {
+    if (_subscribed && _state == _clean && !_computing) return;
+    _validateSlow();
+  }
+
+  void _validateSlow() {
     if (_computing) {
       throw StateError('A Computed read its own value while computing it.');
     }
@@ -185,26 +194,27 @@ class Computed<T> extends ListNotifierSingle
   }
 
   /// A source changed (see [ReactiveDependent]). Nothing is computed here:
-  /// the first mark since it was last up to date passes a "maybe" mark on
-  /// to the `Computed`s that read it and, if something listens to it,
-  /// schedules [runScheduled] for when the change is fully applied.
+  /// the first mark since it was last up to date returns this, so the
+  /// caller passes a "maybe" mark on to the `Computed`s that read it, and,
+  /// if something listens to it, schedules [runScheduled] for when the
+  /// change is fully applied.
   @override
   @protected
-  void markStale(bool direct) {
-    if (!_subscribed || isDisposed) return;
+  ListNotifierSingleMixin? markStale(bool direct) {
+    if (!_subscribed || isDisposed) return null;
     final was = _state;
     if (direct) {
-      if (was == _stale) return;
+      if (was == _stale) return null;
       _state = _stale;
     } else {
-      if (was != _clean) return;
+      if (was != _clean) return null;
       _state = _maybeStale;
     }
-    if (was != _clean) return; // already passed on and scheduled
-    markDependentsStale();
+    if (was != _clean) return null; // already passed on and scheduled
     // Scheduled only on the step from up to date to stale, so almost never
     // twice before it runs (and a second run finds nothing new).
     if (listenersLength > 0) Notifier.instance.scheduleUnique(this);
+    return this;
   }
 
   /// Brings it up to date and tells its listeners if the result changed.

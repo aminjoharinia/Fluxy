@@ -30,24 +30,26 @@ class ListNotifierGroup = ListNotifier with ListNotifierGroupMixin;
 /// This mixin add to Listenable the addListener, removerListener and
 /// containsListener implementation
 mixin ListNotifierSingleMixin on Listenable {
-  /// Null until the first listener (most values are written before anything
-  /// listens, or never listened to); [_disposedUpdaters] once disposed.
-  List<GetStateUpdate>? _updaters;
+  /// The listeners, in the order they were added. A removed one leaves a
+  /// `null` (a hole) until the list is compacted, so removing never shifts
+  /// the others. Null until the first listener (most values are written
+  /// before anything listens, or never listened to), and again once
+  /// disposed.
+  List<_Listener?>? _updaters;
 
-  /// Marks a disposed notifier. Empty, so a notify finds nothing to call,
-  /// and never added to (see [addListener], [_removeUpdater]). A growable
-  /// list like every other value of [_updaters]: a `const` list is another
-  /// class, and the notify loop's `list[i]` could no longer be inlined.
-  static final _disposedUpdaters = <GetStateUpdate>[];
+  /// Holes (removed listeners) still in [_updaters]; -1 once disposed (a
+  /// field check: hot paths ask [isDisposed], and a `static final` marker
+  /// costs a lazy-initialization check on every read).
+  int _holes = 0;
 
   /// The list a notify is walking right now. Adding or removing a listener
   /// while it is walked copies [_updaters] first, so a notify needs no copy
   /// of its own (it used to copy the list on every change).
-  List<GetStateUpdate>? _notifying;
+  List<_Listener?>? _notifying;
 
-  List<GetStateUpdate> _writableUpdaters() {
+  List<_Listener?> _writableUpdaters() {
     final list = _updaters;
-    if (list == null) return _updaters = <GetStateUpdate>[];
+    if (list == null) return _updaters = <_Listener?>[];
     if (identical(list, _notifying)) return _updaters = List.of(list);
     return list;
   }
@@ -57,47 +59,80 @@ mixin ListNotifierSingleMixin on Listenable {
     assert(_debugAssertNotDisposed());
     // Release builds: ignored (it would never be called anyway).
     if (isDisposed) return _noop;
-    _writableUpdaters().add(listener);
-    return () => _removeUpdater(listener);
+    final list = _writableUpdaters();
+    final entry = _Listener(listener, list.length);
+    list.add(entry);
+    return () => _removeEntry(entry);
   }
 
   static void _noop() {}
 
-  bool containsListener(GetStateUpdate listener) {
-    return _updaters?.contains(listener) ?? false;
-  }
+  bool containsListener(GetStateUpdate listener) =>
+      _indexOfListener(listener) >= 0;
 
   @override
   void removeListener(VoidCallback listener) {
     assert(_debugAssertNotDisposed());
-    _removeUpdater(listener);
+    final index = _indexOfListener(listener);
+    if (index >= 0) _removeEntry(_updaters![index]!);
   }
 
-  void _removeUpdater(GetStateUpdate listener) {
+  /// Where [listener] is in [_updaters], or -1. Only `removeListener` /
+  /// `containsListener` search; a disposer knows its entry. Identity first,
+  /// from both ends; `==` for a tear-off made again
+  /// (`removeListener(obj.method)`).
+  int _indexOfListener(GetStateUpdate listener) {
     final list = _updaters;
-    // No listeners yet, or disposed.
-    if (list == null || list.isEmpty) return;
-    final index = _indexOfUpdater(list, listener);
-    if (index >= 0) _writableUpdaters().removeAt(index);
-  }
-
-  /// Identity first: a disposer holds the very object it added, and a scan
-  /// with `==` calls the closure's `operator ==` on every entry (that made
-  /// unsubscribing N listeners of one value cost N² closure compares). The
-  /// `==` scan is left for a tear-off made again
-  /// (`removeListener(obj.method)`). From both ends at once: widgets
-  /// unmounted in the order they mounted remove the oldest listener, a page
-  /// popped removes the newest; both are found at once.
-  static int _indexOfUpdater(
-      List<GetStateUpdate> list, GetStateUpdate listener) {
+    if (list == null) return -1;
     var lo = 0, hi = list.length - 1;
     while (lo <= hi) {
-      if (identical(list[lo], listener)) return lo;
-      if (identical(list[hi], listener)) return hi;
+      if (identical(list[lo]?.fn, listener)) return lo;
+      if (identical(list[hi]?.fn, listener)) return hi;
       lo++;
       hi--;
     }
-    return list.indexOf(listener);
+    for (var i = 0; i < list.length; i++) {
+      if (list[i]?.fn == listener) return i;
+    }
+    return -1;
+  }
+
+  /// O(1): the entry knows its index. It used to be a search and a
+  /// `removeAt`, which shifts every later listener: 1,000 widgets reading
+  /// one value spent most of their unmount there.
+  void _removeEntry(_Listener entry) {
+    final current = _updaters;
+    // No listeners yet, or disposed.
+    if (current == null || current.isEmpty) return;
+    final index = entry.index;
+    // Removed already.
+    if (index >= current.length || !identical(current[index], entry)) return;
+    final list = _writableUpdaters();
+    if (index == list.length - 1) {
+      list.removeLast();
+      while (list.isNotEmpty && list.last == null) {
+        list.removeLast();
+        _holes--;
+      }
+      return;
+    }
+    list[index] = null;
+    // Compacted once holes are the majority: amortized O(1) per removal.
+    if (++_holes > 8 && _holes * 2 > list.length) _compact(list);
+  }
+
+  /// Drops the holes of [list] (never the list a notify walks: see
+  /// [_writableUpdaters]), keeping the order.
+  void _compact(List<_Listener?> list) {
+    var j = 0;
+    for (var i = 0; i < list.length; i++) {
+      final entry = list[i];
+      if (entry == null) continue;
+      entry.index = j;
+      list[j++] = entry;
+    }
+    list.length = j;
+    _holes = 0;
   }
 
   @protected
@@ -175,14 +210,20 @@ mixin ListNotifierSingleMixin on Listenable {
     if (dependents.isEmpty) _dependents = null;
   }
 
-  /// Marks every dependent as possibly stale (a derived value calls this
-  /// when it is marked itself: its own result may have changed).
+  /// Marks every dependent as possibly stale, and theirs, all the way
+  /// down (a derived value's result may have changed).
   @protected
-  void markDependentsStale() {
-    final dependents = _dependents;
+  void markDependentsStale() => _markDescendants(this);
+
+  /// Marks everything below [from] as maybe stale, depth first in
+  /// subscription order; a `Computed` is marked (and its listeners
+  /// scheduled) before the ones it reaches.
+  static void _markDescendants(ListNotifierSingleMixin from) {
+    final dependents = from._dependents;
     if (dependents == null) return;
     for (var i = 0; i < dependents.length; i++) {
-      dependents[i].markStale(false);
+      final marked = dependents[i].markStale(false);
+      if (marked != null) _markDescendants(marked);
     }
   }
 
@@ -211,7 +252,8 @@ mixin ListNotifierSingleMixin on Listenable {
     try {
       final dependents = _dependents!;
       for (var i = 0; i < dependents.length; i++) {
-        dependents[i].markStale(true);
+        final marked = dependents[i].markStale(true);
+        if (marked != null) _markDescendants(marked);
       }
       _deliver();
     } finally {
@@ -246,8 +288,10 @@ mixin ListNotifierSingleMixin on Listenable {
         // A listener that throws is reported and the others still run (as
         // with ChangeNotifier). It used to stop the loop, so every later
         // listener (other Obx, workers, Computed) missed the change.
+        final entry = list[i];
+        if (entry == null) continue; // removed (a hole)
         try {
-          list[i]();
+          entry.fn();
         } catch (exception, stack) {
           FlutterError.reportError(FlutterErrorDetails(
             exception: exception,
@@ -266,7 +310,7 @@ mixin ListNotifierSingleMixin on Listenable {
     }
   }
 
-  bool get isDisposed => identical(_updaters, _disposedUpdaters);
+  bool get isDisposed => _holes < 0;
 
   bool _debugAssertNotDisposed() {
     assert(() {
@@ -281,7 +325,8 @@ mixin ListNotifierSingleMixin on Listenable {
 
   int get listenersLength {
     assert(_debugAssertNotDisposed());
-    return _updaters?.length ?? 0;
+    final list = _updaters;
+    return list == null ? 0 : list.length - _holes;
   }
 
   @mustCallSuper
@@ -291,9 +336,18 @@ mixin ListNotifierSingleMixin on Listenable {
   }
 
   void _disposeListeners() {
-    _updaters = _disposedUpdaters;
+    _updaters = null;
+    _holes = -1;
     _dependents = null;
   }
+}
+
+/// One listener of a notifier. Its disposer holds it, so removal needs no
+/// search: [index] is where it sits in the notifier's list.
+final class _Listener {
+  _Listener(this.fn, this.index);
+  final GetStateUpdate fn;
+  int index;
 }
 
 /// A derived value subscribed to a notifier with
@@ -305,7 +359,12 @@ mixin ListNotifierSingleMixin on Listenable {
 /// and false when only another derived value it reads may have changed (it
 /// checks that one first).
 abstract interface class ReactiveDependent {
-  void markStale(bool direct);
+  /// Marks it; returns it when the mark is new (its own dependents must be
+  /// marked maybe stale next), null when it already was (or cannot be)
+  /// marked. The caller passes the mark on: one static function recursing
+  /// with a direct call, about 30% faster on a deep chain than the
+  /// dependent recursing into its notifier's method.
+  ListNotifierSingleMixin? markStale(bool direct);
 }
 
 mixin ListNotifierGroupMixin on Listenable {
@@ -384,6 +443,12 @@ class Notifier {
   /// The observer being built / computed right now. Static so an untracked
   /// read (the common case) costs one field check (see [ListNotifierSingleMixin.reportRead]).
   static NotifyData? _notifyData;
+
+  /// The [TrackedSources] of [_notifyData] (every observer here has one), so
+  /// a tracked read goes straight to it: no [NotifyData] fields to load and
+  /// no generic [ReadTracker] call. Null with [_notifyData], or for a
+  /// [NotifyData] made without one.
+  static TrackedSources? _tracker;
 
   // Static (with constant initializers) so the hot paths (a write, a
   // tracked read, a Computed's freshness check) read them with no lazy
@@ -504,7 +569,18 @@ class Notifier {
   }
 
   /// A read while an observer runs ([_notifyData] is set).
+  @pragma('vm:prefer-inline')
   static void _readTracked(ListNotifierSingleMixin updaters) {
+    final tracker = _tracker;
+    if (tracker != null) {
+      tracker._readFast(updaters);
+    } else {
+      _readUntrackedData(updaters);
+    }
+  }
+
+  /// A read under a [NotifyData] made without a [TrackedSources].
+  static void _readUntrackedData(ListNotifierSingleMixin updaters) {
     final data = _notifyData!;
     final subscriptions = data.subscriptions;
     if (subscriptions != null) {
@@ -520,7 +596,10 @@ class Notifier {
 
   T append<T>(NotifyData data, T Function() builder) {
     final previous = _notifyData;
+    final previousTracker = _tracker;
     _notifyData = data;
+    final subscriptions = data.subscriptions;
+    _tracker = subscriptions is TrackedSources ? subscriptions : null;
     data.subscriptions?._begin();
     try {
       final result = builder();
@@ -538,6 +617,7 @@ class Notifier {
       rethrow;
     } finally {
       _notifyData = previous;
+      _tracker = previousTracker;
     }
   }
 
@@ -545,11 +625,14 @@ class Notifier {
   /// reads. See also `Rx.peek`.
   T untrack<T>(T Function() fn) {
     final previous = _notifyData;
+    final previousTracker = _tracker;
     _notifyData = null;
+    _tracker = null;
     try {
       return fn();
     } finally {
       _notifyData = previous;
+      _tracker = previousTracker;
     }
   }
 
@@ -807,6 +890,7 @@ class TrackedSources extends ReadTracker {
   }
 
   /// Whether a source read on the last run changed since.
+  @pragma('vm:prefer-inline')
   bool get changed {
     final list = _list;
     for (var i = 0; i < list.length; i++) {
@@ -857,8 +941,10 @@ class TrackedSources extends ReadTracker {
   /// them runs it again) and the error is rethrown.
   T track<T>(T Function() fn) {
     final previous = Notifier._notifyData;
+    final previousTracker = Notifier._tracker;
     final data = _data;
     Notifier._notifyData = data;
+    Notifier._tracker = this;
     if (data.disposers.isNotEmpty) data.disposers.clear();
     _begin();
     try {
@@ -870,6 +956,7 @@ class TrackedSources extends ReadTracker {
       rethrow;
     } finally {
       Notifier._notifyData = previous;
+      Notifier._tracker = previousTracker;
     }
   }
 
@@ -892,6 +979,26 @@ class TrackedSources extends ReadTracker {
       list[i].run = run;
     }
     _stamped = _cursor;
+  }
+
+  /// A read in the same order as the last run (the usual case): one
+  /// identity check and a version store, inlined into the read. Anything
+  /// else goes to [_read].
+  @pragma('vm:prefer-inline')
+  void _readFast(ListNotifierSingleMixin notifier) {
+    if (_next == null && _tracking) {
+      final list = _list;
+      final cursor = _cursor;
+      if (cursor < list.length) {
+        final source = list[cursor];
+        if (identical(source.notifier, notifier)) {
+          _cursor = cursor + 1;
+          source.version = notifier._reactiveVersion;
+          return;
+        }
+      }
+    }
+    _read(notifier, _ignore);
   }
 
   @override

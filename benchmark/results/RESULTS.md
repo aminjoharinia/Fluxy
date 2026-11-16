@@ -4,18 +4,18 @@ Apple M4 Pro, macOS 26.6.2 (Build 25G83), Flutter 3.50.0 • channel stable. Rel
 
 | Scenario | Fluxy | GetX 5 (upstream) | GetX 4.7.3 | Riverpod 3.5 | BLoC 9.2 | Signals 7.1 |
 |---|---|---|---|---|---|---|
-| Create + dispose | **37 µs** | 64 µs | 119 µs | 1.47 ms | 140 µs | 90 µs |
-| Write, 1 listener | **99 µs** | 158 µs | 111 µs | 1.30 ms | 291 µs | 332 µs |
-| Fan-out | **199 µs** | 246 µs | 601 µs | 1.45 ms | 2.50 ms | 2.78 ms |
-| Subscribe + unsubscribe, shared | 1.06 ms | 9.41 ms | 1.28 ms | 852 µs | **80 µs** | 82 µs |
-| Wide derived | 3.50 ms | 4.93 ms | **1.25 ms** | 2.25 s | 5.04 ms | 11.81 ms |
-| Deep chain | 4.49 ms | 3.70 ms | **3.24 ms** | 393.85 ms | 9.09 ms | 3.25 ms |
-| Diamond | 96 µs | 122 µs | **68 µs** | 10.98 ms | 4.61 ms | 114 µs |
-| Batch update | **127 µs** | 5.18 ms | 1.40 ms | 5.39 ms | 1.26 ms | 181 µs |
-| Mount + unmount | 1.04 ms | **1.04 ms** | 1.68 ms | 1.69 ms | 1.08 ms | 1.17 ms |
-| Mount + unmount, shared value | 2.91 ms | 23.70 ms | 3.55 ms | 2.54 ms | **1.07 ms** | 1.12 ms |
-| Rebuild all | **356 µs** | 408 µs | 375 µs | 577 µs | 429 µs | 452 µs |
-| Rebuild one | 238 µs | 238 µs | **219 µs** | 224 µs | 240 µs | 238 µs |
+| Create + dispose | **34 µs** | 64 µs | 97 µs | 1.47 ms | 138 µs | 89 µs |
+| Write, 1 listener | **83 µs** | 158 µs | 108 µs | 1.29 ms | 295 µs | 329 µs |
+| Fan-out | **213 µs** | 234 µs | 591 µs | 1.51 ms | 2.54 ms | 2.67 ms |
+| Subscribe + unsubscribe, shared | **26 µs** | 9.34 ms | 1.27 ms | 850 µs | 80 µs | 81 µs |
+| Wide derived | 2.67 ms | 4.88 ms | **1.26 ms** | 2.24 s | 4.97 ms | 11.63 ms |
+| Deep chain | **2.98 ms** | 3.56 ms | 3.13 ms | 381.97 ms | 9.02 ms | 3.24 ms |
+| Diamond | 85 µs | 122 µs | **68 µs** | 11.19 ms | 4.59 ms | 114 µs |
+| Batch update | **109 µs** | 5.12 ms | 1.42 ms | 5.37 ms | 1.24 ms | 179 µs |
+| Mount + unmount | 1.03 ms | **1.03 ms** | 1.65 ms | 1.61 ms | 1.05 ms | 1.10 ms |
+| Mount + unmount, shared value | **1.01 ms** | 23.38 ms | 3.50 ms | 2.50 ms | 1.03 ms | 1.08 ms |
+| Rebuild all | **346 µs** | 406 µs | 376 µs | 568 µs | 430 µs | 447 µs |
+| Rebuild one | 233 µs | 236 µs | **220 µs** | 221 µs | 238 µs | 237 µs |
 
 ## Correctness
 
@@ -34,11 +34,11 @@ Growth of the process's resident memory while 200,000 values are created, then w
 
 | Library | Bytes / value | Bytes / listener |
 |---|---|---|
-| Fluxy | 185.0 | 205.0 |
-| GetX 5 (upstream) | 168.0 | 175.0 |
-| GetX 4.7.3 | 301.0 | 314.0 |
-| Riverpod 3.5 | 1704.0 | 348.0 |
-| BLoC 9.2 | 133.0 | 226.0 |
-| Signals 7.1 | 365.0 | 415.0 |
+| Fluxy | 185.0 | 237.0 |
+| GetX 5 (upstream) | 168.0 | 178.0 |
+| GetX 4.7.3 | 301.0 | 317.0 |
+| Riverpod 3.5 | 1709.0 | 337.0 |
+| BLoC 9.2 | 133.0 | 228.0 |
+| Signals 7.1 | 364.0 | 416.0 |
 
 Library versions: Fluxy (this repo); GetX 5 (upstream) (get 5.0.0-release-candidate-9.3.3); GetX 4.7.3 (get 4.7.3); Riverpod 3.5 (riverpod 3.5.0, flutter_riverpod 3.5.0); BLoC 9.2 (bloc 9.2.1, flutter_bloc 9.1.1); Signals 7.1 (signals 7.1.0, signals_core 7.0.0, signals_flutter 7.1.0)

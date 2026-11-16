@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'list_notifier.dart';
@@ -111,18 +112,26 @@ mixin StatelessObserverComponent on StatelessElement {
   bool _updateScheduled = false;
 
   void getUpdate() {
-    // One microtask per element however many Rx values change before it
-    // runs.
-    if (disposers != null && !_updateScheduled) {
-      _updateScheduled = true;
-      // Checked again when the microtask runs: the element may have been
-      // unmounted in between, and markNeedsBuild on a defunct element
-      // asserts.
-      scheduleMicrotask(() {
-        _updateScheduled = false;
-        if (disposers != null && mounted) markNeedsBuild();
-      });
+    if (disposers == null || _updateScheduled) return;
+    // Outside the build phase (a tap, a timer, a stream, an animation tick)
+    // mark it dirty right away: markNeedsBuild already coalesces and
+    // ignores an inactive element. It used to schedule a microtask (and a
+    // closure) per element on every change.
+    if (SchedulerBinding.instance.schedulerPhase !=
+        SchedulerPhase.persistentCallbacks) {
+      if (mounted) markNeedsBuild();
+      return;
     }
+    // During a build (an Rx written while another widget builds), marking
+    // now could assert: one microtask per element however many Rx values
+    // change before it runs.
+    _updateScheduled = true;
+    // Checked again when the microtask runs: the element may have been
+    // unmounted in between, and markNeedsBuild on a defunct element asserts.
+    scheduleMicrotask(() {
+      _updateScheduled = false;
+      if (disposers != null && mounted) markNeedsBuild();
+    });
   }
 
   @override
