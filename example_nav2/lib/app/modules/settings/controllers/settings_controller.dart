@@ -1,6 +1,6 @@
 import 'package:fluxy/fluxy.dart';
 
-class SettingsController extends GetxController {
+class SettingsController extends FluxyController {
   final count = 0.obs;
   @override
   void onInit() {

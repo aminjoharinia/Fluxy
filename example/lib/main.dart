@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class FirstController extends GetxController {
+class FirstController extends FluxyController {
   @override
   void onClose() {
     print('on close first');
@@ -115,7 +115,7 @@ class First extends StatelessWidget {
   }
 }
 
-class SecondController extends GetxController {
+class SecondController extends FluxyController {
   final textEdit = TextEditingController();
   @override
   void onClose() {

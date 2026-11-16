@@ -52,7 +52,7 @@ class RouterReportManager<T> {
     _routesByCreate.clear();
   }
 
-  void appendRouteByCreate(GetLifeCycleMixin i) {
+  void appendRouteByCreate(FluxyLifeCycleMixin i) {
     _routesByCreate[_current] ??= HashSet<Function>();
     // _routesByCreate[Get.reference]!.add(i.onDelete as Function);
     _routesByCreate[_current]!.add(i.onDelete);

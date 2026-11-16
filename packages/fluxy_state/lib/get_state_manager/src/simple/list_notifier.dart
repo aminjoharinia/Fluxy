@@ -7,7 +7,7 @@ typedef Disposer = void Function();
 
 // replacing StateSetter, return if the Widget is mounted for extra validation.
 // if it brings overhead the extra call,
-typedef GetStateUpdate = void Function();
+typedef FluxyStateUpdate = void Function();
 
 class ListNotifier extends Listenable
     with ListNotifierSingleMixin, ListNotifierGroupMixin {
@@ -55,7 +55,7 @@ mixin ListNotifierSingleMixin on Listenable {
   }
 
   @override
-  Disposer addListener(GetStateUpdate listener) {
+  Disposer addListener(FluxyStateUpdate listener) {
     assert(_debugAssertNotDisposed());
     // Release builds: ignored (it would never be called anyway).
     if (isDisposed) return _noop;
@@ -67,7 +67,7 @@ mixin ListNotifierSingleMixin on Listenable {
 
   static void _noop() {}
 
-  bool containsListener(GetStateUpdate listener) =>
+  bool containsListener(FluxyStateUpdate listener) =>
       _indexOfListener(listener) >= 0;
 
   @override
@@ -81,7 +81,7 @@ mixin ListNotifierSingleMixin on Listenable {
   /// `containsListener` search; a disposer knows its entry. Identity first,
   /// from both ends; `==` for a tear-off made again
   /// (`removeListener(obj.method)`).
-  int _indexOfListener(GetStateUpdate listener) {
+  int _indexOfListener(FluxyStateUpdate listener) {
     final list = _updaters;
     if (list == null) return -1;
     var lo = 0, hi = list.length - 1;
@@ -346,7 +346,7 @@ mixin ListNotifierSingleMixin on Listenable {
 /// search: [index] is where it sits in the notifier's list.
 final class _Listener {
   _Listener(this.fn, this.index);
-  final GetStateUpdate fn;
+  final FluxyStateUpdate fn;
   int index;
 }
 
@@ -368,7 +368,7 @@ abstract interface class ReactiveDependent {
 }
 
 mixin ListNotifierGroupMixin on Listenable {
-  /// Created on the first id (most controllers never use `GetBuilder` ids).
+  /// Created on the first id (most controllers never use `FluxyBuilder` ids).
   HashMap<Object?, ListNotifierSingleMixin>? _updatersGroupIds;
   bool _groupsDisposed = false;
 
@@ -421,13 +421,13 @@ mixin ListNotifierGroupMixin on Listenable {
     _groupsDisposed = true;
   }
 
-  Disposer addListenerId(Object? key, GetStateUpdate listener) {
+  Disposer addListenerId(Object? key, FluxyStateUpdate listener) {
     assert(_debugAssertNotDisposed());
     return (_groups[key] ??= ListNotifierSingle()).addListener(listener);
   }
 
   /// To dispose an [id] from future updates(), this ids are registered
-  /// by `GetBuilder()` or similar, so is a way to unlink the state change with
+  /// by `FluxyBuilder()` or similar, so is a way to unlink the state change with
   /// the Widget from the Controller.
   void disposeId(Object id) {
     _updatersGroupIds?.remove(id)?.dispose();
@@ -483,7 +483,7 @@ class Notifier {
   /// it is treated as a loop.
   static const maxReactionRounds = 100;
 
-  /// True while code runs inside an observer build ([Obx], [GetX]), so reads
+  /// True while code runs inside an observer build ([Obx], [FluxyX]), so reads
   /// of an Rx subscribe that observer.
   bool get isTracking => _notifyData != null;
 
@@ -678,7 +678,7 @@ class NotifyData {
       required this.disposers,
       this.subscriptions,
       this.throwException = true});
-  final GetStateUpdate updater;
+  final FluxyStateUpdate updater;
 
   /// Cleanup callbacks owned by the observer (for example `bindStream`
   /// subscriptions). Without [subscriptions], Rx subscriptions go here too
@@ -718,7 +718,7 @@ class ObserverSubscriptions extends ReadTracker {
   void _begin() => _seen.clear();
 
   @override
-  void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater) {
+  void _read(ListNotifierSingleMixin notifier, FluxyStateUpdate updater) {
     if (!_seen.add(notifier)) return;
     if (!_active.containsKey(notifier)) {
       _active[notifier] = notifier.addListener(updater);
@@ -763,7 +763,7 @@ class ObxError {
 abstract class ReadTracker {
   bool get isEmpty;
   void _begin();
-  void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater);
+  void _read(ListNotifierSingleMixin notifier, FluxyStateUpdate updater);
   void _end();
 
   /// The run that began with [_begin] threw before [_end].
@@ -791,7 +791,7 @@ class _Source {
 }
 
 /// The sources a derived value (`Computed`), an `Effect` or an observer
-/// widget (`Obx`, `GetX`) read on its last run, in read order, with the
+/// widget (`Obx`, `FluxyX`) read on its last run, in read order, with the
 /// version each had when it was read.
 ///
 /// - [changed] tells, without running anything, whether any source moved on
@@ -814,7 +814,7 @@ class TrackedSources extends ReadTracker {
   static const _mapThreshold = 8;
 
   int _run = 0;
-  GetStateUpdate? _listener;
+  FluxyStateUpdate? _listener;
 
   /// Set instead of [_listener] by [listenAsDependent].
   ReactiveDependent? _dependent;
@@ -906,7 +906,7 @@ class TrackedSources extends ReadTracker {
   }
 
   /// Subscribes [listener] to every source, now and on later runs.
-  void listen(GetStateUpdate listener) {
+  void listen(FluxyStateUpdate listener) {
     if (isListening) return;
     _listener = listener;
     _subscribeAll();
@@ -1002,7 +1002,7 @@ class TrackedSources extends ReadTracker {
   }
 
   @override
-  void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater) {
+  void _read(ListNotifierSingleMixin notifier, FluxyStateUpdate updater) {
     if (!_tracking) return;
     var next = _next;
     if (next == null) {

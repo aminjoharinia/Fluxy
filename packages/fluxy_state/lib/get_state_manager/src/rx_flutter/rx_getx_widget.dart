@@ -6,22 +6,22 @@ import '../../../get_instance/src/extension_instance.dart';
 import '../../../get_instance/src/lifecycle.dart';
 import '../simple/list_notifier.dart';
 
-typedef GetXControllerBuilder<T extends GetLifeCycleMixin> = Widget Function(
+typedef FluxyXControllerBuilder<T extends FluxyLifeCycleMixin> = Widget Function(
     T controller);
 
-class GetX<T extends GetLifeCycleMixin> extends StatefulWidget {
-  final GetXControllerBuilder<T> builder;
+class FluxyX<T extends FluxyLifeCycleMixin> extends StatefulWidget {
+  final FluxyXControllerBuilder<T> builder;
   final bool global;
   final bool autoRemove;
   final bool assignId;
-  final void Function(GetXState<T> state)? initState,
+  final void Function(FluxyXState<T> state)? initState,
       dispose,
       didChangeDependencies;
-  final void Function(GetX oldWidget, GetXState<T> state)? didUpdateWidget;
+  final void Function(FluxyX oldWidget, FluxyXState<T> state)? didUpdateWidget;
   final T? init;
   final String? tag;
 
-  const GetX({
+  const FluxyX({
     super.key,
     this.tag,
     required this.builder,
@@ -49,14 +49,14 @@ class GetX<T extends GetLifeCycleMixin> extends StatefulWidget {
       )
       ..add(DiagnosticsProperty<String>('tag', tag))
       ..add(
-          ObjectFlagProperty<GetXControllerBuilder<T>>.has('builder', builder));
+          ObjectFlagProperty<FluxyXControllerBuilder<T>>.has('builder', builder));
   }
 
   @override
-  GetXState<T> createState() => GetXState<T>();
+  FluxyXState<T> createState() => FluxyXState<T>();
 }
 
-class GetXState<T extends GetLifeCycleMixin> extends State<GetX<T>> {
+class FluxyXState<T extends FluxyLifeCycleMixin> extends State<FluxyX<T>> {
   T? controller;
   bool? _isCreator = false;
 
@@ -96,8 +96,8 @@ class GetXState<T extends GetLifeCycleMixin> extends State<GetX<T>> {
   }
 
   @override
-  void didUpdateWidget(GetX oldWidget) {
-    super.didUpdateWidget(oldWidget as GetX<T>);
+  void didUpdateWidget(FluxyX oldWidget) {
+    super.didUpdateWidget(oldWidget as FluxyX<T>);
     widget.didUpdateWidget?.call(oldWidget, this);
   }
 

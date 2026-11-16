@@ -71,7 +71,7 @@ void main() {
       final showA = true.obs;
       final a = 0.obs;
       final b = 0.obs;
-      await tester.pumpWidget(_host(GetX<_Ctrl>(
+      await tester.pumpWidget(_host(FluxyX<_Ctrl>(
         init: _Ctrl(),
         builder: (_) => Text(showA.value ? '${a.value}' : '${b.value}'),
       )));
@@ -257,4 +257,4 @@ void main() {
   });
 }
 
-class _Ctrl extends GetxController {}
+class _Ctrl extends FluxyController {}

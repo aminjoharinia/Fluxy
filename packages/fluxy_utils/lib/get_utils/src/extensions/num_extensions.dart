@@ -2,12 +2,12 @@ import 'dart:async';
 
 import '../get_utils/get_utils.dart';
 
-extension GetNumUtils on num {
-  bool isLowerThan(num b) => GetUtils.isLowerThan(this, b);
+extension FluxyNumUtils on num {
+  bool isLowerThan(num b) => FluxyUtils.isLowerThan(this, b);
 
-  bool isGreaterThan(num b) => GetUtils.isGreaterThan(this, b);
+  bool isGreaterThan(num b) => FluxyUtils.isGreaterThan(this, b);
 
-  bool isEqual(num b) => GetUtils.isEqual(this, b);
+  bool isEqual(num b) => FluxyUtils.isEqual(this, b);
 
   /// Utility to delay some callback (or code execution).
   /// TODO: Add a separated implementation of delay() with the ability

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:fluxy/fluxy.dart';
 
-class DashboardController extends GetxController {
+class DashboardController extends FluxyController {
   final now = DateTime.now().obs;
   @override
   void onReady() {

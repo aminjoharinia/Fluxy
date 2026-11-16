@@ -3,7 +3,7 @@ import 'package:fluxy_core/fluxy_core.dart';
 import '../simple/list_notifier.dart';
 
 /// `Get.batch` and `Get.untrack`.
-extension GetReactiveExt on GetInterface {
+extension FluxyReactiveExt on GetInterface {
   /// Runs [fn] and holds every Rx change made inside it until it returns.
   /// Then each changed Rx notifies **once**, so `ever` / `listen` / streams
   /// and observers see only the final values.
@@ -21,7 +21,7 @@ extension GetReactiveExt on GetInterface {
   /// half-applied state.
   T batch<T>(T Function() fn) => Notifier.instance.batch(fn);
 
-  /// Runs [fn] without subscribing the building `Obx` / `GetX` to the Rx
+  /// Runs [fn] without subscribing the building `Obx` / `FluxyX` to the Rx
   /// values it reads. For a single value, `rx.peek` does the same.
   T untrack<T>(T Function() fn) => Notifier.instance.untrack(fn);
 

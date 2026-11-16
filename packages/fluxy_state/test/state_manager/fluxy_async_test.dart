@@ -4,10 +4,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 
-class _Rooms extends GetxController with StateMixin<List<String>> {}
+class _Rooms extends FluxyController with StateMixin<List<String>> {}
 
-/// Exhaustive: adding a case to GetStatus would make this a compile error.
-String describe(GetStatus<int> status) => switch (status) {
+/// Exhaustive: adding a case to FluxyStatus would make this a compile error.
+String describe(FluxyStatus<int> status) => switch (status) {
       SuccessStatus(:final data) => 'success $data',
       LoadingStatus(isRefreshing: true, :final data) => 'refreshing $data',
       LoadingStatus() => 'loading',
@@ -18,11 +18,11 @@ String describe(GetStatus<int> status) => switch (status) {
 void main() {
   group('GetStatus', () {
     test('sealed switch, data carried through loading and error', () {
-      GetStatus<int> s = GetStatus<int>.loading();
+      FluxyStatus<int> s = FluxyStatus<int>.loading();
       expect(describe(s), 'loading');
       expect(s.hasData, isFalse);
 
-      s = GetStatus.success(7);
+      s = FluxyStatus.success(7);
       expect(describe(s), 'success 7');
 
       s = s.toLoading();
@@ -35,7 +35,7 @@ void main() {
       expect(s.hasData, isTrue);
       expect(s.errorMessage, 'offline');
 
-      expect(describe(GetStatus<int>.empty()), 'empty');
+      expect(describe(FluxyStatus<int>.empty()), 'empty');
     });
 
     test('equality includes the carried data', () {
@@ -46,7 +46,7 @@ void main() {
     });
 
     test('a nullable data type can carry null as data', () {
-      final s = GetStatus<int?>.success(null).toLoading();
+      final s = FluxyStatus<int?>.success(null).toLoading();
       expect(s.hasData, isTrue);
       expect(s.data, isNull);
     });

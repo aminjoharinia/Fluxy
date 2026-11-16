@@ -1,6 +1,6 @@
 part of '../rx_types.dart';
 
-class RxMap<K, V> extends GetListenable<Map<K, V>>
+class RxMap<K, V> extends FluxyListenable<Map<K, V>>
     with MapMixin<K, V>, RxObjectMixin<Map<K, V>> {
   RxMap([Map<K, V>? initial]) : super(initial ?? <K, V>{});
 

@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:fluxy_utils/fluxy_utils.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 
-mixin GetResponsiveMixin on Widget {
+mixin FluxyResponsiveMixin on Widget {
   ResponsiveScreen get screen;
   bool get alwaysUseBuilder;
 
@@ -53,29 +53,29 @@ mixin GetResponsiveMixin on Widget {
 /// Note if you use this method please set the
 /// property `alwaysUseBuilder` to false
 /// With `settings` property you can set the width limit for the screen types.
-class GetResponsiveView<T> extends GetView<T> with GetResponsiveMixin {
+class FluxyResponsiveView<T> extends FluxyView<T> with FluxyResponsiveMixin {
   @override
   final bool alwaysUseBuilder;
 
   @override
   final ResponsiveScreen screen;
 
-  GetResponsiveView({
+  FluxyResponsiveView({
     this.alwaysUseBuilder = false,
     ResponsiveScreenSettings settings = const ResponsiveScreenSettings(),
     super.key,
   }) : screen = ResponsiveScreen(settings);
 }
 
-class GetResponsiveWidget<T extends GetLifeCycleMixin> extends GetWidget<T>
-    with GetResponsiveMixin {
+class FluxyResponsiveWidget<T extends FluxyLifeCycleMixin> extends FluxyWidget<T>
+    with FluxyResponsiveMixin {
   @override
   final bool alwaysUseBuilder;
 
   @override
   final ResponsiveScreen screen;
 
-  GetResponsiveWidget({
+  FluxyResponsiveWidget({
     this.alwaysUseBuilder = false,
     ResponsiveScreenSettings settings = const ResponsiveScreenSettings(),
     super.key,
@@ -111,7 +111,7 @@ class ResponsiveScreen {
 
   late bool _isPlatformDesktop;
   ResponsiveScreen(this.settings) {
-    _isPlatformDesktop = GetPlatform.isDesktop;
+    _isPlatformDesktop = FluxyPlatform.isDesktop;
   }
 
   double get height => context.height;

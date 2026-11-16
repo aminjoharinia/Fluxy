@@ -25,31 +25,31 @@ extension _Empty on Object {
 
 mixin StateMixin<T> on ListNotifier {
   T? _value;
-  GetStatus<T>? _status;
+  FluxyStatus<T>? _status;
 
   int _futurizeGeneration = 0;
 
   void _fillInitialStatus() {
     _status = (_value == null || _value!._isEmpty())
-        ? GetStatus<T>.loading()
-        : GetStatus<T>.success(_value as T);
+        ? FluxyStatus<T>.loading()
+        : FluxyStatus<T>.success(_value as T);
   }
 
-  GetStatus<T> get status {
+  FluxyStatus<T> get status {
     reportRead();
-    return _status ??= GetStatus<T>.loading();
+    return _status ??= FluxyStatus<T>.loading();
   }
 
   T get state => value;
 
-  set status(GetStatus<T> newStatus) {
+  set status(FluxyStatus<T> newStatus) {
     // Compared without reportRead, so setting the status inside a build
     // does not subscribe that build.
     // A success always notifies: its data may be the same object edited in
     // place (the deep comparison saw it as unchanged and skipped the
     // update), and comparing large data on every set is costly.
     if (newStatus is! SuccessStatus<T> &&
-        newStatus == (_status ??= GetStatus<T>.loading())) {
+        newStatus == (_status ??= FluxyStatus<T>.loading())) {
       return;
     }
     _status = newStatus;
@@ -73,29 +73,29 @@ mixin StateMixin<T> on ListNotifier {
   }
 
   @protected
-  void change(GetStatus<T> status) {
+  void change(FluxyStatus<T> status) {
     this.status = status;
   }
 
   void setSuccess(T data) {
-    change(GetStatus<T>.success(data));
+    change(FluxyStatus<T>.success(data));
   }
 
-  /// An error that keeps the data shown so far (see [GetStatus.toError]).
+  /// An error that keeps the data shown so far (see [FluxyStatus.toError]).
   void setError(Object error, [StackTrace? stackTrace]) {
     change(_currentStatus.toError(error, stackTrace));
   }
 
   /// Loading that keeps the data shown so far (see
-  /// [GetStatus.isRefreshing]).
+  /// [FluxyStatus.isRefreshing]).
   void setLoading() {
     change(_currentStatus.toLoading());
   }
 
-  GetStatus<T> get _currentStatus => _status ??= GetStatus<T>.loading();
+  FluxyStatus<T> get _currentStatus => _status ??= FluxyStatus<T>.loading();
 
   void setEmpty() {
-    change(GetStatus<T>.empty());
+    change(FluxyStatus<T>.empty());
   }
 
   /// Runs [body] and moves through loading, then success / empty / error.
@@ -113,9 +113,9 @@ mixin StateMixin<T> on ListNotifier {
     Future<T>.sync(body).then((newValue) {
       if (generation != _futurizeGeneration || isDisposed) return;
       if ((newValue == null || newValue._isEmpty()) && useEmpty) {
-        status = GetStatus<T>.empty();
+        status = FluxyStatus<T>.empty();
       } else {
-        status = GetStatus<T>.success(newValue);
+        status = FluxyStatus<T>.success(newValue);
       }
     }, onError: (Object err, StackTrace stackTrace) {
       if (generation != _futurizeGeneration || isDisposed) return;
@@ -128,8 +128,8 @@ typedef FuturizeCallback<T> = Future<T> Function(VoidCallback fn);
 
 typedef VoidCallback = void Function();
 
-class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
-  GetListenable(T val) : _value = val;
+class FluxyListenable<T> extends ListNotifierSingle implements RxInterface<T> {
+  FluxyListenable(T val) : _value = val;
 
   StreamController<T>? _controller;
 
@@ -181,7 +181,7 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
   }
 
   /// The current value, **without** subscribing the observer that is
-  /// building ([Obx], [GetX]). Use it inside mutators and when a build needs
+  /// building ([Obx], [FluxyX]). Use it inside mutators and when a build needs
   /// a value but should not rebuild when it changes.
   T get peek => _value;
 
@@ -288,15 +288,15 @@ class Value<T> extends ListNotifier
   dynamic toJson() => (value as dynamic)?.toJson();
 }
 
-/// GetNotifier has a native status and state implementation, with the
+/// FluxyNotifier has a native status and state implementation, with the
 /// Get Lifecycle
-abstract class GetNotifier<T> extends Value<T> with GetLifeCycleMixin {
-  GetNotifier(super.initial);
+abstract class FluxyNotifier<T> extends Value<T> with FluxyLifeCycleMixin {
+  FluxyNotifier(super.initial);
 }
 
 extension StateExt<T> on StateMixin<T> {
   /// Builds from [status]. While reloading with data from before (see
-  /// [GetStatus.isRefreshing]) it keeps showing [widget] unless
+  /// [FluxyStatus.isRefreshing]) it keeps showing [widget] unless
   /// [skipLoadingOnRefresh] is false.
   Widget obx(
     NotifierBuilder<T> widget, {
@@ -343,17 +343,17 @@ typedef NotifierBuilder<T> = Widget Function(T state);
 /// data of the last success ([hasData], [data], [isRefreshing]), so a reload
 /// or a failed refresh can keep showing the old content. [toLoading] and
 /// [toError] build them from the current status.
-sealed class GetStatus<T> with Equality {
-  const GetStatus();
+sealed class FluxyStatus<T> with Equality {
+  const FluxyStatus();
 
-  factory GetStatus.loading() => LoadingStatus<T>();
+  factory FluxyStatus.loading() => LoadingStatus<T>();
 
-  factory GetStatus.error(Object error, [StackTrace? stackTrace]) =>
+  factory FluxyStatus.error(Object error, [StackTrace? stackTrace]) =>
       ErrorStatus<T>(error, stackTrace: stackTrace);
 
-  factory GetStatus.empty() => EmptyStatus<T>();
+  factory FluxyStatus.empty() => EmptyStatus<T>();
 
-  factory GetStatus.success(T data) => SuccessStatus<T>(data);
+  factory FluxyStatus.success(T data) => SuccessStatus<T>(data);
 
   /// Whether data is available: this success's data, or the data a loading
   /// / error status carried over from the last success.
@@ -375,7 +375,7 @@ sealed class GetStatus<T> with Equality {
       : ErrorStatus<T>(error, stackTrace: stackTrace);
 }
 
-class LoadingStatus<T> extends GetStatus<T> {
+class LoadingStatus<T> extends FluxyStatus<T> {
   const LoadingStatus()
       : hasData = false,
         _data = null;
@@ -396,7 +396,7 @@ class LoadingStatus<T> extends GetStatus<T> {
   List get props => [hasData, _data];
 }
 
-class SuccessStatus<T> extends GetStatus<T> {
+class SuccessStatus<T> extends FluxyStatus<T> {
   @override
   final T data;
 
@@ -409,7 +409,7 @@ class SuccessStatus<T> extends GetStatus<T> {
   List get props => [data];
 }
 
-class ErrorStatus<T> extends GetStatus<T> {
+class ErrorStatus<T> extends FluxyStatus<T> {
   const ErrorStatus(this.error, {this.stackTrace})
       : hasData = false,
         _data = null;
@@ -433,7 +433,7 @@ class ErrorStatus<T> extends GetStatus<T> {
   List get props => [error, hasData, _data];
 }
 
-class EmptyStatus<T> extends GetStatus<T> {
+class EmptyStatus<T> extends FluxyStatus<T> {
   const EmptyStatus();
 
   @override
@@ -446,7 +446,7 @@ class EmptyStatus<T> extends GetStatus<T> {
   List get props => [];
 }
 
-extension StatusDataExt<T> on GetStatus<T> {
+extension StatusDataExt<T> on FluxyStatus<T> {
   bool get isLoading => this is LoadingStatus;
 
   bool get isSuccess => this is SuccessStatus;

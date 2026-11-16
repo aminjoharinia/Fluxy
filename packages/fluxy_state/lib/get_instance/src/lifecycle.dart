@@ -19,7 +19,7 @@ import '../../get_state_manager/src/simple/reactive_owner.dart';
 ///   }
 /// }
 /// ```
-mixin GetLifeCycleMixin {
+mixin FluxyLifeCycleMixin {
   /// Called immediately after the widget is allocated in memory.
   /// You might use this to initialize something for the controller.
   @protected
@@ -95,7 +95,7 @@ mixin GetLifeCycleMixin {
     if (resource is Effect) return resource.dispose;
     if (resource is Worker) return resource.dispose;
     if (resource is Workers) return resource.dispose;
-    if (resource is GetListenable) {
+    if (resource is FluxyListenable) {
       return () {
         if (!resource.isDisposed) resource.close();
       };
@@ -141,12 +141,12 @@ mixin GetLifeCycleMixin {
 }
 
 /// Allow track difference between GetxServices and GetxControllers
-mixin GetxServiceMixin {}
+mixin FluxyServiceMixin {}
 
-/// Unlike GetxController, which serves to control events on each of its pages,
-/// GetxService is not automatically disposed (nor can be removed with
+/// Unlike FluxyController, which serves to control events on each of its pages,
+/// FluxyService is not automatically disposed (nor can be removed with
 /// Get.delete()).
 /// It is ideal for situations where, once started, that service will
 /// remain in memory, such as Auth control for example. Only way to remove
 /// it is Get.reset().
-abstract class GetxService with GetLifeCycleMixin, GetxServiceMixin {}
+abstract class FluxyService with FluxyLifeCycleMixin, FluxyServiceMixin {}

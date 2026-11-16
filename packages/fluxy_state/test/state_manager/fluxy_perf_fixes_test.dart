@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 
-class ListController extends GetxController with StateMixin<List<int>> {}
+class ListController extends FluxyController with StateMixin<List<int>> {}
 
 // An Rx is a ListNotifierSingle; refresh() notifies its listeners.
 extension on RxInt {

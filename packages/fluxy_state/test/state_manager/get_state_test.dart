@@ -8,7 +8,7 @@ void main() {
   testWidgets("GetxController smoke test", (test) async {
     await test.pumpWidget(
       MaterialApp(
-        home: GetBuilder<Controller>(
+        home: FluxyBuilder<Controller>(
           init: Controller(),
           builder: (controller) => Column(
             children: [
@@ -23,7 +23,7 @@ void main() {
                 child: const Text("incrementWithId"),
                 onPressed: () => controller.incrementWithId(),
               ),
-              GetBuilder<Controller>(
+              FluxyBuilder<Controller>(
                   id: '1',
                   didChangeDependencies: (_) {
                     // print("didChangeDependencies called");
@@ -31,10 +31,10 @@ void main() {
                   builder: (controller) {
                     return Text('id ${controller.counter}');
                   }),
-              GetBuilder<Controller2>(builder: (controller) {
+              FluxyBuilder<Controller2>(builder: (controller) {
                 return Text('lazy ${controller.test}');
               }),
-              GetBuilder<ControllerNonGlobal>(
+              FluxyBuilder<ControllerNonGlobal>(
                   init: ControllerNonGlobal(),
                   global: false,
                   builder: (controller) {
@@ -73,7 +73,7 @@ void main() {
   //   "MixinBuilder with build null",
   //   (test) async {
   //     expect(
-  //       () => GetBuilder<Controller>(
+  //       () => FluxyBuilder<Controller>(
   //         init: Controller(),
   //         builder: null,
   //       ),
@@ -83,7 +83,7 @@ void main() {
   // );
 }
 
-class Controller extends GetxController {
+class Controller extends FluxyController {
   static Controller get to => Get.find();
 
   int counter = 0;
@@ -99,10 +99,10 @@ class Controller extends GetxController {
   }
 }
 
-class Controller2 extends GetxController {
+class Controller2 extends FluxyController {
   int test = 0;
 }
 
-class ControllerNonGlobal extends GetxController {
+class ControllerNonGlobal extends FluxyController {
   int nonGlobal = 0;
 }

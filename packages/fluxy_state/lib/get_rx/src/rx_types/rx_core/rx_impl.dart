@@ -1,10 +1,10 @@
 part of '../rx_types.dart';
 
-/// global object that registers against `GetX` and `Obx`, and allows the
+/// global object that registers against `FluxyX` and `Obx`, and allows the
 /// reactivity
 /// of those `Widgets` and Rx values.
 
-mixin RxObjectMixin<T> on GetListenable<T> {
+mixin RxObjectMixin<T> on FluxyListenable<T> {
   //late T _value;
 
   /// Makes a direct update of [value] adding it to the Stream
@@ -43,7 +43,7 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   //   subject.add(_value = null);
   // }
 
-  // `call` (`rx()` / `rx(v)` / `rxn(null)`) is defined on GetListenable.
+  // `call` (`rx()` / `rx(v)` / `rxn(null)`) is defined on FluxyListenable.
   // It lets an Rx be passed where a `ValueChanged` is expected:
   // `TextField(onChanged: myText)`.
 
@@ -148,7 +148,7 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   ///
   /// The subscription is cancelled when this Rx is closed, when [stream] is
   /// done, or when you cancel the returned subscription. If it is bound while
-  /// an observer widget (`GetX` or `Obx`) builds, it is also cancelled when
+  /// an observer widget (`FluxyX` or `Obx`) builds, it is also cancelled when
   /// that widget is unmounted. (Before, a binding made outside a build, for
   /// example in `onInit`, was never cancelled.)
   StreamSubscription<T> bindStream(Stream<T> stream) {
@@ -178,7 +178,7 @@ mixin RxObjectMixin<T> on GetListenable<T> {
 }
 
 /// Base Rx class that manages all the stream logic for any Type.
-abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
+abstract class _RxImpl<T> extends FluxyListenable<T> with RxObjectMixin<T> {
   _RxImpl(super.initial);
 
   void addError(Object error, [StackTrace? stackTrace]) {
@@ -250,7 +250,7 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   void trigger(T v) {
     if (_writeAfterClose('triggered')) return;
     // Same value: the setter would not notify, so notify here. This reaches
-    // every listener (Obx, GetBuilder, workers), not only the stream as it
+    // every listener (Obx, FluxyBuilder, workers), not only the stream as it
     // used to.
     if (peek == v) {
       refresh();

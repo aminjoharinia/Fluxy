@@ -4,7 +4,7 @@ import 'package:fluxy/fluxy.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/profile_controller.dart';
 
-class ProfileView extends GetView<ProfileController> {
+class ProfileView extends FluxyView<ProfileController> {
   const ProfileView({super.key});
 
   @override

@@ -15,7 +15,7 @@ class Mock {
   }
 }
 
-abstract class MyController with GetLifeCycleMixin {}
+abstract class MyController with FluxyLifeCycleMixin {}
 
 class DisposableController extends MyController {}
 
@@ -273,7 +273,7 @@ void main() {
   });
 }
 
-class PermanentService extends GetxService {}
+class PermanentService extends FluxyService {}
 
 class Controller extends DisposableController {
   int init = 0;

@@ -147,7 +147,7 @@ extension RxDocumentEdit on RxMap<String, dynamic> {
 /// Like `ever`, the value is taken when it changes and the callback runs in a
 /// microtask (never inside the setter, or a build that set it), but it
 /// listens directly instead of through the Rx's stream.
-Worker watchRx<T>(GetListenable<T> rx, void Function(T value) callback) {
+Worker watchRx<T>(FluxyListenable<T> rx, void Function(T value) callback) {
   var disposed = false;
   final remove = rx.addListener(() {
     final value = rx.peek;
@@ -174,7 +174,7 @@ Worker watchRx<T>(GetListenable<T> rx, void Function(T value) callback) {
 /// returns. Make one per screen (`initState`) and [dispose] it with the
 /// screen.
 class RxSlice<T> {
-  RxSlice(List<GetListenable<Object?>> sources, T Function() select)
+  RxSlice(List<FluxyListenable<Object?>> sources, T Function() select)
       : _select = select,
         _rx = Rx<T>(select()) {
     for (final source in sources) {

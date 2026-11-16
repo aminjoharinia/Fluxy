@@ -3,7 +3,7 @@ import 'package:fluxy/fluxy.dart';
 
 import '../controllers/settings_controller.dart';
 
-class SettingsView extends GetView<SettingsController> {
+class SettingsView extends FluxyView<SettingsController> {
   const SettingsView({super.key});
 
   @override

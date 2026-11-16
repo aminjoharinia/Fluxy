@@ -3,7 +3,7 @@ import 'package:fluxy/fluxy.dart';
 
 import '../controllers/product_details_controller.dart';
 
-class ProductDetailsView extends GetWidget<ProductDetailsController> {
+class ProductDetailsView extends FluxyWidget<ProductDetailsController> {
   const ProductDetailsView({super.key});
 
   @override

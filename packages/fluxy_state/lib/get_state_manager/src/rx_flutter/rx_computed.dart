@@ -255,7 +255,7 @@ class Computed<T> extends ListNotifierSingle
   }
 
   @override
-  Disposer addListener(GetStateUpdate listener) {
+  Disposer addListener(FluxyStateUpdate listener) {
     final first = listenersLength == 0;
     final wake = first && dependentsLength == 0;
     final remove = super.addListener(listener);
@@ -406,8 +406,8 @@ class Effect implements ScheduledReaction {
   }
 }
 
-/// The state of an async load as an Rx: [GetStatus.loading], then
-/// [GetStatus.success] with the data or [GetStatus.error].
+/// The state of an async load as an Rx: [FluxyStatus.loading], then
+/// [FluxyStatus.success] with the data or [FluxyStatus.error].
 ///
 /// ```dart
 /// final rooms = RxFuture(() => api.fetchRooms());
@@ -424,9 +424,9 @@ class Effect implements ScheduledReaction {
 /// Only the newest load counts: if [reload] is called again before an older
 /// load finished, the older result is ignored, so a slow response can never
 /// overwrite a newer one.
-class RxFuture<T> extends Rx<GetStatus<T>> {
+class RxFuture<T> extends Rx<FluxyStatus<T>> {
   /// Starts loading at once unless [lazy] is true (then call [reload]).
-  RxFuture(this._load, {bool lazy = false}) : super(GetStatus<T>.loading()) {
+  RxFuture(this._load, {bool lazy = false}) : super(FluxyStatus<T>.loading()) {
     if (!lazy) reload();
   }
 
@@ -456,7 +456,7 @@ class RxFuture<T> extends Rx<GetStatus<T>> {
       final data = await _load();
       if (generation != _generation || isDisposed) return;
       _lastData = data;
-      value = GetStatus<T>.success(data);
+      value = FluxyStatus<T>.success(data);
     } catch (e, st) {
       if (generation != _generation || isDisposed) return;
       _lastStackTrace = st;

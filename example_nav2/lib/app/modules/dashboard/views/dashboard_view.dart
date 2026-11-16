@@ -3,7 +3,7 @@ import 'package:fluxy/fluxy.dart';
 
 import '../controllers/dashboard_controller.dart';
 
-class DashboardView extends GetView<DashboardController> {
+class DashboardView extends FluxyView<DashboardController> {
   const DashboardView({super.key});
 
   @override

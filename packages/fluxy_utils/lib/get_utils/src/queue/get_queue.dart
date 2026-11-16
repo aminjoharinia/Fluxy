@@ -1,6 +1,6 @@
 import 'dart:async';
 
-class GetMicrotask {
+class FluxyMicrotask {
   int _version = 0;
   int _microtask = 0;
 
@@ -19,17 +19,17 @@ class GetMicrotask {
   }
 }
 
-/// Thrown into the futures of jobs that [GetQueue.cancelAllJobs] removed
+/// Thrown into the futures of jobs that [FluxyQueue.cancelAllJobs] removed
 /// before they started.
-class GetQueueCancelledException implements Exception {
-  const GetQueueCancelledException();
+class FluxyQueueCancelledException implements Exception {
+  const FluxyQueueCancelledException();
 
   @override
   String toString() => 'GetQueueCancelledException: the job was cancelled';
 }
 
 /// Runs jobs one after the other, in the order they were added.
-class GetQueue {
+class FluxyQueue {
   final List<_Item> _queue = [];
   bool _active = false;
 
@@ -41,7 +41,7 @@ class GetQueue {
   }
 
   /// Drops the jobs that haven't started. Their futures fail with
-  /// [GetQueueCancelledException] (they used to never complete). A job
+  /// [FluxyQueueCancelledException] (they used to never complete). A job
   /// already running is not stopped.
   void cancelAllJobs() {
     final cancelled = List.of(_queue);
@@ -82,6 +82,6 @@ class _Item<T> {
     // Nobody may be listening (a fire-and-forget add); don't report the
     // cancellation as an uncaught error then. Listeners still get it.
     completer.future.ignore();
-    completer.completeError(const GetQueueCancelledException());
+    completer.completeError(const FluxyQueueCancelledException());
   }
 }

@@ -5,7 +5,7 @@ import 'package:fluxy/fluxy.dart';
 
 import '../controllers/home_controller.dart';
 
-class HomeView extends GetView<HomeController> {
+class HomeView extends FluxyView<HomeController> {
   const HomeView({Key? key}) : super(key: key);
 
   @override

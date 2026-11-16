@@ -15,7 +15,7 @@ class DetailsController extends StateController<Country> {
     country = Get.arguments;
     final countryName = country?.country;
     if (countryName == null) {
-      change(GetStatus.error('Country not found'));
+      change(FluxyStatus.error('Country not found'));
     } else {
       //Loading, Success, Error handle with 1 line of code
       futurize(() => homeRepository.getCountry(countryName));

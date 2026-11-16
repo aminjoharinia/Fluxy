@@ -21,7 +21,7 @@ enum CommandMode {
   concurrent,
 }
 
-/// An async action as an Rx of its [GetStatus], with a rule for overlapping
+/// An async action as an Rx of its [FluxyStatus], with a rule for overlapping
 /// calls ([CommandMode], like `bloc_concurrency`'s transformers).
 ///
 /// ```dart
@@ -36,13 +36,13 @@ enum CommandMode {
 /// ```
 ///
 /// - Its value starts as [EmptyStatus] (not run yet), is a [LoadingStatus]
-///   while it runs (keeping the last data, see [GetStatus.isRefreshing]),
+///   while it runs (keeping the last data, see [FluxyStatus.isRefreshing]),
 ///   then a [SuccessStatus] or an [ErrorStatus] (also keeping the last
 ///   data).
 /// - [run] never throws: it completes with the status of that call (for a
 ///   dropped call, the run in flight).
 /// - [cancel] ignores the results of runs in flight and skips queued ones.
-class RxCommand<T> extends Rx<GetStatus<T>> {
+class RxCommand<T> extends Rx<FluxyStatus<T>> {
   RxCommand(this._action, {this.mode = CommandMode.droppable})
       : super(EmptyStatus<T>());
 
@@ -53,15 +53,15 @@ class RxCommand<T> extends Rx<GetStatus<T>> {
 
   int _generation = 0;
   int _inFlight = 0;
-  Future<GetStatus<T>>? _current;
+  Future<FluxyStatus<T>>? _current;
   Future<void> _tail = Future<void>.value();
 
   /// Whether a run is in flight or queued. Inside an `Obx`, subscribes it.
   bool get isRunning => value is LoadingStatus<T>;
 
   /// Runs the action, following [mode]. See [CommandMode].
-  Future<GetStatus<T>> run() {
-    if (isDisposed) return Future<GetStatus<T>>.value(peek);
+  Future<FluxyStatus<T>> run() {
+    if (isDisposed) return Future<FluxyStatus<T>>.value(peek);
     switch (mode) {
       case CommandMode.droppable:
         final inFlight = _current;
@@ -99,12 +99,12 @@ class RxCommand<T> extends Rx<GetStatus<T>> {
     final status = peek;
     if (status is LoadingStatus<T>) {
       value = status.hasData
-          ? GetStatus<T>.success(status.data as T)
+          ? FluxyStatus<T>.success(status.data as T)
           : EmptyStatus<T>();
     }
   }
 
-  Future<GetStatus<T>> _start(int generation) {
+  Future<FluxyStatus<T>> _start(int generation) {
     _enter();
     return _execute(generation);
   }
@@ -115,17 +115,17 @@ class RxCommand<T> extends Rx<GetStatus<T>> {
     if (status is! LoadingStatus<T>) value = status.toLoading();
   }
 
-  Future<GetStatus<T>> _execute(int generation) async {
+  Future<FluxyStatus<T>> _execute(int generation) async {
     // A queued run cancelled before it started: skip the action.
     if (generation != _generation) {
       _inFlight--;
       return peek;
     }
-    GetStatus<T> result;
+    FluxyStatus<T> result;
     try {
-      result = GetStatus<T>.success(await _action());
+      result = FluxyStatus<T>.success(await _action());
     } catch (e, st) {
-      result = GetStatus<T>.error(e, st);
+      result = FluxyStatus<T>.error(e, st);
     }
     _inFlight--;
     if (isDisposed || generation != _generation) return result;

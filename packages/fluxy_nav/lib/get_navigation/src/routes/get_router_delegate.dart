@@ -107,7 +107,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     // Hash URLs (`/#/Home`) are Flutter's default, so nothing is changed
     // unless path URLs are asked for. That only works before runApp; see
     // setUrlStrategy().
-    if (!showHashOnUrl && GetPlatform.isWeb) setUrlStrategy();
+    if (!showHashOnUrl && FluxyPlatform.isWeb) setUrlStrategy();
     addPages(pages);
     addPage(notFoundRoute);
     Get.log('GetDelegate is created !');

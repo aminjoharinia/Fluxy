@@ -30,7 +30,7 @@ Future<void> Function() _subscribe<T>(
   void Function()? onDone,
   bool? cancelOnError,
 }) {
-  if (onError == null && onDone == null && listener is GetListenable<T>) {
+  if (onError == null && onDone == null && listener is FluxyListenable<T>) {
     final remove = listener.addListener(() => onValue(listener.peek));
     return () async => remove();
   }
@@ -72,7 +72,7 @@ class Workers {
 /// ```
 /// // imagine some counter widget...
 ///
-/// class _CountController extends GetxController {
+/// class _CountController extends FluxyController {
 ///   final count = 0.obs;
 ///   Worker worker;
 ///
@@ -87,7 +87,7 @@ class Workers {
 /// }
 /// ```
 Worker ever<T>(
-  GetListenable<T> listener,
+  FluxyListenable<T> listener,
   WorkerCallback<T> callback, {
   dynamic condition = true,
   Function? onError,
@@ -147,7 +147,7 @@ Worker everAll(
 ///
 /// Sample:
 /// ```
-///  class _CountController extends GetxController {
+///  class _CountController extends FluxyController {
 ///   final count = 0.obs;
 ///   Worker worker;
 ///
@@ -162,7 +162,7 @@ Worker everAll(
 /// }
 ///```
 Worker once<T>(
-  GetListenable<T> listener,
+  FluxyListenable<T> listener,
   WorkerCallback<T> callback, {
   dynamic condition = true,
   Function? onError,
@@ -205,7 +205,7 @@ Worker once<T>(
 /// );
 /// ```
 Worker interval<T>(
-  GetListenable<T> listener,
+  FluxyListenable<T> listener,
   WorkerCallback<T> callback, {
   Duration time = const Duration(seconds: 1),
   dynamic condition = true,
@@ -256,7 +256,7 @@ Worker interval<T>(
 ///  }
 ///  ```
 Worker debounce<T>(
-  GetListenable<T> listener,
+  FluxyListenable<T> listener,
   WorkerCallback<T> callback, {
   Duration? time,
   Function? onError,

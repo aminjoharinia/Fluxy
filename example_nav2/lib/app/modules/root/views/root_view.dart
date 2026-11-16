@@ -5,7 +5,7 @@ import '../../../routes/app_pages.dart';
 import '../controllers/root_controller.dart';
 import 'drawer.dart';
 
-class RootView extends GetView<RootController> {
+class RootView extends FluxyView<RootController> {
   const RootView({super.key});
 
   @override

@@ -361,7 +361,7 @@ class SnackbarController {
 }
 
 class SnackBarQueue {
-  final _queue = GetQueue();
+  final _queue = FluxyQueue();
   final _snackbarList = <SnackbarController>[];
 
   SnackbarController? get _currentSnackbar {
@@ -375,7 +375,7 @@ class SnackBarQueue {
     _snackbarList.add(job);
     try {
       await _queue.add(job._show);
-    } on GetQueueCancelledException {
+    } on FluxyQueueCancelledException {
       // Removed by cancelAllJobs before it was shown.
     } finally {
       _snackbarList.remove(job);

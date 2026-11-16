@@ -10,7 +10,7 @@ import 'list_notifier.dart';
 
 typedef InitBuilder<T> = T Function();
 
-typedef GetControllerBuilder<T extends GetLifeCycleMixin> = Widget Function(
+typedef FluxyControllerBuilder<T extends FluxyLifeCycleMixin> = Widget Function(
     T controller);
 
 extension WatchExt on BuildContext {
@@ -26,13 +26,13 @@ extension ReadExt on BuildContext {
 }
 
 // extension FilterExt on BuildContext {
-//   T filter<T extends GetxController>(Object Function(T value)? filter) {
+//   T filter<T extends FluxyController>(Object Function(T value)? filter) {
 //     return Bind.of(this, filter: filter, rebuild: true);
 //   }
 // }
 
-class GetBuilder<T extends GetxController> extends StatelessWidget {
-  final GetControllerBuilder<T> builder;
+class FluxyBuilder<T extends FluxyController> extends StatelessWidget {
+  final FluxyControllerBuilder<T> builder;
   final bool global;
   final Object? id;
   final String? tag;
@@ -46,7 +46,7 @@ class GetBuilder<T extends GetxController> extends StatelessWidget {
       didUpdateWidget;
   final T? init;
 
-  const GetBuilder({
+  const FluxyBuilder({
     super.key,
     this.init,
     this.global = true,
@@ -497,12 +497,12 @@ class BindElement<T> extends InheritedElement {
     final filter = _filter != null ? _filterUpdate : getUpdate;
     final localController = _controller;
 
-    if (_needStart == true && localController is GetLifeCycleMixin) {
+    if (_needStart == true && localController is FluxyLifeCycleMixin) {
       localController.onStart();
       _needStart = false;
     }
 
-    if (localController is GetxController) {
+    if (localController is FluxyController) {
       _remove?.call();
       _remove = (widget.id == null)
           ? localController.addListener(filter)
@@ -563,7 +563,7 @@ class BindElement<T> extends InheritedElement {
     super.update(newWidget);
     // Re-subscribe under the new id once the controller exists (global or
     // not). Before, only `global: false` binders re-subscribed, so a
-    // GetBuilder whose id changed kept listening to the old id.
+    // FluxyBuilder whose id changed kept listening to the old id.
     if (oldNotifier != newNotifier && _controller != null) {
       _subscribeToController();
     }

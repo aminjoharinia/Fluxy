@@ -50,9 +50,9 @@ void main() {
   });
 }
 
-class Controller extends GetxController {}
+class Controller extends FluxyController {}
 
-class Controller2 extends GetxController {}
+class Controller2 extends FluxyController {}
 
 class First extends StatelessWidget {
   const First({super.key});

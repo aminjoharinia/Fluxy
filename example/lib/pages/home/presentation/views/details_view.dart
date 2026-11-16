@@ -6,7 +6,7 @@ import 'package:get_demo/pages/home/domain/entity/country_model.dart';
 
 import '../controllers/details_controller.dart';
 
-class DetailsView extends GetView<DetailsController> {
+class DetailsView extends FluxyView<DetailsController> {
   const DetailsView({Key? key}) : super(key: key);
 
   @override

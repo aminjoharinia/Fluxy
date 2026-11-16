@@ -52,7 +52,7 @@ void main() {
   });
 }
 
-class Controller extends GetxController {
+class Controller extends FluxyController {
   static Controller get to => Get.find();
 
   RxInt counter = 0.obs;

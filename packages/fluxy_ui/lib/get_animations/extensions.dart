@@ -7,10 +7,10 @@ const _defaultDuration = Duration(seconds: 2);
 const _defaultDelay = Duration.zero;
 
 extension AnimationExtension on Widget {
-  GetAnimatedBuilder? get _currentAnimation =>
-      (this is GetAnimatedBuilder) ? this as GetAnimatedBuilder : null;
+  FluxyAnimatedBuilder? get _currentAnimation =>
+      (this is FluxyAnimatedBuilder) ? this as FluxyAnimatedBuilder : null;
 
-  GetAnimatedBuilder fadeIn({
+  FluxyAnimatedBuilder fadeIn({
     Duration duration = _defaultDuration,
     Duration delay = _defaultDelay,
     ValueSetter<AnimationController>? onComplete,
@@ -27,7 +27,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder fadeOut({
+  FluxyAnimatedBuilder fadeOut({
     Duration duration = _defaultDuration,
     Duration delay = _defaultDelay,
     ValueSetter<AnimationController>? onComplete,
@@ -44,7 +44,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder rotate({
+  FluxyAnimatedBuilder rotate({
     required double begin,
     required double end,
     Duration duration = _defaultDuration,
@@ -62,7 +62,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder scale({
+  FluxyAnimatedBuilder scale({
     required double begin,
     required double end,
     Duration duration = _defaultDuration,
@@ -80,7 +80,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder slide({
+  FluxyAnimatedBuilder slide({
     required OffsetBuilder offset,
     double begin = 0,
     double end = 1,
@@ -100,7 +100,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder bounce({
+  FluxyAnimatedBuilder bounce({
     required double begin,
     required double end,
     Duration duration = _defaultDuration,
@@ -118,7 +118,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder spin({
+  FluxyAnimatedBuilder spin({
     Duration duration = _defaultDuration,
     Duration delay = _defaultDelay,
     ValueSetter<AnimationController>? onComplete,
@@ -132,7 +132,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder size({
+  FluxyAnimatedBuilder size({
     required double begin,
     required double end,
     Duration duration = _defaultDuration,
@@ -150,7 +150,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder blur({
+  FluxyAnimatedBuilder blur({
     double begin = 0,
     double end = 15,
     Duration duration = _defaultDuration,
@@ -168,7 +168,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder flip({
+  FluxyAnimatedBuilder flip({
     double begin = 0,
     double end = 1,
     Duration duration = _defaultDuration,
@@ -186,7 +186,7 @@ extension AnimationExtension on Widget {
     );
   }
 
-  GetAnimatedBuilder wave({
+  FluxyAnimatedBuilder wave({
     double begin = 0,
     double end = 1,
     Duration duration = _defaultDuration,

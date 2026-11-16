@@ -197,7 +197,7 @@ void main() {
 }
 
 void _testDefaultValues<T>({
-  required GetAnimatedBuilder animation,
+  required FluxyAnimatedBuilder animation,
   required Widget widget,
   required T begin,
   required T end,

@@ -8,12 +8,12 @@ import '../../../get_instance/src/lifecycle.dart';
 import '../../get_state_manager.dart';
 
 /// Used like `SingleTickerProviderMixin` but only with Get Controllers.
-/// Simplifies AnimationController creation inside GetxController.
+/// Simplifies AnimationController creation inside FluxyController.
 ///
 /// Example:
 ///```
-///class SplashController extends GetxController with
-///    GetSingleTickerProviderStateMixin {
+///class SplashController extends FluxyController with
+///    FluxySingleTickerProviderStateMixin {
 ///  AnimationController controller;
 ///
 ///  @override
@@ -27,7 +27,7 @@ import '../../get_state_manager.dart';
 ///  }
 ///  ...
 /// ```
-mixin GetSingleTickerProviderStateMixin on GetxController
+mixin FluxySingleTickerProviderStateMixin on FluxyController
     implements TickerProvider {
   Ticker? _ticker;
 
@@ -88,12 +88,12 @@ mixin GetSingleTickerProviderStateMixin on GetxController
 }
 
 /// Used like `TickerProviderMixin` but only with Get Controllers.
-/// Simplifies multiple AnimationController creation inside GetxController.
+/// Simplifies multiple AnimationController creation inside FluxyController.
 ///
 /// Example:
 ///```
-///class SplashController extends GetxController with
-///    GetTickerProviderStateMixin {
+///class SplashController extends FluxyController with
+///    FluxyTickerProviderStateMixin {
 ///  AnimationController first_controller;
 ///  AnimationController second_controller;
 ///
@@ -112,7 +112,8 @@ mixin GetSingleTickerProviderStateMixin on GetxController
 ///  }
 ///  ...
 /// ```
-mixin GetTickerProviderStateMixin on GetxController implements TickerProvider {
+mixin FluxyTickerProviderStateMixin on FluxyController
+    implements TickerProvider {
   Set<Ticker>? _tickers;
 
   @override
@@ -174,7 +175,7 @@ mixin GetTickerProviderStateMixin on GetxController implements TickerProvider {
 class _WidgetTicker extends Ticker {
   _WidgetTicker(super.onTick, this._creator, {super.debugLabel});
 
-  final GetTickerProviderStateMixin _creator;
+  final FluxyTickerProviderStateMixin _creator;
 
   @override
   void dispose() {
@@ -185,11 +186,11 @@ class _WidgetTicker extends Ticker {
 
 @Deprecated('use GetSingleTickerProviderStateMixin')
 /// Used like `SingleTickerProviderMixin` but only with Get Controllers.
-/// Simplifies AnimationController creation inside GetxController.
+/// Simplifies AnimationController creation inside FluxyController.
 ///
 /// Example:
 ///```
-///class SplashController extends GetxController with
+///class SplashController extends FluxyController with
 ///    SingleGetTickerProviderMixin {
 ///  AnimationController _ac;
 ///
@@ -202,7 +203,7 @@ class _WidgetTicker extends Ticker {
 ///  }
 ///  ...
 /// ```
-mixin SingleGetTickerProviderMixin on GetLifeCycleMixin
+mixin SingleGetTickerProviderMixin on FluxyLifeCycleMixin
     implements TickerProvider {
   @override
   Ticker createTicker(TickerCallback onTick) => Ticker(onTick);

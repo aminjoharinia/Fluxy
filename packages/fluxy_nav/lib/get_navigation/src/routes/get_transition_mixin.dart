@@ -342,7 +342,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
   }
 
   static bool canSwipe(GetPageRoute route) =>
-      route.popGesture ?? Get.defaultPopGesture ?? GetPlatform.isIOS;
+      route.popGesture ?? Get.defaultPopGesture ?? FluxyPlatform.isIOS;
 
   /// Returns a [CupertinoFullscreenDialogTransition] if [route] is a full
   /// screen dialog, otherwise a [CupertinoPageTransition] is returned.

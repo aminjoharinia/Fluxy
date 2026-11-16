@@ -5,9 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 
-class _IdController extends GetxController {}
+class _IdController extends FluxyController {}
 
-class _ReadyController extends GetxController {
+class _ReadyController extends FluxyController {
   int ready = 0;
   @override
   void onReady() => ready++;
@@ -17,7 +17,7 @@ class _Model {
   int n = 0;
 }
 
-class _Futurizer extends GetxController with StateMixin<String> {
+class _Futurizer extends FluxyController with StateMixin<String> {
   int notifications = 0;
   _Futurizer() {
     addListener(() => notifications++);
@@ -65,7 +65,7 @@ void main() {
     testWidgets('follows a changed id', (tester) async {
       final controller = Get.put(_IdController());
       var builds = 0;
-      Widget app(String id) => GetBuilder<_IdController>(
+      Widget app(String id) => FluxyBuilder<_IdController>(
             id: id,
             builder: (_) {
               builds++;

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 /// Duration utilities.
-extension GetDurationUtils on Duration {
+extension FluxyDurationUtils on Duration {
   /// Utility to delay some callback (or code execution).
   ///
   /// Sample:

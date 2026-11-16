@@ -8,12 +8,12 @@ import 'package:fluxy_utils/fluxy_utils.dart';
 
 void main() {
   test('Platform test', () {
-    expect(GetPlatform.isAndroid, Platform.isAndroid);
-    expect(GetPlatform.isIOS, Platform.isIOS);
-    expect(GetPlatform.isFuchsia, Platform.isFuchsia);
-    expect(GetPlatform.isLinux, Platform.isLinux);
-    expect(GetPlatform.isMacOS, Platform.isMacOS);
-    expect(GetPlatform.isWindows, Platform.isWindows);
-    expect(GetPlatform.isWeb, true);
+    expect(FluxyPlatform.isAndroid, Platform.isAndroid);
+    expect(FluxyPlatform.isIOS, Platform.isIOS);
+    expect(FluxyPlatform.isFuchsia, Platform.isFuchsia);
+    expect(FluxyPlatform.isLinux, Platform.isLinux);
+    expect(FluxyPlatform.isMacOS, Platform.isMacOS);
+    expect(FluxyPlatform.isWindows, Platform.isWindows);
+    expect(FluxyPlatform.isWeb, true);
   });
 }

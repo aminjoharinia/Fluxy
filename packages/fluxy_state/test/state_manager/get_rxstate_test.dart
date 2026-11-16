@@ -8,7 +8,7 @@ void main() {
   testWidgets("GetxController smoke test", (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: GetX<Controller>(
+        home: FluxyX<Controller>(
           init: Controller(),
           builder: (controller) {
             return Column(
@@ -35,10 +35,10 @@ void main() {
                   child: const Text("increment"),
                   onPressed: () => controller.increment(),
                 ),
-                GetX<Controller2>(builder: (controller) {
+                FluxyX<Controller2>(builder: (controller) {
                   return Text('lazy ${controller.lazy.value}');
                 }),
-                GetX<ControllerNonGlobal>(
+                FluxyX<ControllerNonGlobal>(
                     init: ControllerNonGlobal(),
                     global: false,
                     builder: (controller) {
@@ -74,15 +74,15 @@ void main() {
   });
 }
 
-class Controller2 extends GetxController {
+class Controller2 extends FluxyController {
   RxInt lazy = 0.obs;
 }
 
-class ControllerNonGlobal extends GetxController {
+class ControllerNonGlobal extends FluxyController {
   RxInt nonGlobal = 0.obs;
 }
 
-class Controller extends GetxController {
+class Controller extends FluxyController {
   static Controller get to => Get.find();
 
   RxInt counter = 0.obs;

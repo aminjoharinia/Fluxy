@@ -442,7 +442,7 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
     }
 
     // defaultOpaqueRoute = config.opaqueRoute ?? true;
-    // defaultPopGesture = config.popGesture ?? GetPlatform.isIOS;
+    // defaultPopGesture = config.popGesture ?? FluxyPlatform.isIOS;
     // defaultTransitionDuration =
     //     config.transitionDuration ?? Duration(milliseconds: 300);
 

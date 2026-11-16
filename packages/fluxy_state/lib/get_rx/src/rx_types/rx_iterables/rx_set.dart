@@ -1,6 +1,6 @@
 part of '../rx_types.dart';
 
-class RxSet<E> extends GetListenable<Set<E>>
+class RxSet<E> extends FluxyListenable<Set<E>>
     with SetMixin<E>, RxObjectMixin<Set<E>> {
   RxSet([Set<E>? initial]) : super(initial ?? <E>{});
 

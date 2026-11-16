@@ -4,7 +4,7 @@ import 'package:fluxy/fluxy.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/products_controller.dart';
 
-class ProductsView extends GetView<ProductsController> {
+class ProductsView extends FluxyView<ProductsController> {
   const ProductsView({super.key});
   @override
   Widget build(BuildContext context) {

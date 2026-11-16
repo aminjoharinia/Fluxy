@@ -4,16 +4,16 @@ import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import 'get_widget_cache.dart';
 
-/// GetView is a great way of quickly access your Controller
+/// FluxyView is a great way of quickly access your Controller
 /// without having to call `Get.find<AwesomeController>()` yourself.
 ///
 /// Sample:
 /// ```
-/// class AwesomeController extends GetxController {
+/// class AwesomeController extends FluxyController {
 ///   final String title = 'My Awesome View';
 /// }
 ///
-/// class AwesomeView extends GetView<AwesomeController> {
+/// class AwesomeView extends FluxyView<AwesomeController> {
 ///   /// if you need you can pass the tag for
 ///   /// Get.find<AwesomeController>(tag:"myTag");
 ///   @override
@@ -30,8 +30,8 @@ import 'get_widget_cache.dart';
 ///   }
 /// }
 ///``
-abstract class GetView<T> extends StatelessWidget {
-  const GetView({super.key});
+abstract class FluxyView<T> extends StatelessWidget {
+  const FluxyView({super.key});
 
   final String? tag = null;
 
@@ -41,23 +41,23 @@ abstract class GetView<T> extends StatelessWidget {
   Widget build(BuildContext context);
 }
 
-/// GetWidget is a great way of quickly access your individual Controller
+/// FluxyWidget is a great way of quickly access your individual Controller
 /// without having to call `Get.find<AwesomeController>()` yourself.
 /// Get save you controller on cache, so, you can to use Get.create() safely
-/// GetWidget is perfect to multiples instance of a same controller. Each
-/// GetWidget will have your own controller, and will be call events as `onInit`
+/// FluxyWidget is perfect to multiples instance of a same controller. Each
+/// FluxyWidget will have your own controller, and will be call events as `onInit`
 /// and `onClose` when the controller get in/get out on memory.
-abstract class GetWidget<S extends GetLifeCycleMixin> extends GetWidgetCache {
-  const GetWidget({super.key});
+abstract class FluxyWidget<S extends FluxyLifeCycleMixin> extends FluxyWidgetCache {
+  const FluxyWidget({super.key});
 
   @protected
   final String? tag = null;
 
-  S get controller => GetWidget._cache[this] as S;
+  S get controller => FluxyWidget._cache[this] as S;
 
-  // static final _cache = <GetWidget, GetLifeCycleBase>{};
+  // static final _cache = <FluxyWidget, GetLifeCycleBase>{};
 
-  static final _cache = Expando<GetLifeCycleMixin>();
+  static final _cache = Expando<FluxyLifeCycleMixin>();
 
   @protected
   Widget build(BuildContext context);
@@ -66,7 +66,7 @@ abstract class GetWidget<S extends GetLifeCycleMixin> extends GetWidgetCache {
   WidgetCache createWidgetCache() => _GetCache<S>();
 }
 
-class _GetCache<S extends GetLifeCycleMixin> extends WidgetCache<GetWidget<S>> {
+class _GetCache<S extends FluxyLifeCycleMixin> extends WidgetCache<FluxyWidget<S>> {
   S? _controller;
   bool _isCreator = false;
   InstanceInfo? info;
@@ -80,7 +80,7 @@ class _GetCache<S extends GetLifeCycleMixin> extends WidgetCache<GetWidget<S>> {
       _controller = Get.find<S>(tag: widget!.tag);
     }
 
-    GetWidget._cache[widget!] = _controller;
+    FluxyWidget._cache[widget!] = _controller;
 
     super.onInit();
   }
@@ -92,7 +92,7 @@ class _GetCache<S extends GetLifeCycleMixin> extends WidgetCache<GetWidget<S>> {
         widget!.controller.onDelete();
         Get.log('"${widget!.controller.runtimeType}" onClose() called');
         Get.log('"${widget!.controller.runtimeType}" deleted from memory');
-        // GetWidget._cache[widget!] = null;
+        // FluxyWidget._cache[widget!] = null;
       });
     }
     info = null;

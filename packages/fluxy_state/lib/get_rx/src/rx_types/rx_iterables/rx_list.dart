@@ -1,7 +1,7 @@
 part of '../rx_types.dart';
 
 /// Create a list similar to `List<T>`
-class RxList<E> extends GetListenable<List<E>>
+class RxList<E> extends FluxyListenable<List<E>>
     with ListMixin<E>, RxObjectMixin<List<E>> {
   /// Growable empty list. Do not default to `const []` — that is an
   /// unmodifiable `List<Never>` and `addAll` then throws at runtime.

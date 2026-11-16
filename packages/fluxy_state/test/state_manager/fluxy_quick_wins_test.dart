@@ -28,7 +28,7 @@ class _Listener {
   void onChange() => calls++;
 }
 
-class _Controller extends GetxController {}
+class _Controller extends FluxyController {}
 
 void main() {
   group('Rx write', () {

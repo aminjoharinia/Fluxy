@@ -14,3 +14,41 @@
 # Phase 1 (v0.8.0): package name
 package:get/get.dart package:fluxy/fluxy.dart
 package:get/ package:fluxy/
+
+# Phase 2 (v0.9.0): state, UI and utils types. Old names stay as deprecated
+# typedefs until v1.1.0 (extensions have no aliases: only explicit extension
+# calls such as GetStringUtils(s).isEmail need the new name).
+GetxController FluxyController
+GetxService FluxyService
+GetxServiceMixin FluxyServiceMixin
+GetLifeCycleMixin FluxyLifeCycleMixin
+GetView FluxyView
+GetWidget FluxyWidget
+GetWidgetCache FluxyWidgetCache
+GetWidgetCacheElement FluxyWidgetCacheElement
+GetBuilder FluxyBuilder
+GetControllerBuilder FluxyControllerBuilder
+GetX FluxyX
+GetXState FluxyXState
+GetXControllerBuilder FluxyXControllerBuilder
+GetStatus FluxyStatus
+GetListenable FluxyListenable
+GetNotifier FluxyNotifier
+GetStateUpdate FluxyStateUpdate
+GetTickerProviderStateMixin FluxyTickerProviderStateMixin
+GetSingleTickerProviderStateMixin FluxySingleTickerProviderStateMixin
+GetReactiveExt FluxyReactiveExt
+GetResponsiveView FluxyResponsiveView
+GetResponsiveWidget FluxyResponsiveWidget
+GetResponsiveMixin FluxyResponsiveMixin
+GetAnimatedBuilder FluxyAnimatedBuilder
+GetAnimatedBuilderState FluxyAnimatedBuilderState
+GetPlatform FluxyPlatform
+GetUtils FluxyUtils
+GetStringUtils FluxyStringUtils
+GetNumUtils FluxyNumUtils
+GetDurationUtils FluxyDurationUtils
+GetDynamicUtils FluxyDynamicUtils
+GetQueue FluxyQueue
+GetQueueCancelledException FluxyQueueCancelledException
+GetMicrotask FluxyMicrotask

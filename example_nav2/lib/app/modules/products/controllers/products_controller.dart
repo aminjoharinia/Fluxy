@@ -2,7 +2,7 @@ import 'package:fluxy/fluxy.dart';
 
 import '../../../../models/demo_product.dart';
 
-class ProductsController extends GetxController {
+class ProductsController extends FluxyController {
   final products = <DemoProduct>[].obs;
 
   void loadDemoProductsFromSomeWhere() {

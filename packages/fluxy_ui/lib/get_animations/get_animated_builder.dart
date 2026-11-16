@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'animations.dart';
 
-class GetAnimatedBuilder<T> extends StatefulWidget {
+class FluxyAnimatedBuilder<T> extends StatefulWidget {
   final Duration duration;
   final Duration delay;
   final Widget child;
@@ -15,7 +15,7 @@ class GetAnimatedBuilder<T> extends StatefulWidget {
 
   Duration get totalDuration => duration + delay;
 
-  const GetAnimatedBuilder({
+  const FluxyAnimatedBuilder({
     super.key,
     this.curve = Curves.linear,
     this.onComplete,
@@ -28,10 +28,10 @@ class GetAnimatedBuilder<T> extends StatefulWidget {
     required this.delay,
   });
   @override
-  GetAnimatedBuilderState<T> createState() => GetAnimatedBuilderState<T>();
+  FluxyAnimatedBuilderState<T> createState() => FluxyAnimatedBuilderState<T>();
 }
 
-class GetAnimatedBuilderState<T> extends State<GetAnimatedBuilder<T>>
+class FluxyAnimatedBuilderState<T> extends State<FluxyAnimatedBuilder<T>>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<T> _animation;
@@ -72,7 +72,7 @@ class GetAnimatedBuilderState<T> extends State<GetAnimatedBuilder<T>>
 
     if (widget is OpacityAnimation) {
       final current =
-          context.findRootAncestorStateOfType<GetAnimatedBuilderState>();
+          context.findRootAncestorStateOfType<FluxyAnimatedBuilderState>();
       final isLast = current == null;
 
       if (widget is FadeInAnimation) {

@@ -1,3 +1,3 @@
 import 'package:fluxy/fluxy.dart';
 
-class ProfileController extends GetxController {}
+class ProfileController extends FluxyController {}

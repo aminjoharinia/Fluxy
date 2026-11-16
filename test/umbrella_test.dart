@@ -9,7 +9,7 @@ void main() {
     expect(Get, isNotNull); // fluxy_core
     expect(0.obs, isA<RxInt>()); // fluxy_state
     expect('k'.tr, 'k'); // fluxy_i18n
-    expect(GetUtils.isEmail('a@b.io'), isTrue); // fluxy_utils
+    expect(FluxyUtils.isEmail('a@b.io'), isTrue); // fluxy_utils
     expect(GetPage(name: '/', page: () => const SizedBox()).name, '/'); // nav
     expect(ScreenType.values, isNotEmpty); // fluxy_ui
     expect(Get.reset, isA<Function>()); // moved into fluxy_nav

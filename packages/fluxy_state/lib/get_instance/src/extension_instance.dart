@@ -99,9 +99,9 @@ extension Inst on GetInterface {
   /// the Instance if the Instance has been removed with `Get.delete()`.
   /// Therefore, future calls to `Get.find()` will return the same Instance.
   ///
-  /// If you need to make use of GetxController's life-cycle
+  /// If you need to make use of FluxyController's life-cycle
   /// (`onInit(), onStart(), onClose()`) [fenix] is a great choice to mix with
-  /// `GetBuilder()` and `GetX()` widgets, and/or `GetMaterialApp` Navigation.
+  /// `FluxyBuilder()` and `FluxyX()` widgets, and/or `GetMaterialApp` Navigation.
   ///
   /// You could use `Get.lazyPut(fenix:true)` in your app's `main()` instead
   /// of `Bindings()` for each `GetPage`.
@@ -250,7 +250,7 @@ extension Inst on GetInterface {
   S _startController<S>({String? tag}) {
     final key = _getKey(S, tag);
     final i = _singl[key]!.getDependency() as S;
-    if (i is GetLifeCycleMixin) {
+    if (i is FluxyLifeCycleMixin) {
       i.onStart();
       if (tag == null) {
         Get.log('Instance "$S" has been initialized');
@@ -281,7 +281,7 @@ extension Inst on GetInterface {
   /// it will initialize it's lifecycle.
   S find<S>({String? tag}) {
     // One lookup for the common case (an instance already started), which
-    // `GetView.controller` hits on every access, often inside build. It
+    // `FluxyView.controller` hits on every access, often inside build. It
     // used to look the key up three times (and build a (Type, tag) record
     // for each).
     final dep = _singl[_getKey(S, tag)];
@@ -383,11 +383,11 @@ extension Inst on GetInterface {
     }
     final i = builder.dependency;
 
-    if (i is GetxServiceMixin && !force) {
+    if (i is FluxyServiceMixin && !force) {
       return false;
     }
 
-    if (i is GetLifeCycleMixin) {
+    if (i is FluxyLifeCycleMixin) {
       i.onDelete();
       Get.log('"$newKey" onDelete() called');
     }
@@ -456,11 +456,11 @@ extension Inst on GetInterface {
 
     final i = builder.dependency;
 
-    if (i is GetxServiceMixin && !force) {
+    if (i is FluxyServiceMixin && !force) {
       return;
     }
 
-    if (i is GetLifeCycleMixin) {
+    if (i is FluxyLifeCycleMixin) {
       i.onDelete();
       Get.log('"$newKey" onDelete() called');
     }

@@ -7,7 +7,7 @@ Fluxy is a fork of [GetX](https://github.com/jonataslaw/getx) (from commit `a294
 | [`fluxy_core`](packages/fluxy_core) | `Get` singleton, logging, engine, `Equality` | — |
 | [`fluxy_state`](packages/fluxy_state) | Rx, `Obx`, `Computed`, `RxFuture`, controllers, workers, DI, copy-on-write edits | core |
 | [`fluxy_i18n`](packages/fluxy_i18n) | `Translations`, `.tr`, locale state | core, state |
-| [`fluxy_utils`](packages/fluxy_utils) | `GetPlatform`, validators, extensions, queue | core |
+| [`fluxy_utils`](packages/fluxy_utils) | `FluxyPlatform`, validators, extensions, queue | core |
 | [`fluxy_nav`](packages/fluxy_nav) | router, `Get.to/back`, dialogs, sheets, snackbars | core, state, i18n, utils |
 | [`fluxy_ui`](packages/fluxy_ui) | responsive views, `hp`/`wp`, animations | core, state, utils |
 

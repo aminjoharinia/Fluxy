@@ -5,7 +5,7 @@ import '../../../../services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/login_controller.dart';
 
-class LoginView extends GetView<LoginController> {
+class LoginView extends FluxyView<LoginController> {
   const LoginView({super.key});
 
   @override

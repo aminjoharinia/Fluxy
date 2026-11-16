@@ -7,7 +7,7 @@ import 'package:fluxy_state/fluxy_state.dart';
 
 final _count = 0.obs;
 
-class _OwningController extends GetxController {
+class _OwningController extends FluxyController {
   final log = <String>[];
   late Computed<int> doubled;
   late Effect logger;
@@ -36,7 +36,7 @@ class _OwningController extends GetxController {
   }
 }
 
-class _Child extends GetxController {
+class _Child extends FluxyController {
   late Effect e;
   @override
   void onInit() {
@@ -45,7 +45,7 @@ class _Child extends GetxController {
   }
 }
 
-class _Parent extends GetxController {
+class _Parent extends FluxyController {
   late Effect e;
   late _Child child;
   @override

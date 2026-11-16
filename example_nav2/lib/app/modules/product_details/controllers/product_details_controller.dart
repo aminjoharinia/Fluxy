@@ -1,6 +1,6 @@
 import 'package:fluxy/fluxy.dart';
 
-class ProductDetailsController extends GetxController {
+class ProductDetailsController extends FluxyController {
   final String productId;
 
   ProductDetailsController(this.productId);

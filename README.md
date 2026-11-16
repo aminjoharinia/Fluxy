@@ -7,7 +7,7 @@ Fluxy is a private fork of [GetX](https://github.com/jonataslaw/getx) (MIT), spl
 | `fluxy_core` | `Get` singleton, logging, `Get.asap`, `Equality` |
 | `fluxy_state` | `.obs` / `Rx*`, `Obx`, glitch-free `Computed`, `effect`, `RxFuture`, `RxCommand`, controllers, workers, DI, `Get.batch`, `peek`, copy-on-write edits |
 | `fluxy_i18n` | `Translations`, reactive `.tr`, `.trParams`, locale state |
-| `fluxy_utils` | `GetPlatform`, validators, extensions, `GetQueue` |
+| `fluxy_utils` | `FluxyPlatform`, validators, extensions, `FluxyQueue` |
 | `fluxy_nav` | `GetMaterialApp` / `GetCupertinoApp`, router, `Get.to` / `back`, dialogs, sheets, snackbars |
 | `fluxy_ui` | responsive views, `hp` / `wp`, animation extensions |
 
