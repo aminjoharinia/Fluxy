@@ -1,6 +1,6 @@
 name: get
 description: "Fluxy umbrella package ( name kept as get ) : re-exports fluxy_core , fluxy_state , fluxy_nav , fluxy_i18n , fluxy_utils and fluxy_ui ."
-version: 0.6.1
+version: 0.6.2
 repository: https://github.com/aminjoharinia/Fluxy
 publish_to: none
 

@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.6.1
+    ref: v0.6.2
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.6.1
+    ref: v0.6.2
     path: packages/fluxy_state
 ```
 
@@ -86,6 +86,11 @@ fluxy_state:
   - `rxn(null)` sets a nullable Rx to null (`call` used to ignore `null`); `rx()` still reads, `null` on a non-nullable Rx is still ignored, and a wrong-type argument throws `ArgumentError`.
 - v0.6.1:
   - `rx(v)` is typed again: `T call(T v)` with a required argument. `count('abc')` and `count(null)` on a non-nullable Rx are compile errors (v0.6.0 only caught a wrong type at runtime), and `rxn(null)` still sets null. `rx()` no longer reads; use `rx.value`.
+- v0.6.2:
+  - Navigation: `Get.to` fixes for `preventDuplicates` and for pages of the same class; the futures of pages removed by `offAllNamed` / `offNamedUntil` / `off` / reorder / `removeRoute` complete; `popUntilOriginalRoute` works; `GetPage.copyWith` keeps `preventDuplicateHandlingMode` and `restorationId`; `Get.back` never pops the last page.
+  - Utils / snackbars: `GetQueue` survives a job that throws an `Error` and fails jobs that are cancelled; `closeAllSnackbars` no longer shows the next queued snackbar.
+  - `setSuccess` / `status = success` always notify, so a list edited in place and passed again updates the UI (the deep comparison treated it as unchanged). Calling `setSuccess` twice with equal data now notifies twice; other statuses still skip unchanged values.
+  - Performance: an `Obx` schedules one rebuild microtask however many Rx values change; `ListNotifier` copies its listener list only when listeners change during a notify (it used to copy on every notify); `GetPage.path` is compiled on first use and `matchRoute` copies each page once, so a navigation no longer recompiles route regexes.
 
 ## Tests
 
