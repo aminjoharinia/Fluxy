@@ -76,7 +76,7 @@ class RouteDecoder {
   }
 
   @override
-  int get hashCode => currentTreeBranch.hashCode ^ pageSettings.hashCode;
+  int get hashCode => Object.hash(Object.hashAll(currentTreeBranch), pageSettings);
 
   @override
   String toString() =>

@@ -352,8 +352,30 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
 
   @protected
   void _popWithResult<T>([T? result]) {
-    final completer = _activePages.removeLast().route?.completer;
+    _complete(_activePages.removeLast(), result);
+  }
+
+  /// Completes the future of a page that leaves the stack, so code awaiting
+  /// `Get.toNamed(...)` for it doesn't wait forever.
+  void _complete(RouteDecoder removed, [Object? result]) {
+    final completer = removed.route?.completer;
     if (completer?.isCompleted == false) completer!.complete(result);
+  }
+
+  /// Matches [page] by name (for parameters and parent pages) but builds
+  /// [page] itself. An older page with the same name can still be in the
+  /// route tree (two `Get.to(() => Detail(..))`), and the first match wins.
+  RouteDecoder _decoderForPage<T>(PageSettings args, GetPage<T> page) {
+    final decoder = _getRouteDecoder<T>(args)!;
+    final matched = decoder.route!;
+    decoder.route = page.copyWith(
+      name: matched.name,
+      key: matched.key,
+      parameters: matched.parameters,
+      arguments: matched.arguments,
+      completer: matched.completer as Completer<T?>?,
+    );
+    return decoder;
   }
 
   @override
@@ -367,6 +389,9 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     final args = _buildPageSettings(page, arguments);
     final route = _getRouteDecoder<T>(args);
     if (route != null) {
+      if (!preventDuplicates) {
+        route.route = route.route!.copyWith(preventDuplicates: false);
+      }
       return _push<T>(route);
     } else {
       goToUnknownPage();
@@ -412,13 +437,14 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
       fullscreenDialog: fullscreenDialog,
       bindings: bindings,
       transitionDuration: duration ?? Get.defaultTransitionDuration,
+      preventDuplicates: preventDuplicates,
       preventDuplicateHandlingMode: preventDuplicateHandlingMode,
     );
 
     _routeTree.addRoute(getPage);
     final args = _buildPageSettings(routeName, arguments);
-    final route = _getRouteDecoder<T>(args);
-    final result = await _push<T>(route!, rebuildStack: rebuildStack);
+    final route = _decoderForPage<T>(args, getPage);
+    final result = await _push<T>(route, rebuildStack: rebuildStack);
     _routeTree.removeRoute(getPage);
     return result;
   }
@@ -515,7 +541,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     if (route == null) return null;
 
     while (_activePages.length > 1) {
-      _activePages.removeLast();
+      _popWithResult();
     }
 
     return _replaceNamed(route);
@@ -536,7 +562,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     final newPredicate = predicate ?? (route) => false;
 
     while (_activePages.length > 1 && !newPredicate(_activePages.last.route!)) {
-      _activePages.removeLast();
+      _popWithResult();
     }
 
     return _push(route);
@@ -590,7 +616,14 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
 
   @override
   void removeRoute<T>(String name) {
-    _activePages.remove(RouteDecoder.fromRoute(name));
+    // By name: a decoder built from the name never equals the one on the
+    // stack (different key and completer), so this used to remove nothing.
+    final index = _activePages.lastIndexWhere(
+      (e) => e.pageSettings?.name == name || e.route?.name == name,
+    );
+    if (index < 0 || _activePages.length < 2) return;
+    _complete(_activePages.removeAt(index));
+    notifyListeners();
   }
 
   bool get canBack {
@@ -657,11 +690,13 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     final index = _activePages.length > 1 ? _activePages.length - 1 : 0;
     _routeTree.addRoute(page);
 
-    final activePage = _getRouteDecoder(arguments);
+    final activePage = _decoderForPage<T>(arguments, page);
 
     // final activePage = _configureRouterDecoder<T>(route!, arguments);
 
-    _activePages[index] = activePage!;
+    final replaced = _activePages[index];
+    _activePages[index] = activePage;
+    _complete(replaced);
 
     notifyListeners();
     final result = await activePage.route?.completer?.future as Future<T?>?;
@@ -673,7 +708,9 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   Future<T?> _replaceNamed<T>(RouteDecoder activePage) async {
     final index = _activePages.length > 1 ? _activePages.length - 1 : 0;
     // final activePage = _configureRouterDecoder<T>(page, arguments);
+    final replaced = _activePages[index];
     _activePages[index] = activePage;
+    _complete(replaced);
 
     notifyListeners();
     final result = await activePage.route?.completer?.future as Future<T?>?;
@@ -758,23 +795,33 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     /// There are no duplicate routes in the stack
     if (onStackPage == null) {
       _activePages.add(res);
+    } else if (res.route?.preventDuplicates == false) {
+      // Pushed anyway: the Navigator needs a key of its own for it.
+      res.route = res.route!.copyWith(key: UniqueKey());
+      _activePages.add(res);
     } else {
       /// There are duplicate routes, reorder
       switch (preventDuplicateHandlingMode) {
         case PreventDuplicateHandlingMode.doNothing:
+          // Nothing is pushed, so nothing will complete the new future.
+          _complete(res);
           break;
         case PreventDuplicateHandlingMode.reorderRoutes:
           _activePages.remove(onStackPage);
           _activePages.add(res);
+          _complete(onStackPage);
           break;
         case PreventDuplicateHandlingMode.popUntilOriginalRoute:
-          while (_activePages.last == onStackPage) {
+          // Back to the page already on the stack; the new one isn't pushed.
+          while (_activePages.last != onStackPage) {
             _popWithResult();
           }
+          _complete(res);
           break;
         case PreventDuplicateHandlingMode.recreate:
           _activePages.remove(onStackPage);
           _activePages.add(res);
+          _complete(onStackPage);
       }
     }
     if (rebuildStack) {
@@ -832,6 +879,9 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   @override
   void back<T>([T? result]) {
     _checkIfCanBack();
+    // The check above only runs in debug builds. Popping the last page
+    // would leave an empty navigator (a blank screen).
+    if (!canBack) return;
     _popWithResult<T>(result);
     notifyListeners();
   }

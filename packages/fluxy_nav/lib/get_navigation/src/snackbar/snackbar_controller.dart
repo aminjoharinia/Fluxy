@@ -373,14 +373,20 @@ class SnackBarQueue {
 
   Future<void> addJob(SnackbarController job) async {
     _snackbarList.add(job);
-    final data = await _queue.add(job._show);
-    _snackbarList.remove(job);
-    return data;
+    try {
+      await _queue.add(job._show);
+    } on GetQueueCancelledException {
+      // Removed by cancelAllJobs before it was shown.
+    } finally {
+      _snackbarList.remove(job);
+    }
   }
 
   Future<void> cancelAllJobs() async {
-    await _currentSnackbar?.close();
+    // Drop the waiting ones first: closing the current snackbar lets the
+    // queue start the next job, which used to show one more snackbar.
     _queue.cancelAllJobs();
+    await _currentSnackbar?.close();
     _snackbarList.clear();
   }
 

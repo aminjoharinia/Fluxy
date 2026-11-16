@@ -123,6 +123,7 @@ class GetPage<T> extends Page<T> {
     GetPage? unknownRoute,
     List<GetMiddleware>? middlewares,
     bool? preventDuplicates,
+    PreventDuplicateHandlingMode? preventDuplicateHandlingMode,
     double Function(BuildContext context)? gestureWidth,
     bool? participatesInRootNavigator,
     Object? arguments,
@@ -138,6 +139,8 @@ class GetPage<T> extends Page<T> {
       participatesInRootNavigator:
           participatesInRootNavigator ?? this.participatesInRootNavigator,
       preventDuplicates: preventDuplicates ?? this.preventDuplicates,
+      preventDuplicateHandlingMode:
+          preventDuplicateHandlingMode ?? this.preventDuplicateHandlingMode,
       name: name ?? this.name,
       page: page ?? this.page,
       popGesture: popGesture ?? this.popGesture,
@@ -167,7 +170,7 @@ class GetPage<T> extends Page<T> {
       inheritParentPath: inheritParentPath ?? this.inheritParentPath,
       canPop: canPop ?? this.canPop,
       onPopInvoked: onPopInvoked ?? this.onPopInvoked,
-      restorationId: restorationId ?? restorationId,
+      restorationId: restorationId ?? this.restorationId,
     );
   }
 
