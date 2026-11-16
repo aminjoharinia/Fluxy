@@ -106,7 +106,20 @@ mixin ListNotifierSingleMixin on Listenable {
     notifier._depth++;
     try {
       for (var i = 0; i < list.length; i++) {
-        list[i]();
+        // A listener that throws is reported and the others still run (as
+        // with ChangeNotifier). It used to stop the loop, so every later
+        // listener (other Obx, workers, Computed) missed the change.
+        try {
+          list[i]();
+        } catch (exception, stack) {
+          FlutterError.reportError(FlutterErrorDetails(
+            exception: exception,
+            stack: stack,
+            library: 'fluxy_state',
+            context: ErrorDescription(
+                'while notifying the listeners of a $runtimeType'),
+          ));
+        }
       }
     } finally {
       _notifying = previous;
@@ -346,10 +359,9 @@ class Notifier {
   }
 
   void _flush() {
-    Object? firstError;
-    StackTrace? firstStack;
     // Counted as one notify, so effects run once after every held change
-    // went out (not once per changed Rx).
+    // went out (not once per changed Rx). Listener errors are reported by
+    // each notify, so one failing listener does not hold back the others.
     _depth++;
     try {
       while (_pending.isNotEmpty) {
@@ -357,21 +369,13 @@ class Notifier {
         _pending.clear();
         for (final notifier in list) {
           if (notifier.isDisposed) continue;
-          try {
-            notifier._notifyUpdateNow();
-          } catch (e, st) {
-            firstError ??= e;
-            firstStack ??= st;
-          }
+          notifier._notifyUpdateNow();
         }
       }
     } finally {
       _depth--;
     }
     _runReactionsIfIdle();
-    if (firstError != null) {
-      Error.throwWithStackTrace(firstError, firstStack!);
-    }
   }
 }
 

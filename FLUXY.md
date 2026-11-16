@@ -96,6 +96,8 @@ fluxy_state:
   - Every Rx / notifier has a `reactiveVersion`; a `Computed` recomputes only when a source's version moved (a global version skips the check when nothing changed at all). A `Computed` with no listeners keeps its source record without subscriptions, so a read after unrelated changes does not recompute.
   - `Computed` reads inside `Get.batch` see the held changes; its listeners are notified once after the batch. Errors are kept and rethrown at each read until a source changes.
   - `effect(() { ... })`: runs now and again when what it read changes; synchronous, but once per notify / batch and after the change is fully applied. It may return a cleanup (run before the next run and on `dispose()`). Its writes are held until it returns; an effect that keeps re-triggering itself is stopped with a `StateError`; errors after the first run go to `FlutterError.reportError`.
+  - A listener that throws is reported with `FlutterError.reportError` and the other listeners still run, also inside `Get.batch` (as with `ChangeNotifier`). It used to stop the notify, so later listeners (other `Obx`, workers, `Computed`) missed the change, and the error was thrown into the code that wrote the Rx.
+  - Writing a closed Rx (`value =`, `rx(v)`, `update`, `trigger`) throws a `FlutterError` in debug builds; release builds still ignore the write. It was silently ignored, which hid callbacks that outlived their widget or controller (`refresh()` and collection edits already asserted).
 
 ## Tests
 

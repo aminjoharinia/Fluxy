@@ -74,11 +74,33 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => value.hashCode;
 
+  /// True when this Rx was closed, so a write must be ignored. In debug
+  /// builds it throws instead (release builds still ignore the write): a
+  /// write after `close()` is usually a callback (a Future, a stream, a
+  /// timer) that outlived the widget or controller that closed this Rx, and
+  /// silently dropping it hid the bug.
+  bool _writeAfterClose(String what) {
+    if (!isDisposed) return false;
+    assert(() {
+      throw FlutterError.fromParts(<DiagnosticsNode>[
+        ErrorSummary('A $runtimeType was $what after close().'),
+        ErrorDescription(
+            'Writes to a closed Rx are ignored in release builds and throw in '
+            'debug builds, so a late write is found.'),
+        ErrorHint(
+            'Usually a callback (a Future, a stream, a timer) outlived the '
+            'widget or controller that closed this Rx. Cancel it in '
+            'onClose / dispose, or check `isDisposed` before writing.'),
+      ]);
+    }());
+    return true;
+  }
+
   /// Updates the [value] and adds it to the stream, updating the observer
   /// Widget, only if it's different from the previous value.
   @override
   set value(T val) {
-    if (isDisposed) return;
+    if (_writeAfterClose('given a value')) return;
     sentToStream = false;
     assert(() {
       if (!firstRebuild &&
@@ -192,7 +214,7 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   /// If [fn] returns the same object it was given (it edited it in place),
   /// listeners are still notified.
   void update(T Function(T? val) fn) {
-    if (isDisposed) return;
+    if (_writeAfterClose('updated')) return;
     final current = peek;
     final next = fn(current);
     if (identical(next, current) && !firstRebuild) {
@@ -228,7 +250,7 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   /// ```
   ///
   void trigger(T v) {
-    if (isDisposed) return;
+    if (_writeAfterClose('triggered')) return;
     value = v;
     // Same value: the setter did not notify, so notify here. This reaches
     // every listener (Obx, GetBuilder, workers), not only the stream as it
