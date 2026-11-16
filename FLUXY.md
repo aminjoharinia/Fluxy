@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.7.0
+    ref: v0.7.1
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.7.0
+    ref: v0.7.1
     path: packages/fluxy_state
 ```
 
@@ -104,12 +104,12 @@ fluxy_state:
   - `RxCommand`: an async action as an Rx of its `GetStatus`, with a rule for overlapping calls (`CommandMode.droppable` / `restartable` / `sequential` / `concurrent`), `isRunning`, and `cancel()`. `run()` never throws.
   - Performance: a `Computed` that reads the same sources in the same order as last time matches them by position (no lookup, no new list, no allocation per run), and one that a source notified recomputes without first scanning every source's version. Reading `rx.value` outside an `Obx` is one static check. Measured (release build): a derived sum of 1,000 sources 3.9× faster, a 100-deep chain 1.8×, the diamond 1.7×.
   - Benchmark suite in [`benchmark/`](benchmark/README.md): Fluxy against GetX 4.7.3, upstream GetX 5 at a294d2f, Riverpod 3.5, BLoC 9.2 and Signals 7.1, in release (AOT) macOS builds, with correctness checks (glitches, missed notifications, rebuild counts). Results in [`benchmark/results/RESULTS.md`](benchmark/results/RESULTS.md).
-- Unreleased:
+- v0.7.1:
   - `Computed` propagates by marking, then pulling. An Rx write only marks the `Computed`s that read it as stale (and the ones below them as maybe stale), right away and also inside `Get.batch`. Nothing recomputes until a read, or, for a `Computed` with listeners, once the write is fully applied. A `Computed` whose upstream result did not change is not recomputed, and a subscribed `Computed` ignores writes to values it does not read.
   - Listeners of a `Computed` now run after the listeners of the Rx that changed (they could run in the middle of them), still before the write returns. A `Computed` subscribes to its sources as a dependent, not a listener: `rx.listenersLength` no longer counts it; `dependentsLength` and `subscribersLength` are new. Inside `Get.batch`, an Rx nobody listens to is no longer queued.
   - `Obx` and `GetX` track their reads like a `Computed` (matched by position, no hash map for a few values, one `NotifyData` per element instead of one per build). An `Obx` build that throws keeps the values it read before the error, so it still rebuilds when one of them changes.
   - Faster tracked reads: no run stamp for a read in the same order as last time, a lookup index only past 8 sources, versions read from a field (a `Computed` validates before it reports the read), and the notifier's global state in static fields.
-  - Measured against v0.7.0 (release build, same machine): batch update 3.4× faster (132 µs, Signals 178 µs), derived sum of 1,000 sources 1.3×, diamond 1.3×, 100-deep chain 1.2×, mount + unmount and rebuild-all 1.2×. Fluxy is now fastest in 7 of the 10 scenarios; GetX 4.7.3 stays ahead on wide derived, deep chain and diamond with hand-wired listeners (and glitches), Signals on deep chain.
+  - Measured against v0.7.0 (release build, same machine): batch update 3.4× faster (132 µs, Signals 178 µs), derived sum of 1,000 sources 1.3×, diamond 1.3×, 100-deep chain 1.2×, mount + unmount 1.2×, rebuild-all 1.1×. Fluxy is now fastest in 7 of the 10 scenarios; GetX 4.7.3 stays ahead on wide derived, deep chain and diamond with hand-wired listeners (and glitches), Signals on deep chain.
 
 ## Tests
 
