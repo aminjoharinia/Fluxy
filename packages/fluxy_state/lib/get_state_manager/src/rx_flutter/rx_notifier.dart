@@ -174,6 +174,7 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
   T _value;
 
   @override
+  @pragma('vm:prefer-inline')
   T get value {
     reportRead();
     return _value;

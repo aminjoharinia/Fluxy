@@ -1,0 +1,10 @@
+apps/*/build/
+apps/*/.dart_tool/
+apps/*/macos/Flutter/ephemeral/
+apps/*/.flutter-plugins-dependencies
+bench_kit/.dart_tool/
+bench_kit/pubspec.lock
+results/*.log
+
+# keep the resolved library versions the numbers were measured with
+!apps/*/pubspec.lock

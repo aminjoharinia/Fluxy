@@ -1,0 +1,15 @@
+name: bench_bloc
+description: Fluxy state-management benchmark (bloc).
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  bench_kit:
+    path: ../../bench_kit
+  bloc: ^9.2.1
+  flutter_bloc: ^9.1.1

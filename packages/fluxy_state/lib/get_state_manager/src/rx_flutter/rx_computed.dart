@@ -98,13 +98,15 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
   @protected
   bool get bumpsGlobalVersion => false;
 
-  void _validate() {
+  void _validate({bool sourceNotified = false}) {
     if (_computing) {
       throw StateError('A Computed read its own value while computing it.');
     }
     final now = Notifier.instance.globalVersion;
     if (_hasRun && _checkedAt == now) return;
-    if (!_hasRun || _sources.changed) _recompute();
+    // A source that notified did change (an Rx notifies on a change, a
+    // Computed only when its result changed), so skip the version scan.
+    if (!_hasRun || sourceNotified || _sources.changed) _recompute();
     _checkedAt = now;
   }
 
@@ -143,7 +145,7 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
   void _sourceChanged() {
     if (isDisposed) return;
     try {
-      _validate();
+      _validate(sourceNotified: true);
     } catch (_) {
       // Only a cycle gets here (compute errors are kept as the value). Do
       // not throw into the source's notify loop; the listener's read throws.

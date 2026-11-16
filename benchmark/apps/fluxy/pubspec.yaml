@@ -1,0 +1,15 @@
+name: bench_fluxy
+description: Fluxy state-management benchmark (fluxy).
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  bench_kit:
+    path: ../../bench_kit
+  get:
+    path: ../../..

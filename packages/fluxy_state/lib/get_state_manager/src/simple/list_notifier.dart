@@ -60,8 +60,11 @@ mixin ListNotifierSingleMixin on Listenable {
   }
 
   @protected
+  @pragma('vm:prefer-inline')
   void reportRead() {
-    Notifier.instance.read(this);
+    // Outside an observer build there is nothing to record: one static
+    // field check, no call.
+    if (Notifier._notifyData != null) Notifier.instance.read(this);
   }
 
   @protected
@@ -226,7 +229,9 @@ class Notifier {
   static Notifier? _instance;
   static Notifier get instance => _instance ??= Notifier._();
 
-  NotifyData? _notifyData;
+  /// The observer being built / computed right now. Static so an untracked
+  /// read (the common case) costs one field check (see [ListNotifierSingleMixin.reportRead]).
+  static NotifyData? _notifyData;
 
   int _batchDepth = 0;
   final _pending = LinkedHashSet<ListNotifierSingleMixin>.identity();
@@ -504,9 +509,26 @@ class _Source {
 class TrackedSources extends ReadTracker {
   List<_Source> _list = <_Source>[];
   final _byNotifier = HashMap<ListNotifierSingleMixin, _Source>.identity();
-  List<_Source>? _next;
   int _run = 0;
   GetStateUpdate? _listener;
+
+  /// While tracking: how many sources of [_list] were read again in the
+  /// same order. Reads usually repeat the last run exactly, so they are
+  /// matched by position, with no lookup and no new list.
+  int _cursor = 0;
+  bool _tracking = false;
+
+  /// Set once a run reads something out of the last run's order; from
+  /// there it collects into a new list.
+  List<_Source>? _next;
+
+  /// Reused by every run (the disposers it collects are dropped).
+  late final NotifyData _data = NotifyData(
+    updater: _ignore,
+    disposers: <Disposer>[],
+    subscriptions: this,
+    throwException: false,
+  );
 
   int get length => _list.length;
   @override
@@ -551,14 +573,9 @@ class TrackedSources extends ReadTracker {
   /// before the throw are added to the previous ones (so a change of any of
   /// them runs it again) and the error is rethrown.
   T track<T>(T Function() fn) {
-    final notifier = Notifier.instance;
-    final previous = notifier._notifyData;
-    notifier._notifyData = NotifyData(
-      updater: _ignore,
-      disposers: <Disposer>[],
-      subscriptions: this,
-      throwException: false,
-    );
+    final previous = Notifier._notifyData;
+    Notifier._notifyData = _data;
+    _data.disposers.clear();
     _begin();
     try {
       final result = fn();
@@ -568,7 +585,7 @@ class TrackedSources extends ReadTracker {
       _endAfterError();
       rethrow;
     } finally {
-      notifier._notifyData = previous;
+      Notifier._notifyData = previous;
     }
   }
 
@@ -577,13 +594,33 @@ class TrackedSources extends ReadTracker {
   @override
   void _begin() {
     _run++;
-    _next = <_Source>[];
+    _cursor = 0;
+    _next = null;
+    _tracking = true;
   }
 
   @override
   void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater) {
-    final next = _next;
-    if (next == null) return;
+    if (!_tracking) return;
+    var next = _next;
+    if (next == null) {
+      // Same order as the last run so far.
+      final list = _list;
+      final cursor = _cursor;
+      if (cursor < list.length) {
+        final source = list[cursor];
+        if (identical(source.notifier, notifier)) {
+          source.run = _run;
+          _cursor = cursor + 1;
+          source.version = notifier.reactiveVersion;
+          return;
+        }
+      }
+      // A second read of a source already read in this run.
+      final seen = _byNotifier[notifier];
+      if (seen != null && seen.run == _run) return;
+      next = _next = list.sublist(0, cursor);
+    }
     var source = _byNotifier[notifier];
     if (source == null) {
       source = _byNotifier[notifier] = _Source(notifier);
@@ -602,9 +639,22 @@ class TrackedSources extends ReadTracker {
 
   @override
   void _end() {
-    final next = _next!;
+    _tracking = false;
+    final next = _next;
+    final list = _list;
+    if (next == null) {
+      // Same reads as last time, maybe fewer: drop the ones not read.
+      if (_cursor == list.length) return;
+      for (var i = _cursor; i < list.length; i++) {
+        final source = list[i];
+        source.disposer?.call();
+        _byNotifier.remove(source.notifier);
+      }
+      list.length = _cursor;
+      return;
+    }
     _next = null;
-    for (final source in _list) {
+    for (final source in list) {
       if (source.run != _run) {
         source.disposer?.call();
         _byNotifier.remove(source.notifier);
@@ -614,7 +664,10 @@ class TrackedSources extends ReadTracker {
   }
 
   void _endAfterError() {
-    final next = _next!;
+    _tracking = false;
+    final next = _next;
+    // Still in the last run's order: every old source is kept anyway.
+    if (next == null) return;
     _next = null;
     for (final source in _list) {
       if (source.run != _run) next.add(source);

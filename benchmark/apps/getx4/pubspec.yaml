@@ -1,0 +1,14 @@
+name: bench_getx4
+description: Fluxy state-management benchmark (getx4).
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  bench_kit:
+    path: ../../bench_kit
+  get: ^4.7.3

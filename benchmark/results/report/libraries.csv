@@ -1,0 +1,7 @@
+library,libraryName,versions,notifies,notes,runs,mode
+fluxy,Fluxy,this repo,sync,"Rx.addListener, glitch-free Computed, Get.batch, Obx",3,release
+getx5,GetX 5 (upstream),get 5.0.0-release-candidate-9.3.3,sync,fork base a294d2f; Rx.addListener; derived values by hand; Obx,3,release
+getx4,GetX 4.7.3,get 4.7.3,sync,pub.dev stable; Rx.listen (synchronous GetStream); derived values by hand; Obx,3,release
+riverpod,Riverpod 3.5,"riverpod 3.5.0, flutter_riverpod 3.5.0",async (streams / scheduled),"NotifierProvider + Provider (ref.watch), container.listen, Consumer; no batch API (derived providers recompute lazily)",3,release
+bloc,BLoC 9.2,"bloc 9.2.1, flutter_bloc 9.1.1",async (streams / scheduled),Cubit + stream.listen; derived values are cubits listening to other cubits; BlocBuilder; no batch API,3,release
+signals,Signals 7.1,"signals 7.1.0, signals_core 7.0.0, signals_flutter 7.1.0",sync,"signal / computed / subscribe / batch, SignalBuilder widget",3,release

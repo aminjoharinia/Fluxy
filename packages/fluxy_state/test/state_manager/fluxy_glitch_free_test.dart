@@ -148,6 +148,61 @@ void main() {
     });
   });
 
+  group('source tracking', () {
+    test('same reads, reordered reads, duplicates, fewer reads', () {
+      final a = 1.obs, b = 2.obs, c = 3.obs;
+      final mode = 0.obs;
+      final sum = Computed(() {
+        switch (mode.value) {
+          case 0:
+            return a.value + b.value + c.value;
+          case 1:
+            return c.value + a.value + a.value + b.value; // reordered, dup
+          default:
+            return a.value; // fewer
+        }
+      });
+      sum.addListener(() {});
+      expect(sum.peek, 6);
+      a.value = 10;
+      expect(sum.peek, 15);
+
+      mode.value = 1;
+      expect(sum.peek, 3 + 10 + 10 + 2);
+      expect(a.listenersLength, 1, reason: 'a duplicate read subscribes once');
+      c.value = 4;
+      expect(sum.peek, 4 + 10 + 10 + 2);
+
+      mode.value = 2;
+      expect(sum.peek, 10);
+      expect(b.listenersLength, 0);
+      expect(c.listenersLength, 0);
+      b.value = 99;
+      c.value = 99;
+      expect(sum.peek, 10);
+      a.value = 11;
+      expect(sum.peek, 11);
+    });
+
+    test('an error part-way keeps every source of the last run', () {
+      final a = 1.obs, b = 2.obs;
+      final fail = false.obs;
+      final c = Computed(() {
+        final x = a.value;
+        if (fail.value) throw StateError('x');
+        return x + b.value;
+      });
+      c.addListener(() {});
+      expect(c.peek, 3);
+      fail.value = true;
+      expect(() => c.peek, throwsStateError);
+      expect(b.listenersLength, 1, reason: 'kept: it may matter again');
+      fail.value = false;
+      b.value = 5;
+      expect(c.peek, 6);
+    });
+  });
+
   group('effect', () {
     test('runs now and again when what it read changes', () {
       final n = 1.obs;

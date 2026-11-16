@@ -5,7 +5,7 @@ Fluxy is a private fork of [GetX](https://github.com/jonataslaw/getx) (MIT), spl
 | Package | What it holds |
 |---|---|
 | `fluxy_core` | `Get` singleton, logging, `Get.asap`, `Equality` |
-| `fluxy_state` | `.obs` / `Rx*`, `Obx`, controllers, workers, DI, `Get.batch`, `peek`, copy-on-write edits |
+| `fluxy_state` | `.obs` / `Rx*`, `Obx`, glitch-free `Computed`, `effect`, `RxFuture`, `RxCommand`, controllers, workers, DI, `Get.batch`, `peek`, copy-on-write edits |
 | `fluxy_i18n` | `Translations`, reactive `.tr`, `.trParams`, locale state |
 | `fluxy_utils` | `GetPlatform`, validators, extensions, `GetQueue` |
 | `fluxy_nav` | `GetMaterialApp` / `GetCupertinoApp`, router, `Get.to` / `back`, dialogs, sheets, snackbars |
@@ -47,8 +47,10 @@ final cart = Get.put(CartController());
 Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 ```
 
-- **State:** an `Obx` subscribes to exactly the Rx values its last build read. Write new values instead of editing in place (`mapWith`, `listWith`, `setIn`, `patch`); `rx.peek` reads without subscribing.
+- **State:** an `Obx` subscribes to exactly the Rx values its last build read. `Computed` derives values without glitches, `effect` reacts to them, and effects, `Computed`s and workers made in a controller's `onInit` are disposed with it. Write new values instead of editing in place (`mapWith`, `listWith`, `setIn`, `patch`); `rx.peek` reads without subscribing.
 - **Navigation:** `GetMaterialApp.router(getPages: ..., initialRoute: ..., unknownRoute: ...)`. Unknown addresses reach `unknownRoute`; web uses hash URLs unless you call `setUrlStrategy()` before `runApp`.
 - **Translations:** `.tr` inside an `Obx` updates on a language change; `Get.updateLocale(locale)` rebuilds the rest.
 
 What changed from GetX, release by release: [FLUXY.md](FLUXY.md). The upstream GetX guides in [`documentation/`](documentation/) still describe most of the API, but not the changes listed there (and they mention `GetConnect`, which is removed).
+
+How Fluxy compares with GetX 4, upstream GetX 5, Riverpod, BLoC and Signals in release builds: [benchmark/results/RESULTS.md](benchmark/results/RESULTS.md) (method in [benchmark/README.md](benchmark/README.md)).
