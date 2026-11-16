@@ -110,6 +110,13 @@ fluxy_state:
   - `Obx` and `GetX` track their reads like a `Computed` (matched by position, no hash map for a few values, one `NotifyData` per element instead of one per build). An `Obx` build that throws keeps the values it read before the error, so it still rebuilds when one of them changes.
   - Faster tracked reads: no run stamp for a read in the same order as last time, a lookup index only past 8 sources, versions read from a field (a `Computed` validates before it reports the read), and the notifier's global state in static fields.
   - Measured against v0.7.0 (release build, same machine): batch update 3.4× faster (132 µs, Signals 178 µs), derived sum of 1,000 sources 1.3×, diamond 1.3×, 100-deep chain 1.2×, mount + unmount 1.2×, rebuild-all 1.1×. Fluxy is now fastest in 7 of the 10 scenarios; GetX 4.7.3 stays ahead on wide derived, deep chain and diamond with hand-wired listeners (and glitches), Signals on deep chain.
+- Unreleased:
+  - An Rx write compares the new value once (it ran `==` twice, costly for models with lists). An equal value never notifies, the first write included; `update()` that edits in place now notifies on the very first write too, and `trigger()` no longer needs a flag. The unused public `firstRebuild` / `sentToStream` fields are gone.
+  - A notifier creates its listener list on the first listener, and a controller its `GetBuilder` id map on the first id. Unsubscribing finds the listener by identity from both ends of the list (it compared closures with `==` from the start: N listeners of one value cost N² compares); `removeListener` with a tear-off made again still works.
+  - `Get.find` / `findOrNull` look the key up once (three lookups and three `(Type, tag)` records before).
+  - Fix: `dispose()` on a `GetxController`, `Value` or other `ListNotifier` now removes its listeners and sets `isDisposed` (the group mixin's dispose skipped the listener part). `addListener` on a disposed notifier is ignored in release builds (asserts in debug).
+  - Benchmark: subscribe + unsubscribe on a shared value, mount + unmount of widgets sharing one value, memory per value and per listener; app sizes (tiny / normal / heavy / super) and the size picker in the benchmark UI.
+  - Measured against v0.7.1 (release build, runs alternated): subscribe + unsubscribe 9.5× faster (1.0 ms; GetX 5 9.4 ms), create + dispose 1.8× (fastest of the six), a value with no listener 214 → 180 bytes, batch update 1.1×; other scenarios unchanged. Fluxy is fastest in 5 of the 12 scenarios. Still behind: shared subscribe / unmount (BLoC and Signals ~80 µs / ~1.1 ms with linked subscriptions), wide derived and deep chain (GetX 4, Signals).
 
 ## Tests
 

@@ -280,35 +280,31 @@ extension Inst on GetInterface {
   /// If the registered type <[S]> (or [tag]) is a Controller,
   /// it will initialize it's lifecycle.
   S find<S>({String? tag}) {
-    final key = _getKey(S, tag);
-    if (isRegistered<S>(tag: tag)) {
-      final dep = _singl[key];
-      if (dep == null) {
-        if (tag == null) {
-          throw 'Class "$S" is not registered';
-        } else {
-          throw 'Class "$S" with tag "$tag" is not registered';
-        }
-      }
-
-      /// although dirty solution, the lifecycle starts inside
-      /// `initDependencies`, so we have to return the instance from there
-      /// to make it compatible with `Get.create()`.
-      final i = _initDependencies<S>(name: tag);
-      return i ?? dep.getDependency() as S;
-    } else {
+    // One lookup for the common case (an instance already started), which
+    // `GetView.controller` hits on every access, often inside build. It
+    // used to look the key up three times (and build a (Type, tag) record
+    // for each).
+    final dep = _singl[_getKey(S, tag)];
+    if (dep == null) {
       // ignore: lines_longer_than_80_chars
       throw '"$S" not found. You need to call "Get.put($S())" or "Get.lazyPut(()=>$S())"';
     }
+    if (dep.isInit) return dep.getDependency() as S;
+
+    /// although dirty solution, the lifecycle starts inside
+    /// `initDependencies`, so we have to return the instance from there
+    /// to make it compatible with `Get.create()`.
+    final i = _initDependencies<S>(name: tag);
+    return i ?? dep.getDependency() as S;
   }
 
   /// The findOrNull method will return the instance if it is registered;
   /// otherwise, it will return null.
   S? findOrNull<S>({String? tag}) {
-    if (isRegistered<S>(tag: tag)) {
-      return find<S>(tag: tag);
-    }
-    return null;
+    final dep = _singl[_getKey(S, tag)];
+    if (dep == null) return null;
+    if (dep.isInit) return dep.getDependency() as S;
+    return find<S>(tag: tag);
   }
 
   /// Replace a parent instance of a class in dependency management

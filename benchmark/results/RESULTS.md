@@ -4,16 +4,18 @@ Apple M4 Pro, macOS 26.6.2 (Build 25G83), Flutter 3.50.0 • channel stable. Rel
 
 | Scenario | Fluxy | GetX 5 (upstream) | GetX 4.7.3 | Riverpod 3.5 | BLoC 9.2 | Signals 7.1 |
 |---|---|---|---|---|---|---|
-| Create + dispose | 65 µs | **63 µs** | 101 µs | 1.48 ms | 140 µs | 90 µs |
-| Write, 1 listener | **100 µs** | 162 µs | 107 µs | 1.30 ms | 289 µs | 313 µs |
-| Fan-out | **183 µs** | 249 µs | 583 µs | 1.46 ms | 2.49 ms | 2.76 ms |
-| Wide derived | 3.40 ms | 4.92 ms | **1.22 ms** | 2.27 s | 7.62 ms | 10.82 ms |
-| Deep chain | 4.04 ms | 3.49 ms | **2.99 ms** | 379.10 ms | 11.34 ms | 3.19 ms |
-| Diamond | 92 µs | 115 µs | **68 µs** | 11.37 ms | 7.08 ms | 115 µs |
-| Batch update | **132 µs** | 5.18 ms | 1.41 ms | 5.41 ms | 1.49 ms | 178 µs |
-| Mount + unmount | **1.03 ms** | 1.04 ms | 1.59 ms | 1.71 ms | 1.10 ms | 1.21 ms |
-| Rebuild all | **334 µs** | 397 µs | 373 µs | 556 µs | 419 µs | 447 µs |
-| Rebuild one of 1,000 | **215 µs** | 226 µs | 229 µs | 217 µs | 234 µs | 232 µs |
+| Create + dispose | **37 µs** | 64 µs | 119 µs | 1.47 ms | 140 µs | 90 µs |
+| Write, 1 listener | **99 µs** | 158 µs | 111 µs | 1.30 ms | 291 µs | 332 µs |
+| Fan-out | **199 µs** | 246 µs | 601 µs | 1.45 ms | 2.50 ms | 2.78 ms |
+| Subscribe + unsubscribe, shared | 1.06 ms | 9.41 ms | 1.28 ms | 852 µs | **80 µs** | 82 µs |
+| Wide derived | 3.50 ms | 4.93 ms | **1.25 ms** | 2.25 s | 5.04 ms | 11.81 ms |
+| Deep chain | 4.49 ms | 3.70 ms | **3.24 ms** | 393.85 ms | 9.09 ms | 3.25 ms |
+| Diamond | 96 µs | 122 µs | **68 µs** | 10.98 ms | 4.61 ms | 114 µs |
+| Batch update | **127 µs** | 5.18 ms | 1.40 ms | 5.39 ms | 1.26 ms | 181 µs |
+| Mount + unmount | 1.04 ms | **1.04 ms** | 1.68 ms | 1.69 ms | 1.08 ms | 1.17 ms |
+| Mount + unmount, shared value | 2.91 ms | 23.70 ms | 3.55 ms | 2.54 ms | **1.07 ms** | 1.12 ms |
+| Rebuild all | **356 µs** | 408 µs | 375 µs | 577 µs | 429 µs | 452 µs |
+| Rebuild one | 238 µs | 238 µs | **219 µs** | 224 µs | 240 µs | 238 µs |
 
 ## Correctness
 
@@ -25,5 +27,18 @@ Apple M4 Pro, macOS 26.6.2 (Build 25G83), Flutter 3.50.0 • channel stable. Rel
 | Riverpod 3.5 | 1.0 | 0.0 | 1.0 | 1.0 |
 | BLoC 9.2 | 1.0 | 0.0 | 2.0 | 1.0 |
 | Signals 7.1 | 1.0 | 0.0 | 1.0 | 1.0 |
+
+## Memory
+
+Growth of the process's resident memory while 200,000 values are created, then while each gets one listener (lowest of the runs; a rough figure).
+
+| Library | Bytes / value | Bytes / listener |
+|---|---|---|
+| Fluxy | 185.0 | 205.0 |
+| GetX 5 (upstream) | 168.0 | 175.0 |
+| GetX 4.7.3 | 301.0 | 314.0 |
+| Riverpod 3.5 | 1704.0 | 348.0 |
+| BLoC 9.2 | 133.0 | 226.0 |
+| Signals 7.1 | 365.0 | 415.0 |
 
 Library versions: Fluxy (this repo); GetX 5 (upstream) (get 5.0.0-release-candidate-9.3.3); GetX 4.7.3 (get 4.7.3); Riverpod 3.5 (riverpod 3.5.0, flutter_riverpod 3.5.0); BLoC 9.2 (bloc 9.2.1, flutter_bloc 9.1.1); Signals 7.1 (signals 7.1.0, signals_core 7.0.0, signals_flutter 7.1.0)

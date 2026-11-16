@@ -18,6 +18,10 @@ abstract class WidgetSuite {
   /// The reactive widget for value [i]; it must build `Leaf(value)`.
   Widget leaf(int i);
 
+  /// A reactive widget that reads the one value every `sharedLeaf` shares
+  /// (created in [setup]); it must build `Leaf(value)`.
+  Widget sharedLeaf(int i);
+
   /// Sets value [i].
   void write(int i, int value);
 
@@ -54,11 +58,14 @@ Future<void> pumpFrame() async {
   binding.handleDrawFrame();
 }
 
-Widget _tree(WidgetSuite suite, int n) => Align(
+Widget _tree(WidgetSuite suite, int n, {bool shared = false}) => Align(
       alignment: Alignment.topLeft,
       child: SizedBox(
         width: 200,
-        child: Wrap(children: [for (var i = 0; i < n; i++) suite.leaf(i)]),
+        child: Wrap(children: [
+          for (var i = 0; i < n; i++)
+            shared ? suite.sharedLeaf(i) : suite.leaf(i)
+        ]),
       ),
     );
 
@@ -71,18 +78,21 @@ Widget benchHost() => ValueListenableBuilder<Widget>(
 
 Future<List<Map<String, Object?>>> runWidgets(
   WidgetSuite suite, {
+  BenchSize size = BenchSize.normal,
   ScenarioStart? onStart,
   ScenarioResult? onResult,
 }) async {
-  const n = 1000;
+  final n = size.widgets;
   final results = <Map<String, Object?>>[];
   suite.setup(n);
   var counter = 1;
 
   Future<Map<String, Object?>> step(String id, Bench Function() make) async {
     await onStart?.call(id);
-    final result =
-        await measure(id, make, budget: const Duration(milliseconds: 2000));
+    final result = await measure(id, make,
+        warmup: size.warmup,
+        minSamples: size.minSamples,
+        budget: const Duration(milliseconds: 2000));
     onResult?.call(result);
     return result;
   }
@@ -93,6 +103,21 @@ Future<List<Map<String, Object?>>> runWidgets(
       run: () async {
         final before = Leaf.builds;
         _host.value = _tree(suite, n);
+        await pumpFrame();
+        check(Leaf.builds - before == n,
+            'mount built ${Leaf.builds - before} leaves, expected $n');
+        _host.value = const SizedBox();
+        await pumpFrame();
+      },
+    );
+  }));
+
+  results.add(await step('mountShared', () {
+    return Bench(
+      opsPerRun: n,
+      run: () async {
+        final before = Leaf.builds;
+        _host.value = _tree(suite, n, shared: true);
         await pumpFrame();
         check(Leaf.builds - before == n,
             'mount built ${Leaf.builds - before} leaves, expected $n');
@@ -145,6 +170,7 @@ Future<List<Map<String, Object?>>> runWidgets(
 
 /// With `--dart-define=BENCH_OUT=...` (what `run.sh` does): runs everything
 /// for one library with no UI, writes the JSON there and exits.
+/// `--dart-define=BENCH_SIZE=tiny|normal|heavy|super` picks the workload.
 ///
 /// Without it (the app opened by hand): shows the benchmark UI, which runs
 /// the same scenarios on demand and charts them next to the saved results
@@ -157,6 +183,8 @@ Future<void> runBenchmarks({
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
   const out = String.fromEnvironment('BENCH_OUT');
+  final size = BenchSize.fromKey(
+      const String.fromEnvironment('BENCH_SIZE', defaultValue: 'normal'));
   if (out.isEmpty) {
     runApp(widgets.wrap(BenchApp(
       library: library,
@@ -172,18 +200,21 @@ Future<void> runBenchmarks({
   )));
   await pumpFrame();
 
-  final coreResults = await runCore(core);
-  final widgetResults = await runWidgets(widgets);
+  // First, in a fresh heap (see measureMemory).
+  final memory = await measureMemory(core);
+  final coreResults = await runCore(core, size: size);
+  final widgetResults = await runWidgets(widgets, size: size);
 
   final json = const JsonEncoder.withIndent('  ').convert({
     'library': library,
     'notes': notes,
+    'size': size.key,
     'asyncNotify': core.asyncNotify,
     'dart': Platform.version,
     'os': Platform.operatingSystemVersion,
     'cpus': Platform.numberOfProcessors,
     'mode': const bool.fromEnvironment('dart.vm.product') ? 'release' : 'debug',
-    'results': [...coreResults, ...widgetResults],
+    'results': [...coreResults, ...widgetResults, memory],
   });
   File(out).writeAsStringSync(json);
   exit(0);

@@ -1,0 +1,138 @@
+{
+  "library": "Signals 7.1",
+  "notes": "signal / computed / subscribe / batch, SignalBuilder widget",
+  "size": "super",
+  "asyncNotify": false,
+  "dart": "3.14.0 (stable) (Wed Nov 4 16:28:39 2026 -0800) on \"macos_arm64\"",
+  "os": "Version 26.6.2 (Build 25G83)",
+  "cpus": 12,
+  "mode": "release",
+  "results": [
+    {
+      "id": "create",
+      "ok": true,
+      "medianUs": 7202,
+      "p25Us": 6245,
+      "p75Us": 8052,
+      "minUs": 4616,
+      "samples": 342,
+      "opsPerRun": 20000,
+      "nsPerOp": 360.1,
+      "metrics": {}
+    },
+    {
+      "id": "write",
+      "ok": true,
+      "medianUs": 6385,
+      "p25Us": 6312,
+      "p75Us": 6468,
+      "minUs": 6176,
+      "samples": 391,
+      "opsPerRun": 200000,
+      "nsPerOp": 31.925,
+      "metrics": {}
+    },
+    {
+      "id": "fanout",
+      "ok": true,
+      "medianUs": 62886,
+      "p25Us": 62530,
+      "p75Us": 63380,
+      "minUs": 62148,
+      "samples": 40,
+      "opsPerRun": 100,
+      "nsPerOp": 628860.0,
+      "metrics": {}
+    },
+    {
+      "id": "wide",
+      "ok": true,
+      "medianUs": 336379,
+      "p25Us": 335542,
+      "p75Us": 337347,
+      "minUs": 334413,
+      "samples": 8,
+      "opsPerRun": 5000,
+      "nsPerOp": 67275.8,
+      "metrics": {}
+    },
+    {
+      "id": "chain",
+      "ok": true,
+      "medianUs": 25055,
+      "p25Us": 24857,
+      "p75Us": 25277,
+      "minUs": 24349,
+      "samples": 100,
+      "opsPerRun": 1000,
+      "nsPerOp": 25055.0,
+      "metrics": {}
+    },
+    {
+      "id": "diamond",
+      "ok": true,
+      "medianUs": 2302,
+      "p25Us": 2276,
+      "p75Us": 2342,
+      "minUs": 2206,
+      "samples": 400,
+      "opsPerRun": 20000,
+      "nsPerOp": 115.1,
+      "metrics": {
+        "listenerCallsPerWrite": 1.0,
+        "glitchesPerWrite": 0.0,
+        "recomputesPerWrite": 1.0
+      }
+    },
+    {
+      "id": "batch",
+      "ok": true,
+      "medianUs": 2502,
+      "p25Us": 2468,
+      "p75Us": 2543,
+      "minUs": 2235,
+      "samples": 400,
+      "opsPerRun": 100,
+      "nsPerOp": 25020.0,
+      "metrics": {
+        "listenerCallsPerRound": 1.0
+      }
+    },
+    {
+      "id": "mount",
+      "ok": true,
+      "medianUs": 75489,
+      "p25Us": 70827,
+      "p75Us": 80736,
+      "minUs": 58855,
+      "samples": 28,
+      "opsPerRun": 20000,
+      "nsPerOp": 3774.45,
+      "metrics": {}
+    },
+    {
+      "id": "rebuildAll",
+      "ok": true,
+      "medianUs": 23081,
+      "p25Us": 22075,
+      "p75Us": 25076,
+      "minUs": 18388,
+      "samples": 85,
+      "opsPerRun": 20000,
+      "nsPerOp": 1154.05,
+      "metrics": {}
+    },
+    {
+      "id": "rebuildOne",
+      "ok": true,
+      "medianUs": 7001,
+      "p25Us": 6749,
+      "p75Us": 7169,
+      "minUs": 5657,
+      "samples": 289,
+      "opsPerRun": 1,
+      "nsPerOp": 7001000.0,
+      "metrics": {}
+    }
+  ]
+}

@@ -15,3 +15,6 @@ dependencies:
     git:
       url: https://github.com/jonataslaw/getx.git
       ref: a294d2fbfc65856ca1da1bd37e5018e778e8939a
+
+flutter:
+  uses-material-design: true

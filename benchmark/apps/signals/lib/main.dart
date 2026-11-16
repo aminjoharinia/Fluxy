@@ -22,9 +22,53 @@ void Function() _on<T>(ReadonlySignal<T> s, void Function() listener) {
   });
 }
 
+void _noop() {}
+
 class _Core extends CoreSuite {
   @override
   bool get asyncNotify => false;
+
+  @override
+  Bench subscribeShared(int listeners) {
+    final s = signal(0);
+    final order = scatteredOrder(listeners);
+    var calls = 0, base = 0;
+    return Bench(
+      opsPerRun: listeners,
+      run: () {
+        final removers = [
+          for (var i = 0; i < listeners; i++) _on(s, () => calls++)
+        ];
+        final start = calls;
+        s.value = ++base;
+        check(calls - start == listeners, 'missed notifications');
+        for (final i in order) {
+          removers[i]();
+        }
+        s.value = ++base;
+        check(calls - start == listeners, 'listener ran after removal');
+      },
+      dispose: s.dispose,
+    );
+  }
+
+  @override
+  MemoryProbe memory(int n) {
+    late List<Signal<int>> cells;
+    late List<void Function()> removers;
+    return MemoryProbe(
+      create: () => cells = List.generate(n, (i) => signal(i)),
+      listen: () => removers = [for (final c in cells) _on(c, _noop)],
+      dispose: () {
+        for (final r in removers) {
+          r();
+        }
+        for (final c in cells) {
+          c.dispose();
+        }
+      },
+    );
+  }
 
   @override
   Bench create(int n) => Bench(
@@ -214,10 +258,18 @@ class _Core extends CoreSuite {
 }
 
 class _Widgets extends WidgetSuite {
+  late Signal<int> shared;
+
+  @override
+  Widget sharedLeaf(int i) => SignalBuilder(builder: (_) => Leaf(shared.value));
+
   late List<Signal<int>> values;
 
   @override
-  void setup(int n) => values = List.generate(n, (i) => signal(i));
+  void setup(int n) {
+    values = List.generate(n, (i) => signal(i));
+    shared = signal(7);
+  }
 
   @override
   Widget leaf(int i) => SignalBuilder(builder: (_) => Leaf(values[i].value));
@@ -227,6 +279,7 @@ class _Widgets extends WidgetSuite {
 
   @override
   void teardown() {
+    shared.dispose();
     for (final v in values) {
       v.dispose();
     }

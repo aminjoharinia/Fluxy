@@ -17,7 +17,7 @@ summary = json.load(open(os.path.join(root, "results", "summary.json")))
 out = os.path.join(root, "results", "report")
 os.makedirs(out, exist_ok=True)
 
-# Mirrors scenarioInfos in bench_kit/lib/src/harness.dart.
+# Mirrors scenarioInfos in bench_kit/lib/src/harness.dart (normal size).
 SCENARIOS = [
     ("create", "Create + dispose", "core", "value",
      "1,000 reactive values, one listener each, then disposed."),
@@ -25,6 +25,8 @@ SCENARIOS = [
      "10,000 writes to one value with one listener."),
     ("fanout", "Fan-out", "core", "write",
      "100 writes to one value with 1,000 listeners."),
+    ("subscribe", "Subscribe + unsubscribe, shared", "core", "listener",
+     "1,000 listeners subscribe to one value and unsubscribe in a scattered order, with a write in between."),
     ("wide", "Wide derived", "core", "write",
      "1,000 sources summed by one derived value; each source written once, the sum read after every write."),
     ("chain", "Deep chain", "core", "write",
@@ -35,13 +37,16 @@ SCENARIOS = [
      "100 sources and a derived sum with a listener; 100 rounds that change every source (batched where the library can), then read the sum."),
     ("mount", "Mount + unmount", "widget", "widget",
      "Mount 1,000 reactive widgets (each subscribing to its own value), one frame, then unmount them, one frame."),
+    ("mountShared", "Mount + unmount, shared value", "widget", "widget",
+     "Mount 1,000 reactive widgets that all read the same value, one frame, then unmount them, one frame."),
     ("rebuildAll", "Rebuild all", "widget", "widget",
      "Write all 1,000 values, then one frame that rebuilds all 1,000 widgets."),
-    ("rebuildOne", "Rebuild one of 1,000", "widget", "frame",
+    ("rebuildOne", "Rebuild one", "widget", "frame",
      "Write one of 1,000 values, then one frame that must rebuild exactly that widget."),
 ]
 
-METRICS = ["listenerCallsPerWrite", "glitchesPerWrite", "recomputesPerWrite", "listenerCallsPerRound"]
+METRICS = ["listenerCallsPerWrite", "glitchesPerWrite", "recomputesPerWrite", "listenerCallsPerRound",
+           "bytesPerValue", "bytesPerListener"]
 
 with open(os.path.join(out, "results.csv"), "w", newline="") as f:
     w = csv.writer(f)
@@ -123,6 +128,13 @@ for l in libs:
     b = next((x for x in l["results"] if x["id"] == "batch"), {}).get("metrics", {})
     lines.append(f"| {l['library']} | {d.get('listenerCallsPerWrite', '')} | {d.get('glitchesPerWrite', '')} | "
                  f"{d.get('recomputesPerWrite', '')} | {b.get('listenerCallsPerRound', '')} |")
+lines += ["", "## Memory", "",
+          "Growth of the process's resident memory while 200,000 values are created, then while each gets one "
+          "listener (lowest of the runs; a rough figure).", "",
+          "| Library | Bytes / value | Bytes / listener |", "|---|---|---|"]
+for l in libs:
+    mm = next((x for x in l["results"] if x["id"] == "memory"), {}).get("metrics", {})
+    lines.append(f"| {l['library']} | {mm.get('bytesPerValue', '')} | {mm.get('bytesPerListener', '')} |")
 lines += ["", "Library versions: " + "; ".join(
     f"{l['library']} ({', '.join(f'{k} {v}' for k, v in l['versions'].items()) or 'this repo'})" for l in libs), ""]
 open(os.path.join(root, "results", "RESULTS.md"), "w").write("\n".join(lines))

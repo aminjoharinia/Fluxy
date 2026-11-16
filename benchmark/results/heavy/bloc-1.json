@@ -1,0 +1,138 @@
+{
+  "library": "BLoC 9.2",
+  "notes": "Cubit + stream.listen; derived values are cubits listening to other cubits; BlocBuilder; no batch API",
+  "size": "heavy",
+  "asyncNotify": true,
+  "dart": "3.14.0 (stable) (Wed Nov 4 16:28:39 2026 -0800) on \"macos_arm64\"",
+  "os": "Version 26.6.2 (Build 25G83)",
+  "cpus": 12,
+  "mode": "release",
+  "results": [
+    {
+      "id": "create",
+      "ok": true,
+      "medianUs": 1027,
+      "p25Us": 659,
+      "p75Us": 1604,
+      "minUs": 611,
+      "samples": 400,
+      "opsPerRun": 5000,
+      "nsPerOp": 205.4,
+      "metrics": {}
+    },
+    {
+      "id": "write",
+      "ok": true,
+      "medianUs": 1628,
+      "p25Us": 1492,
+      "p75Us": 1730,
+      "minUs": 1426,
+      "samples": 400,
+      "opsPerRun": 50000,
+      "nsPerOp": 32.56,
+      "metrics": {}
+    },
+    {
+      "id": "fanout",
+      "ok": true,
+      "medianUs": 35052,
+      "p25Us": 30598,
+      "p75Us": 37056,
+      "minUs": 28429,
+      "samples": 73,
+      "opsPerRun": 100,
+      "nsPerOp": 350520.0,
+      "metrics": {}
+    },
+    {
+      "id": "wide",
+      "ok": true,
+      "medianUs": 15385,
+      "p25Us": 15203,
+      "p75Us": 15551,
+      "minUs": 14604,
+      "samples": 162,
+      "opsPerRun": 2500,
+      "nsPerOp": 6154.0,
+      "metrics": {}
+    },
+    {
+      "id": "chain",
+      "ok": true,
+      "medianUs": 15897,
+      "p25Us": 15774,
+      "p75Us": 16036,
+      "minUs": 15048,
+      "samples": 158,
+      "opsPerRun": 1000,
+      "nsPerOp": 15897.0,
+      "metrics": {}
+    },
+    {
+      "id": "diamond",
+      "ok": true,
+      "medianUs": 20729,
+      "p25Us": 20368,
+      "p75Us": 21524,
+      "minUs": 19951,
+      "samples": 120,
+      "opsPerRun": 5000,
+      "nsPerOp": 4145.8,
+      "metrics": {
+        "listenerCallsPerWrite": 1.0,
+        "glitchesPerWrite": 0.0,
+        "recomputesPerWrite": 2.0
+      }
+    },
+    {
+      "id": "batch",
+      "ok": true,
+      "medianUs": 5088,
+      "p25Us": 5047,
+      "p75Us": 5134,
+      "minUs": 4698,
+      "samples": 400,
+      "opsPerRun": 100,
+      "nsPerOp": 50880.0,
+      "metrics": {
+        "listenerCallsPerRound": 1.0
+      }
+    },
+    {
+      "id": "mount",
+      "ok": true,
+      "medianUs": 12458,
+      "p25Us": 11475,
+      "p75Us": 14049,
+      "minUs": 8051,
+      "samples": 159,
+      "opsPerRun": 5000,
+      "nsPerOp": 2491.6,
+      "metrics": {}
+    },
+    {
+      "id": "rebuildAll",
+      "ok": true,
+      "medianUs": 2473,
+      "p25Us": 2241,
+      "p75Us": 3049,
+      "minUs": 2143,
+      "samples": 400,
+      "opsPerRun": 5000,
+      "nsPerOp": 494.6,
+      "metrics": {}
+    },
+    {
+      "id": "rebuildOne",
+      "ok": true,
+      "medianUs": 1043,
+      "p25Us": 1034,
+      "p75Us": 1080,
+      "minUs": 1013,
+      "samples": 400,
+      "opsPerRun": 1,
+      "nsPerOp": 1043000.0,
+      "metrics": {}
+    }
+  ]
+}

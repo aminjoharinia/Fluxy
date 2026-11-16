@@ -32,6 +32,59 @@ class _Core extends CoreSuite {
   bool get asyncNotify => true;
 
   @override
+  Bench subscribeShared(int listeners) {
+    final container = ProviderContainer();
+    final cell = _cell(0);
+    final notifier = container.read(cell.notifier);
+    final order = scatteredOrder(listeners);
+    var calls = 0, base = 0;
+    return Bench(
+      opsPerRun: listeners,
+      run: () async {
+        final subs = [
+          for (var i = 0; i < listeners; i++)
+            container.listen<int>(cell, (_, __) => calls++)
+        ];
+        final start = calls;
+        notifier.set(++base);
+        if (calls - start != listeners) await settle();
+        check(calls - start == listeners, 'missed notifications');
+        for (final i in order) {
+          subs[i].close();
+        }
+        notifier.set(++base);
+        await settle();
+        check(calls - start == listeners, 'listener ran after removal');
+      },
+      dispose: container.dispose,
+    );
+  }
+
+  @override
+  MemoryProbe memory(int n) {
+    final container = ProviderContainer();
+    late List<NotifierProvider<Counter, int>> cells;
+    late List<ProviderSubscription<int>> subs;
+    return MemoryProbe(
+      create: () {
+        cells = List.generate(n, _cell);
+        for (final c in cells) {
+          container.read(c);
+        }
+      },
+      listen: () => subs = [
+        for (final c in cells) container.listen<int>(c, (_, __) {})
+      ],
+      dispose: () {
+        for (final s in subs) {
+          s.close();
+        }
+        container.dispose();
+      },
+    );
+  }
+
+  @override
   Bench create(int n) => Bench(
         opsPerRun: n,
         run: () {
@@ -257,6 +310,12 @@ class _Core extends CoreSuite {
 }
 
 class _Widgets extends WidgetSuite {
+  final shared = _cell(7);
+
+  @override
+  Widget sharedLeaf(int i) =>
+      Consumer(builder: (_, ref, __) => Leaf(ref.watch(shared)));
+
   final container = ProviderContainer();
   late List<NotifierProvider<Counter, int>> cells;
   late List<Counter?> notifiers;

@@ -16,9 +16,53 @@ void main() => runBenchmarks(
 void Function() _on(RxInt rx, void Function() listener) =>
     rx.addListener(listener);
 
+void _noop() {}
+
 class _Core extends CoreSuite {
   @override
   bool get asyncNotify => false;
+
+  @override
+  Bench subscribeShared(int listeners) {
+    final rx = 0.obs;
+    final order = scatteredOrder(listeners);
+    var calls = 0, base = 0;
+    return Bench(
+      opsPerRun: listeners,
+      run: () {
+        final removers = [
+          for (var i = 0; i < listeners; i++) _on(rx, () => calls++)
+        ];
+        final start = calls;
+        rx.value = ++base;
+        check(calls - start == listeners, 'missed notifications');
+        for (final i in order) {
+          removers[i]();
+        }
+        rx.value = ++base;
+        check(calls - start == listeners, 'listener ran after removal');
+      },
+      dispose: rx.close,
+    );
+  }
+
+  @override
+  MemoryProbe memory(int n) {
+    late List<RxInt> cells;
+    late List<void Function()> removers;
+    return MemoryProbe(
+      create: () => cells = List<RxInt>.generate(n, RxInt.new),
+      listen: () => removers = [for (final c in cells) _on(c, _noop)],
+      dispose: () {
+        for (final r in removers) {
+          r();
+        }
+        for (final c in cells) {
+          c.close();
+        }
+      },
+    );
+  }
 
   @override
   Bench create(int n) => Bench(
@@ -242,10 +286,18 @@ class _Core extends CoreSuite {
 }
 
 class _Widgets extends WidgetSuite {
+  late RxInt shared;
+
+  @override
+  Widget sharedLeaf(int i) => Obx(() => Leaf(shared.value));
+
   late List<RxInt> values;
 
   @override
-  void setup(int n) => values = List<RxInt>.generate(n, RxInt.new);
+  void setup(int n) {
+    values = List<RxInt>.generate(n, RxInt.new);
+    shared = RxInt(7);
+  }
 
   @override
   Widget leaf(int i) => Obx(() => Leaf(values[i].value));
@@ -255,6 +307,7 @@ class _Widgets extends WidgetSuite {
 
   @override
   void teardown() {
+    shared.close();
     for (final v in values) {
       v.close();
     }

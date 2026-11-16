@@ -12,3 +12,6 @@ dependencies:
   bench_kit:
     path: ../../bench_kit
   get: ^4.7.3
+
+flutter:
+  uses-material-design: true

@@ -4,6 +4,7 @@ import 'package:bench_kit/bench_kit.dart';
 import 'package:bench_kit/src/ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show Theme, IconButton;
 import 'package:flutter_test/flutter_test.dart';
 
 class _NoCore extends CoreSuite {
@@ -24,6 +25,11 @@ class _NoCore extends CoreSuite {
   Bench diamond(int writes) => _none(writes);
   @override
   Bench batchUpdate(int sources, int rounds) => _none(rounds);
+  @override
+  Bench subscribeShared(int listeners) => _none(listeners);
+  @override
+  MemoryProbe memory(int n) =>
+      MemoryProbe(create: () {}, listen: () {}, dispose: () {});
 }
 
 class _NoWidgets extends WidgetSuite {
@@ -31,6 +37,8 @@ class _NoWidgets extends WidgetSuite {
   void setup(int n) {}
   @override
   Widget leaf(int i) => Leaf(i);
+  @override
+  Widget sharedLeaf(int i) => Leaf(0);
   @override
   void write(int i, int value) {}
   @override
@@ -68,6 +76,29 @@ void main() {
     expect(find.text('Fluxy benchmark'), findsOneWidget);
     expect(find.text('Wide derived'), findsOneWidget);
     expect(tester.takeException(), isNull);
+
+    // The size picker rescales every scenario's description.
+    expect(find.textContaining('1,000 sources summed'), findsOneWidget);
+    await tester.tap(find.text('Heavy app'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('2,500 sources summed'), findsOneWidget);
+    await tester.tap(find.text('Normal app'));
+    await tester.pumpAndSettle();
+
+    // The theme button flips light and dark.
+    final before = Theme.of(tester.element(find.text('Wide derived'))).brightness;
+    await tester.tap(find.byTooltip(
+        before == Brightness.dark ? 'Light mode' : 'Dark mode'));
+    await tester.pumpAndSettle();
+    expect(Theme.of(tester.element(find.text('Wide derived'))).brightness,
+        isNot(before));
+    expect(tester.takeException(), isNull);
+    if (preview) {
+      await expectLater(
+          find.byType(BenchApp), matchesGoldenFile('ui_preview_flipped.png'));
+      await tester.tap(find.byType(IconButton).first);
+      await tester.pumpAndSettle();
+    }
     // Set BENCH_UI_PREVIEW=1 with --update-goldens to write a PNG to look at.
     if (preview) {
       await expectLater(

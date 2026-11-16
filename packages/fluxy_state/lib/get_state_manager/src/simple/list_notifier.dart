@@ -10,7 +10,16 @@ typedef Disposer = void Function();
 typedef GetStateUpdate = void Function();
 
 class ListNotifier extends Listenable
-    with ListNotifierSingleMixin, ListNotifierGroupMixin {}
+    with ListNotifierSingleMixin, ListNotifierGroupMixin {
+  /// Runs both mixins' disposal. The group mixin's [dispose] (applied last)
+  /// cannot call the single one, so a disposed controller used to keep its
+  /// listeners (and `isDisposed` stayed false).
+  @override
+  void dispose() {
+    super.dispose();
+    _disposeListeners();
+  }
+}
 
 /// A Notifier with single listeners
 class ListNotifierSingle = ListNotifier with ListNotifierSingleMixin;
@@ -21,27 +30,38 @@ class ListNotifierGroup = ListNotifier with ListNotifierGroupMixin;
 /// This mixin add to Listenable the addListener, removerListener and
 /// containsListener implementation
 mixin ListNotifierSingleMixin on Listenable {
-  List<GetStateUpdate>? _updaters = <GetStateUpdate>[];
+  /// Null until the first listener (most values are written before anything
+  /// listens, or never listened to); [_disposedUpdaters] once disposed.
+  List<GetStateUpdate>? _updaters;
+
+  /// Marks a disposed notifier. Empty, so a notify finds nothing to call,
+  /// and never added to (see [addListener], [_removeUpdater]). A growable
+  /// list like every other value of [_updaters]: a `const` list is another
+  /// class, and the notify loop's `list[i]` could no longer be inlined.
+  static final _disposedUpdaters = <GetStateUpdate>[];
 
   /// The list a notify is walking right now. Adding or removing a listener
   /// while it is walked copies [_updaters] first, so a notify needs no copy
   /// of its own (it used to copy the list on every change).
   List<GetStateUpdate>? _notifying;
 
-  List<GetStateUpdate>? _writableUpdaters() {
+  List<GetStateUpdate> _writableUpdaters() {
     final list = _updaters;
-    if (list != null && identical(list, _notifying)) {
-      return _updaters = List.of(list);
-    }
+    if (list == null) return _updaters = <GetStateUpdate>[];
+    if (identical(list, _notifying)) return _updaters = List.of(list);
     return list;
   }
 
   @override
   Disposer addListener(GetStateUpdate listener) {
     assert(_debugAssertNotDisposed());
-    _writableUpdaters()!.add(listener);
-    return () => _writableUpdaters()?.remove(listener);
+    // Release builds: ignored (it would never be called anyway).
+    if (isDisposed) return _noop;
+    _writableUpdaters().add(listener);
+    return () => _removeUpdater(listener);
   }
+
+  static void _noop() {}
 
   bool containsListener(GetStateUpdate listener) {
     return _updaters?.contains(listener) ?? false;
@@ -50,7 +70,34 @@ mixin ListNotifierSingleMixin on Listenable {
   @override
   void removeListener(VoidCallback listener) {
     assert(_debugAssertNotDisposed());
-    _writableUpdaters()!.remove(listener);
+    _removeUpdater(listener);
+  }
+
+  void _removeUpdater(GetStateUpdate listener) {
+    final list = _updaters;
+    // No listeners yet, or disposed.
+    if (list == null || list.isEmpty) return;
+    final index = _indexOfUpdater(list, listener);
+    if (index >= 0) _writableUpdaters().removeAt(index);
+  }
+
+  /// Identity first: a disposer holds the very object it added, and a scan
+  /// with `==` calls the closure's `operator ==` on every entry (that made
+  /// unsubscribing N listeners of one value cost N² closure compares). The
+  /// `==` scan is left for a tear-off made again
+  /// (`removeListener(obj.method)`). From both ends at once: widgets
+  /// unmounted in the order they mounted remove the oldest listener, a page
+  /// popped removes the newest; both are found at once.
+  static int _indexOfUpdater(
+      List<GetStateUpdate> list, GetStateUpdate listener) {
+    var lo = 0, hi = list.length - 1;
+    while (lo <= hi) {
+      if (identical(list[lo], listener)) return lo;
+      if (identical(list[hi], listener)) return hi;
+      lo++;
+      hi--;
+    }
+    return list.indexOf(listener);
   }
 
   @protected
@@ -219,7 +266,7 @@ mixin ListNotifierSingleMixin on Listenable {
     }
   }
 
-  bool get isDisposed => _updaters == null;
+  bool get isDisposed => identical(_updaters, _disposedUpdaters);
 
   bool _debugAssertNotDisposed() {
     assert(() {
@@ -234,13 +281,17 @@ mixin ListNotifierSingleMixin on Listenable {
 
   int get listenersLength {
     assert(_debugAssertNotDisposed());
-    return _updaters!.length;
+    return _updaters?.length ?? 0;
   }
 
   @mustCallSuper
   void dispose() {
     assert(_debugAssertNotDisposed());
-    _updaters = null;
+    _disposeListeners();
+  }
+
+  void _disposeListeners() {
+    _updaters = _disposedUpdaters;
     _dependents = null;
   }
 }
@@ -258,13 +309,15 @@ abstract interface class ReactiveDependent {
 }
 
 mixin ListNotifierGroupMixin on Listenable {
-  HashMap<Object?, ListNotifierSingleMixin>? _updatersGroupIds =
-      HashMap<Object?, ListNotifierSingleMixin>();
+  /// Created on the first id (most controllers never use `GetBuilder` ids).
+  HashMap<Object?, ListNotifierSingleMixin>? _updatersGroupIds;
+  bool _groupsDisposed = false;
+
+  HashMap<Object?, ListNotifierSingleMixin> get _groups =>
+      _updatersGroupIds ??= HashMap<Object?, ListNotifierSingleMixin>();
 
   void _notifyGroupUpdate(Object id) {
-    if (_updatersGroupIds!.containsKey(id)) {
-      _updatersGroupIds![id]!._notifyUpdate();
-    }
+    _updatersGroupIds?[id]?._notifyUpdate();
   }
 
   @protected
@@ -272,7 +325,7 @@ mixin ListNotifierGroupMixin on Listenable {
     assert(_debugAssertNotDisposed());
     // Created on demand: reading an id nothing has registered yet used to
     // crash on a null check.
-    Notifier.instance.read(_updatersGroupIds![id] ??= ListNotifierSingle());
+    Notifier.instance.read(_groups[id] ??= ListNotifierSingle());
   }
 
   bool containsId(Object id) {
@@ -287,7 +340,7 @@ mixin ListNotifierGroupMixin on Listenable {
 
   bool _debugAssertNotDisposed() {
     assert(() {
-      if (_updatersGroupIds == null) {
+      if (_groupsDisposed) {
         throw FlutterError('''A $runtimeType was used after being disposed.\n
 'Once you have called dispose() on a $runtimeType, it can no longer be used.''');
       }
@@ -298,9 +351,7 @@ mixin ListNotifierGroupMixin on Listenable {
 
   void removeListenerId(Object id, VoidCallback listener) {
     assert(_debugAssertNotDisposed());
-    if (_updatersGroupIds!.containsKey(id)) {
-      _updatersGroupIds![id]!.removeListener(listener);
-    }
+    _updatersGroupIds?[id]?.removeListener(listener);
   }
 
   @mustCallSuper
@@ -308,11 +359,12 @@ mixin ListNotifierGroupMixin on Listenable {
     assert(_debugAssertNotDisposed());
     _updatersGroupIds?.forEach((key, value) => value.dispose());
     _updatersGroupIds = null;
+    _groupsDisposed = true;
   }
 
   Disposer addListenerId(Object? key, GetStateUpdate listener) {
-    _updatersGroupIds![key] ??= ListNotifierSingle();
-    return _updatersGroupIds![key]!.addListener(listener);
+    assert(_debugAssertNotDisposed());
+    return (_groups[key] ??= ListNotifierSingle()).addListener(listener);
   }
 
   /// To dispose an [id] from future updates(), this ids are registered

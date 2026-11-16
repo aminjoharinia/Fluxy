@@ -195,6 +195,15 @@ class GetListenable<T> extends ListNotifierSingle implements RxInterface<T> {
     _notify();
   }
 
+  /// Stores [newValue] and notifies, without comparing it with the current
+  /// value: for a setter that compared already (`Rx.value`), so a costly
+  /// `==` runs once per write.
+  @protected
+  void setValueUnchecked(T newValue) {
+    _value = newValue;
+    _notify();
+  }
+
   /// `rx(v)` sets the value and returns it, so an Rx can be passed where a
   /// `ValueChanged<T>` is expected: `TextField(onChanged: myText)`.
   /// `rxn(null)` sets a nullable Rx to null.

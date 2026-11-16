@@ -1,4 +1,6 @@
-"""Merges results/<lib>-<n>.json into results/summary.json.
+"""Merges results/<lib>-<n>.json into results/summary.json (or, for a size
+other than normal, results/<size>/<lib>-<n>.json into
+results/<size>/summary.json).
 
 For each library and scenario the best (lowest) median of the runs is kept:
 the runs differ only by machine noise, so the lowest median is the closest
@@ -14,6 +16,8 @@ import subprocess
 import sys
 
 root = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(__file__)
+size = sys.argv[2] if len(sys.argv) > 2 else "normal"
+results_dir = os.path.join(root, "results") if size == "normal" else os.path.join(root, "results", size)
 order = ["fluxy", "getx5", "getx4", "riverpod", "bloc", "signals"]
 packages = {
     "fluxy": [],
@@ -44,10 +48,17 @@ def cpu():
         return platform.processor()
 
 
+def better(r, best):
+    # Memory is a one-shot figure: keep the run that grew the least.
+    if r["id"] == "memory":
+        return r["metrics"]["bytesPerValue"] < best["metrics"]["bytesPerValue"]
+    return r["medianUs"] < best["medianUs"]
+
+
 libraries = []
 machine_info = {}
 for lib in order:
-    runs = [json.load(open(p)) for p in sorted(glob.glob(os.path.join(root, "results", f"{lib}-*.json")))]
+    runs = [json.load(open(p)) for p in sorted(glob.glob(os.path.join(results_dir, f"{lib}-*.json")))]
     if not runs:
         continue
     merged = {}
@@ -58,7 +69,7 @@ for lib in order:
                 if best is None:
                     merged[r["id"]] = r
                 continue
-            if best is None or not best["ok"] or r["medianUs"] < best["medianUs"]:
+            if best is None or not best["ok"] or better(r, best):
                 merged[r["id"]] = r
     first = runs[0]
     machine_info = {"os": first["os"], "dart": first["dart"], "cpus": first["cpus"]}
@@ -74,8 +85,9 @@ for lib in order:
     })
 
 summary = {
+    "size": size,
     "machine": {"cpu": cpu(), **machine_info},
     "libraries": libraries,
 }
-json.dump(summary, open(os.path.join(root, "results", "summary.json"), "w"), indent=2)
-print("wrote results/summary.json for", ", ".join(l["key"] for l in libraries))
+json.dump(summary, open(os.path.join(results_dir, "summary.json"), "w"), indent=2)
+print("wrote", os.path.relpath(os.path.join(results_dir, "summary.json"), root), "for", ", ".join(l["key"] for l in libraries))

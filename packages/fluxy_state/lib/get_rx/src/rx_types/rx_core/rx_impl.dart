@@ -47,9 +47,6 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   // It lets an Rx be passed where a `ValueChanged` is expected:
   // `TextField(onChanged: myText)`.
 
-  bool firstRebuild = true;
-  bool sentToStream = false;
-
   /// Same as `toString()` but using a getter.
   String get string => value.toString();
 
@@ -101,22 +98,22 @@ mixin RxObjectMixin<T> on GetListenable<T> {
   @override
   set value(T val) {
     if (_writeAfterClose('given a value')) return;
-    sentToStream = false;
-    assert(() {
-      if (!firstRebuild &&
-          identical(peek, val) &&
-          (val is Map || val is Iterable)) {
-        debugPrint('[Fluxy] An Rx was given the same ${val.runtimeType} '
-            'object it already holds, so it does not notify. If that object '
-            'was edited in place, write a copy instead (mapWith / listWith / '
-            'setIn ...).');
-      }
-      return true;
-    }());
-    if (peek == val && !firstRebuild) return;
-    firstRebuild = false;
-    sentToStream = true;
-    super.value = val;
+    final current = peek;
+    if (current == val) {
+      assert(() {
+        if (identical(current, val) && (val is Map || val is Iterable)) {
+          debugPrint('[Fluxy] An Rx was given the same ${val.runtimeType} '
+              'object it already holds, so it does not notify. If that '
+              'object was edited in place, write a copy instead (mapWith / '
+              'listWith / setIn ...).');
+        }
+        return true;
+      }());
+      return;
+    }
+    // Compared once: the value's == can be costly (a model with lists).
+    // An equal value never notifies, the first write included.
+    setValueUnchecked(val);
   }
 
   /// Returns a [StreamSubscription] similar to [listen], but with the
@@ -217,7 +214,8 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
     if (_writeAfterClose('updated')) return;
     final current = peek;
     final next = fn(current);
-    if (identical(next, current) && !firstRebuild) {
+    // Also on the first write (it used to need an earlier write first).
+    if (identical(next, current)) {
       refresh();
     } else {
       value = next;
@@ -251,11 +249,14 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   ///
   void trigger(T v) {
     if (_writeAfterClose('triggered')) return;
-    value = v;
-    // Same value: the setter did not notify, so notify here. This reaches
+    // Same value: the setter would not notify, so notify here. This reaches
     // every listener (Obx, GetBuilder, workers), not only the stream as it
     // used to.
-    if (!sentToStream) refresh();
+    if (peek == v) {
+      refresh();
+    } else {
+      value = v;
+    }
   }
 }
 

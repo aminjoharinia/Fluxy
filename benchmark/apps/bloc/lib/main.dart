@@ -41,9 +41,56 @@ class DerivedCubit extends Cubit<int> {
   }
 }
 
+void _noopValue(int _) {}
+
 class _Core extends CoreSuite {
   @override
   bool get asyncNotify => true;
+
+  @override
+  Bench subscribeShared(int listeners) {
+    final cubit = IntCubit(0);
+    final order = scatteredOrder(listeners);
+    var calls = 0, base = 0;
+    return Bench(
+      opsPerRun: listeners,
+      run: () async {
+        final subs = [
+          for (var i = 0; i < listeners; i++)
+            cubit.stream.listen((_) => calls++)
+        ];
+        final start = calls;
+        cubit.set(++base);
+        await settle();
+        check(calls - start == listeners, 'missed notifications');
+        for (final i in order) {
+          subs[i].cancel();
+        }
+        cubit.set(++base);
+        await settle();
+        check(calls - start == listeners, 'listener ran after removal');
+      },
+      dispose: cubit.close,
+    );
+  }
+
+  @override
+  MemoryProbe memory(int n) {
+    late List<IntCubit> cells;
+    late List<StreamSubscription<int>> subs;
+    return MemoryProbe(
+      create: () => cells = List.generate(n, IntCubit.new),
+      listen: () => subs = [for (final c in cells) c.stream.listen(_noopValue)],
+      dispose: () async {
+        for (final s in subs) {
+          await s.cancel();
+        }
+        for (final c in cells) {
+          await c.close();
+        }
+      },
+    );
+  }
 
   @override
   Bench create(int n) => Bench(
@@ -260,10 +307,21 @@ class _Core extends CoreSuite {
 }
 
 class _Widgets extends WidgetSuite {
+  late IntCubit shared;
+
+  @override
+  Widget sharedLeaf(int i) => BlocBuilder<IntCubit, int>(
+        bloc: shared,
+        builder: (_, v) => Leaf(v),
+      );
+
   late List<IntCubit> cubits;
 
   @override
-  void setup(int n) => cubits = List.generate(n, IntCubit.new);
+  void setup(int n) {
+    cubits = List.generate(n, IntCubit.new);
+    shared = IntCubit(7);
+  }
 
   @override
   Widget leaf(int i) => BlocBuilder<IntCubit, int>(
@@ -276,6 +334,7 @@ class _Widgets extends WidgetSuite {
 
   @override
   void teardown() {
+    shared.close();
     for (final c in cubits) {
       c.close();
     }

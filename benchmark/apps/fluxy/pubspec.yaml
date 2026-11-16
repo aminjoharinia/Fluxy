@@ -13,3 +13,6 @@ dependencies:
     path: ../../bench_kit
   get:
     path: ../../..
+
+flutter:
+  uses-material-design: true
