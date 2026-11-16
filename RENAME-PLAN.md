@@ -1,6 +1,6 @@
 # Plan: from `get` to Fluxy names
 
-Status: draft, 2026-11-16, after v0.7.3. Phase 0 done (codemod in `tool/`, `dart fix` checked); nothing renamed yet. Open questions below are still to decide.
+Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). Phase 1 in progress. Decisions are listed under "Decisions" at the end.
 
 ## Goal
 
@@ -14,8 +14,8 @@ The app (`boofi/lib`, 87 imports of `package:get/get.dart`, plus 2 commented out
 
 | Area | Uses | Ready to rename? |
 |---|---|---|
-| `Get.` navigation / dialogs / snackbars (`back` 133, `closeAllDialogs` 80, `defaultDialog` 62, `dialog` 42, `to` / `offAll` 16, `bottomSheet` 6, …) | ~390 | Not yet: the facade should be split, not just renamed (phase 3) |
-| `Get.put` | 20 | With typed DI handles (phase 3) |
+| `Get.` navigation / dialogs / snackbars (`back` 133, `closeAllDialogs` 80, `defaultDialog` 62, `dialog` 42, `to` / `offAll` 16, `bottomSheet` 6, …) | ~390 | Phase 3 (`Get.` → `Fluxy.`, with the nav rework) |
+| `Get.put` | 20 | Phase 3 (`Fluxy.put`, typed DI handles) |
 | `.tr` | 1,684 | Stays |
 | `.obs` / `Rx…` / `Obx` | ~640 | Stay |
 | `GetxController` | 20 | Phase 2 |
@@ -34,12 +34,12 @@ Library side: 26 `Get…` public types in fluxy_nav, 20 in fluxy_state (plus 6 `
   - The app has two branches in worktrees (`boofi/.claude/worktrees`) that import `get`: re-run the codemod on them when they merge (a second run changes nothing).
 - **One release per phase**, each with release notes listing every rename, and the app bumped and tested as usual.
 
-## Naming rules (to confirm)
+## Naming rules (decided 2026-11-17)
 
-1. No prefix where a plain name is clear and does not clash with Flutter or the app (`AsyncStatus`, `ResponsiveView`, `TaskQueue`).
-2. `Flux` prefix for Fluxy building blocks that would otherwise clash or read as generic (`FluxController`, `FluxView`, `FluxPage`).
-3. `Fluxy` only for brand-level entry points: the package, the app widget (`FluxyApp`).
-4. Checked against the app: none of the proposed names below is used there today. `Dialogs` is (11 uses), so it is not a candidate for a facade name.
+1. Every `Get` prefix becomes `Fluxy` (`GetxController` → `FluxyController`, `GetStatus` → `FluxyStatus`, `GetQueue` → `FluxyQueue`). One rule, nothing to look up.
+2. The `Get` facade object becomes one `Fluxy` object (`Get.back()` → `Fluxy.back()`), not split by job.
+3. Names that are not `Get`-branded stay (`Obx`, `Rx…`, `StateMixin`, the `GetStatus` subclasses `LoadingStatus` / `SuccessStatus` / …).
+4. Checked against the app: none of the names below is used there today.
 
 ## Phases
 
@@ -52,52 +52,53 @@ Library side: 26 `Get…` public types in fluxy_nav, 20 in fluxy_state (plus 6 `
 ### Phase 1: package name (v0.8.0)
 
 - Root package `get` becomes `fluxy`; `lib/get.dart` becomes `lib/fluxy.dart` (`import 'package:fluxy/fluxy.dart';`). The split libraries (`instance_manager.dart`, `route_manager.dart`, `state_manager.dart`, `utils.dart`) move along.
-- A compatibility package `packages/get_compat`, named `get`, re-exports `fluxy`. Until the app switches, it can point its `get:` dependency at that path (`path: packages/get_compat`) and nothing changes for it.
-- App migration: pubspec `get:` → `fluxy:` and the import rewrite (87 files, one codemod line: `package:get/ package:fluxy/`).
-- Also: benchmark app `apps/fluxy` depends on `fluxy:`, CI workflow, README, FLUXY.md, description in pubspec.
+- No compatibility package: the app is the only consumer and switches in the same release. App migration: pubspec `get:` → `fluxy:` and the import rewrite (87 files, one codemod line: `package:get/ package:fluxy/`).
+- Also: examples, README, FLUXY.md, description in pubspec. The benchmark app `apps/fluxy` is left on `get:` (it no longer resolves) and is updated in phase 4.
 - Internal folders (`get_core`, `get_rx`, `get_navigation`, …) are not renamed here: no API effect, and it costs history readability. Done once, in phase 4, if at all.
 
 ### Phase 2: state, UI and utils types (v0.9.0)
 
 | Old | New |
 |---|---|
-| `GetxController` | `FluxController` |
-| `GetxService` / `GetxServiceMixin` | `FluxService` / `FluxServiceMixin` |
-| `GetLifeCycleMixin` | `FluxLifecycleMixin` |
-| `GetView` / `GetWidget` | `FluxView` / `FluxWidget` |
-| `GetBuilder` | `FluxBuilder` |
-| `GetX<T>` (widget) | `RxControllerBuilder<T>` |
-| `GetStatus` | `AsyncStatus` (subclasses `LoadingStatus`, `SuccessStatus`, `ErrorStatus`, `EmptyStatus` keep their names) |
-| `GetListenable` | `RxListenable` |
-| `GetNotifier` | `FluxNotifier` |
-| `GetStateUpdate` | `StateUpdate` |
-| `GetTickerProviderStateMixin` / `GetSingleTickerProviderStateMixin` | `FluxTickerProviderStateMixin` / `FluxSingleTickerProviderStateMixin` |
-| `GetResponsiveView` / `GetResponsiveWidget` / `GetResponsiveMixin` | `ResponsiveView` / `ResponsiveWidget` / `ResponsiveMixin` |
-| `GetAnimatedBuilder` | `FluxAnimatedBuilder` |
-| `GetPlatform` | `FluxPlatform` |
-| `GetUtils` (+ `GetStringUtils`, `GetNumUtils`, `GetDurationUtils`, `GetDynamicUtils`) | `FluxUtils` (+ `…Utils` extensions without the prefix) |
-| `GetQueue` / `GetQueueCancelledException` | `TaskQueue` / `TaskQueueCancelledException` |
-| `GetMicrotask` | `FluxMicrotask` |
+| `GetxController` | `FluxyController` |
+| `GetxService` / `GetxServiceMixin` | `FluxyService` / `FluxyServiceMixin` |
+| `GetLifeCycleMixin` | `FluxyLifeCycleMixin` |
+| `GetView` / `GetWidget` | `FluxyView` / `FluxyWidget` |
+| `GetBuilder` | `FluxyBuilder` |
+| `GetX<T>` (widget) | `FluxyX<T>` |
+| `GetStatus` | `FluxyStatus` (subclasses `LoadingStatus`, `SuccessStatus`, `ErrorStatus`, `EmptyStatus` keep their names) |
+| `GetListenable` | `FluxyListenable` |
+| `GetNotifier` | `FluxyNotifier` |
+| `GetStateUpdate` | `FluxyStateUpdate` |
+| `GetTickerProviderStateMixin` / `GetSingleTickerProviderStateMixin` | `FluxyTickerProviderStateMixin` / `FluxySingleTickerProviderStateMixin` |
+| `GetResponsiveView` / `GetResponsiveWidget` / `GetResponsiveMixin` | `FluxyResponsiveView` / `FluxyResponsiveWidget` / `FluxyResponsiveMixin` |
+| `GetAnimatedBuilder` | `FluxyAnimatedBuilder` |
+| `GetPlatform` | `FluxyPlatform` |
+| `GetUtils` (+ `GetStringUtils`, `GetNumUtils`, `GetDurationUtils`, `GetDynamicUtils`) | `FluxyUtils` (+ `FluxyStringUtils`, …) |
+| `GetQueue` / `GetQueueCancelledException` | `FluxyQueue` / `FluxyQueueCancelledException` |
+| `GetMicrotask` | `FluxyMicrotask` |
 
 - `Get.batch(...)` also becomes a top-level `batch(...)` (the facade method stays, forwarding).
 - Ship a `fix_data.yaml` with every type rename (uris: `package:fluxy/fluxy.dart`, and `package:get/get.dart` while that path exists), so `dart fix --apply` works as well as the codemod.
 - App impact: 20 `GetxController` lines; the rest is not used by the app.
+- The full list of `Get…` public types is checked against this table before the release (26 in fluxy_nav, 20 in fluxy_state, 9 in fluxy_utils, 5 in fluxy_ui, `GetInterface` in fluxy_core); anything missed follows rule 1.
 
-### Phase 3: navigation, dialogs and DI (v0.10.0)
+### Phase 3: navigation, dialogs and DI (v1.0.0)
 
 This one is an API change, not a rename, and gets its own short spec first. Direction:
 
-- The `Get` facade (one object doing navigation, dialogs, snackbars, bottom sheets, DI, screen size, theme, locale) is split by job, for example `Nav.back()`, `Nav.to(...)`, `Nav.offAll(...)`, `Overlays.dialog(...)` / `Overlays.closeAll()`, `Overlays.snackbar(...)`, `Screen.size`, `Themes.changeMode(...)`. Final names in the spec; each must not clash with Flutter or the app.
-- DI moves to the typed handles already on the roadmap (`final cart = Inject.put(CartController())`-style, scoped, ref-counted), with `Get.put / find / lazyPut / delete` forwarding.
-- Navigation types: `GetMaterialApp` / `GetCupertinoApp` → `FluxyApp` / `FluxyCupertinoApp` (with `.router`), `GetPage` → `FluxPage`, `GetMiddleware` → `FluxMiddleware`, `GetDelegate` → `FluxRouterDelegate`, `GetInformationParser` → `FluxRouteInformationParser`, `GetNavigator` → `FluxNavigator`, `GetObserver` → `FluxRouteObserver`, `GetRouterOutlet` → `FluxRouterOutlet`, `GetSnackBar` → `FluxSnackBar`, `GetHeroScope` → `FluxHeroScope`, `GetPageRoute` / `GetDialogRoute` / `GetModalBottomSheetRoute` → `Flux…Route`, `GetRoot` → `FluxyRoot`.
+- The `Get` facade (navigation, dialogs, snackbars, bottom sheets, DI, screen size, theme, locale) becomes one `Fluxy` object: `Fluxy.back()`, `Fluxy.to(...)`, `Fluxy.dialog(...)`, `Fluxy.put(...)`. `GetInterface` becomes `FluxyInterface`. The spec decides what else changes on the way (nav rework, members that go).
+- DI moves to the typed handles already on the roadmap (scoped, ref-counted), with `Fluxy.put / find / lazyPut / delete` kept.
+- Navigation types: `GetMaterialApp` / `GetCupertinoApp` → `FluxyApp` / `FluxyCupertinoApp` (with `.router`), `GetPage` → `FluxyPage`, `GetMiddleware` → `FluxyMiddleware`, `GetDelegate` → `FluxyDelegate`, `GetInformationParser` → `FluxyInformationParser`, `GetNavigator` → `FluxyNavigator`, `GetObserver` → `FluxyObserver`, `GetRouterOutlet` → `FluxyRouterOutlet`, `GetSnackBar` → `FluxySnackBar`, `GetHeroScope` → `FluxyHeroScope`, `GetPageRoute` / `GetDialogRoute` / `GetModalBottomSheetRoute` → `Fluxy…Route`, `GetRoot` → `FluxyRoot`.
 - Done together with the open nav work (static-first route matching, splitting `extension_navigation.dart` and `get_router_delegate.dart`), so the app migrates navigation once.
-- The `Get` object stays, deprecated, forwarding to the new homes. App impact: ~390 `Get.` navigation / dialog calls and 20 `Get.put`, all through the codemod (the map handles `Get.back(` → `Nav.back(` style rewrites).
+- The `Get` object stays, deprecated (`@Deprecated('Use Fluxy') final Get = Fluxy;`-style). App impact: ~390 `Get.` navigation / dialog calls and 20 `Get.put`, all through the codemod (one line: `Get Fluxy` as a member-access rename).
 - Tests for fluxy_core and fluxy_i18n come before this phase, so the rename is not the first time those paths are tested.
 
-### Phase 4: remove the old names (v1.0.0)
+### Phase 4: remove the old names (v1.1.0)
 
-- Delete the deprecated aliases, the forwarding `Get` facade and `get_compat`.
+- Delete the deprecated aliases and the deprecated `Get` object.
 - Optionally move the internal `get_*` folders to `src/`.
+- Benchmark: `apps/fluxy` moves to `fluxy:` and the new names, and the README's reason for one app per library is updated (GetX 4 and 5 are still both `get`).
 - Final docs: README / FLUXY.md written as Fluxy, with a "coming from GetX" table generated from `tool/renames.txt`.
 - The GetX `LICENSE` notice (MIT) stays, with Fluxy's copyright added.
 
@@ -106,13 +107,11 @@ This one is an API change, not a rename, and gets its own short spec first. Dire
 - **Deprecation noise.** Between a release and the app's codemod run, the app's analyzer lists every old name. Run the codemod in the same change as the version bump.
 - **History.** Renames touch many lines. Keep each phase's rename in its own commit (no other changes), so `git log -S` and blame stay usable; never `dart format` whole upstream files.
 - **Upstream.** After phase 2, pulling fixes from jonataslaw/getx becomes manual. Fluxy has diverged far enough that this is already mostly true.
-- **Benchmark.** `apps/getx4` and `apps/getx5` keep depending on packages named `get`; only `apps/fluxy` changes.
+- **Benchmark.** Not updated until phase 4: `apps/fluxy` does not build from v0.8.0 to then. `apps/getx4` and `apps/getx5` keep depending on packages named `get`.
 
-## Open questions
+## Decisions (2026-11-17)
 
-Phase 0's recommendation (input, not a decision): `Flux` / `Fluxy` as proposed; split the facade (the codemod moved 266 calls in one pass, so a split costs about the same as one `Fluxy.` object); skip `get_compat` and switch the app in the phase 1 release (one consumer, one codemod line); keep the phased versions.
-
-1. Prefix: `Flux` for building blocks and `Fluxy` for entry points (proposed), `Fluxy` everywhere, or no prefix where possible?
-2. Phase 3 facade names: `Nav` / `Overlays` / `Screen` / `Themes` / `Inject`, or one `Fluxy.` facade (simpler, still one object)?
-3. Keep `get_compat` for a few releases, or let the app switch package in the same release as phase 1?
-4. Version numbers: as above (0.8 / 0.9 / 0.10 / 1.0), or a single 1.0 for everything at once?
+1. Prefix: `Fluxy` everywhere a `Get` prefix was (not `Flux`, no plain names).
+2. Facade: one `Fluxy.` object replacing `Get.`, not split by job.
+3. No `get_compat`: the app switches package in the phase 1 release.
+4. Versions step by 0.1: v0.8.0 package, v0.9.0 types, v1.0.0 facade + nav, v1.1.0 removes the old names.
