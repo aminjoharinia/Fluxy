@@ -1,6 +1,6 @@
 # Plan: from `get` to Fluxy names
 
-Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). Phases 1 and 2 committed on main (unreleased; v0.8.0 and v0.9.0 still to tag). Decisions are listed under "Decisions" at the end.
+Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). Phases 1, 2 and 3 committed on main, untagged: one tag once the rename is complete (decided 2026-11-17). Decisions are listed under "Decisions" at the end.
 
 ## Goal
 
@@ -85,20 +85,37 @@ Library side: 26 `Get…` public types in fluxy_nav, 20 in fluxy_state (plus 6 `
 - App impact: 20 `GetxController` lines; the rest is not used by the app.
 - The full list of `Get…` public types is checked against this table before the release (26 in fluxy_nav, 20 in fluxy_state, 9 in fluxy_utils, 5 in fluxy_ui, `GetInterface` in fluxy_core); anything missed follows rule 1.
 
-### Phase 3: navigation, dialogs and DI (v1.0.0)
+### Phase 3: the `Fluxy` object and navigation types (v1.0.0) — committed 2026-11-17
 
-This one is an API change, not a rename, and gets its own short spec first. Direction:
+Spec (2026-11-17):
 
-- The `Get` facade (navigation, dialogs, snackbars, bottom sheets, DI, screen size, theme, locale) becomes one `Fluxy` object: `Fluxy.back()`, `Fluxy.to(...)`, `Fluxy.dialog(...)`, `Fluxy.put(...)`. `GetInterface` becomes `FluxyInterface`. The spec decides what else changes on the way (nav rework, members that go).
-- DI moves to the typed handles already on the roadmap (scoped, ref-counted), with `Fluxy.put / find / lazyPut / delete` kept.
-- Navigation types: `GetMaterialApp` / `GetCupertinoApp` → `FluxyApp` / `FluxyCupertinoApp` (with `.router`), `GetPage` → `FluxyPage`, `GetMiddleware` → `FluxyMiddleware`, `GetDelegate` → `FluxyDelegate`, `GetInformationParser` → `FluxyInformationParser`, `GetNavigator` → `FluxyNavigator`, `GetObserver` → `FluxyObserver`, `GetRouterOutlet` → `FluxyRouterOutlet`, `GetSnackBar` → `FluxySnackBar`, `GetHeroScope` → `FluxyHeroScope`, `GetPageRoute` / `GetDialogRoute` / `GetModalBottomSheetRoute` → `Fluxy…Route`, `GetRoot` → `FluxyRoot`.
-- Done together with the open nav work (static-first route matching, splitting `extension_navigation.dart` and `get_router_delegate.dart`), so the app migrates navigation once.
-- The `Get` object stays, deprecated (`@Deprecated('Use Fluxy') final Get = Fluxy;`-style). App impact: ~390 `Get.` navigation / dialog calls and 20 `Get.put`, all through the codemod (one line: `Get Fluxy` as a member-access rename).
-- Tests for fluxy_core and fluxy_i18n come before this phase, so the rename is not the first time those paths are tested.
+- **The facade.** `final Get = _GetImpl()` (fluxy_core) becomes `final Fluxy = _FluxyImpl()`, and `GetInterface` becomes `FluxyInterface`. Every member keeps its name: the members come from extensions on the interface (`Fluxy.back()`, `Fluxy.to(...)`, `Fluxy.dialog(...)`, `Fluxy.put(...)`, `Fluxy.find<T>()`, `Fluxy.batch(...)`, `Fluxy.locale`, …), so renaming the object and the interface renames all of them at once. The log name `GETX` becomes `FLUXY`.
+- **Old names.** `@Deprecated('Use Fluxy') final Get = Fluxy;` (the same object, so state set through either name is shared) and `@Deprecated('Use FluxyInterface') typedef GetInterface = FluxyInterface;` in fluxy_core's `lib/deprecated_names.dart`; the nav types below as deprecated typedefs in fluxy_nav's. Extensions on the interface (`GetNavigationExt`, `GetResetExt`) are renamed without alias, as in phase 2.
+- **Navigation types**, every `Get` prefix to `Fluxy` (rule 1), except the app widget:
+
+| Old | New |
+|---|---|
+| `GetMaterialApp` / `GetCupertinoApp` | `FluxyApp` / `FluxyCupertinoApp` (with `.router`) |
+| `GetPage`, `GetPageBuilder`, `GetRouteAwarePageBuilder` | `FluxyPage`, `FluxyPageBuilder`, `FluxyRouteAwarePageBuilder` |
+| `GetMiddleware` | `FluxyMiddleware` |
+| `GetDelegate`, `GetInformationParser`, `GetNavigator`, `GetObserver`, `GetRouterOutlet` | `FluxyDelegate`, `FluxyInformationParser`, `FluxyNavigator`, `FluxyObserver`, `FluxyRouterOutlet` |
+| `GetRoot` / `GetRootState` | `FluxyRoot` / `FluxyRootState` |
+| `GetPageRoute`, `GetDialogRoute`, `GetModalBottomSheetRoute`, `GetPageRouteTransitionMixin` | `FluxyPageRoute`, `FluxyDialogRoute`, `FluxyModalBottomSheetRoute`, `FluxyPageRouteTransitionMixin` |
+| `GetSnackBar` / `GetSnackBarState`, `GetHeroScope`, `GetTestMode` | `FluxySnackBar` / `FluxySnackBarState`, `FluxyHeroScope`, `FluxyTestMode` |
+| `GetBackGestureController` / `GetBackGestureDetector` / `GetBackGestureDetectorState` | `FluxyBackGesture…` |
+| `GetNavigationExt`, `GetResetExt` (extensions) | `FluxyNavigationExt`, `FluxyResetExt` |
+
+- **App migration.** One codemod pair, `Get Fluxy` (the whole word: `Get.back()`, `Get.find<T>()`, a bare `Get`), plus the type pairs; `fix_data.yaml` gets the same renames (`variable: Get`, the typedefs). App impact: ~410 `Get.` uses and ~40 nav type uses.
+- **Not in this phase** (no rename, so no app migration; done as follow-ups in the 1.x series): static-first route matching, splitting `extension_navigation.dart` and `get_router_delegate.dart`, typed DI handles. The earlier idea of splitting the facade by job was dropped (decision 2).
+- Before it: fluxy_core and fluxy_i18n tests (done 2026-11-17, 16 + 16).
+- Done as: the codemod with the phase 3 pairs over `packages/`, root `test/` and the examples, comments (`Get.member`, `[Get]`, the type names), docs for the current API (FLUXY.md history left as written). `GetRoot` / `GetRootState`, `GetDialogRoute` and `GetTestMode` are not exported, so they have no alias. On a copy of the app, old code compiles with deprecation infos only (381 `Get`, 20 `GetxController`, 22 nav types), and `dart fix --apply` and the codemod give identical results (424 changes in 64 files, analyze clean apart from the 2 Firebase infos, 97 tests pass).
+- The codemod skips `deprecated_names.dart` files: running it over `packages/` again had turned the phase 2 aliases into `typedef FluxyController = FluxyController`.
 
 ### Phase 4: remove the old names (v1.1.0)
 
-- Delete the deprecated aliases (`lib/deprecated_names.dart` in fluxy_state, fluxy_utils, fluxy_ui), the deprecated `Get` object and the transforms in `lib/fix_data.yaml`.
+Left before tagging: the internal nav work listed under phase 3 is optional; this phase and the benchmark are what make the rename complete.
+
+- Delete the deprecated aliases (`lib/deprecated_names.dart` in fluxy_core, fluxy_state, fluxy_utils, fluxy_ui, fluxy_nav, with the `Get` object) and the transforms in `lib/fix_data.yaml`.
 - Optionally move the internal `get_*` folders to `src/`.
 - Benchmark: `apps/fluxy` moves to `fluxy:` and the new names, and the README's reason for one app per library is updated (GetX 4 and 5 are still both `get`).
 - Final docs: README / FLUXY.md written as Fluxy, with a "coming from GetX" table generated from `tool/renames.txt`.
