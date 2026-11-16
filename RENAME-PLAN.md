@@ -1,6 +1,6 @@
 # Plan: from `get` to Fluxy names
 
-Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). Phase 1 in progress. Decisions are listed under "Decisions" at the end.
+Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). Phases 1 and 2 committed on main (unreleased; v0.8.0 and v0.9.0 still to tag). Decisions are listed under "Decisions" at the end.
 
 ## Goal
 
@@ -49,14 +49,14 @@ Library side: 26 `Get…` public types in fluxy_nav, 20 in fluxy_state (plus 6 `
 - `tool/migrate.dart` written (44 tests, `cd tool && dart test`) and run on a copy of the app.
 - Still open: the questions at the end.
 
-### Phase 1: package name (v0.8.0)
+### Phase 1: package name (v0.8.0) — committed 2026-11-17
 
 - Root package `get` becomes `fluxy`; `lib/get.dart` becomes `lib/fluxy.dart` (`import 'package:fluxy/fluxy.dart';`). The split libraries (`instance_manager.dart`, `route_manager.dart`, `state_manager.dart`, `utils.dart`) move along.
 - No compatibility package: the app is the only consumer and switches in the same release. App migration: pubspec `get:` → `fluxy:` and the import rewrite (87 files, one codemod line: `package:get/ package:fluxy/`).
 - Also: examples, README, FLUXY.md, description in pubspec. The benchmark app `apps/fluxy` is left on `get:` (it no longer resolves) and is updated in phase 4.
 - Internal folders (`get_core`, `get_rx`, `get_navigation`, …) are not renamed here: no API effect, and it costs history readability. Done once, in phase 4, if at all.
 
-### Phase 2: state, UI and utils types (v0.9.0)
+### Phase 2: state, UI and utils types (v0.9.0) — committed 2026-11-17
 
 | Old | New |
 |---|---|
@@ -77,9 +77,11 @@ Library side: 26 `Get…` public types in fluxy_nav, 20 in fluxy_state (plus 6 `
 | `GetUtils` (+ `GetStringUtils`, `GetNumUtils`, `GetDurationUtils`, `GetDynamicUtils`) | `FluxyUtils` (+ `FluxyStringUtils`, …) |
 | `GetQueue` / `GetQueueCancelledException` | `FluxyQueue` / `FluxyQueueCancelledException` |
 | `GetMicrotask` | `FluxyMicrotask` |
+| also: `GetControllerBuilder`, `GetXControllerBuilder`, `GetXState`, `GetAnimatedBuilderState`, `GetReactiveExt`, and the unexported `GetWidgetCache` / `GetWidgetCacheElement` / `GetStateUpdate` | same names with `Fluxy` (the unexported ones get no alias) |
 
-- `Get.batch(...)` also becomes a top-level `batch(...)` (the facade method stays, forwarding).
-- Ship a `fix_data.yaml` with every type rename (uris: `package:fluxy/fluxy.dart`, and `package:get/get.dart` while that path exists), so `dart fix --apply` works as well as the codemod.
+- `Get.batch(...)` becomes `Fluxy.batch(...)` with the facade in phase 3.
+- Done as: the codemod with the phase 2 pairs of `tool/renames.txt` over `packages/`, root `test/` and the examples, plus old names in comments; deprecated aliases in one `lib/deprecated_names.dart` per package (fluxy_state, fluxy_utils, fluxy_ui); extensions (`GetStringUtils`, …) have no alias, and the app never names them. On a copy of the app, old names compile through the aliases (21 deprecation infos), and `dart fix --apply` and the codemod give identical results (21 renames in 20 files, 97 tests pass).
+- Ship `lib/fix_data.yaml` with every type rename (uris: `package:fluxy/fluxy.dart`, the split libraries and the package libraries), so `dart fix --apply` works as well as the codemod.
 - App impact: 20 `GetxController` lines; the rest is not used by the app.
 - The full list of `Get…` public types is checked against this table before the release (26 in fluxy_nav, 20 in fluxy_state, 9 in fluxy_utils, 5 in fluxy_ui, `GetInterface` in fluxy_core); anything missed follows rule 1.
 
@@ -96,7 +98,7 @@ This one is an API change, not a rename, and gets its own short spec first. Dire
 
 ### Phase 4: remove the old names (v1.1.0)
 
-- Delete the deprecated aliases and the deprecated `Get` object.
+- Delete the deprecated aliases (`lib/deprecated_names.dart` in fluxy_state, fluxy_utils, fluxy_ui), the deprecated `Get` object and the transforms in `lib/fix_data.yaml`.
 - Optionally move the internal `get_*` folders to `src/`.
 - Benchmark: `apps/fluxy` moves to `fluxy:` and the new names, and the README's reason for one app per library is updated (GetX 4 and 5 are still both `get`).
 - Final docs: README / FLUXY.md written as Fluxy, with a "coming from GetX" table generated from `tool/renames.txt`.
