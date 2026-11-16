@@ -1,6 +1,6 @@
 name: fluxy_nav
 description: "Fluxy navigation: router, Get.to/back, transitions, dialogs, bottom sheets and snackbars."
-version: 0.7.1
+version: 0.7.2
 publish_to: none
 repository: https://github.com/aminjoharinia/Fluxy
 
