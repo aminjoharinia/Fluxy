@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 import '../controllers/profile_controller.dart';
 

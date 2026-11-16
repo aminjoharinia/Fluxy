@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 import '../../../routes/app_pages.dart';
 import '../controllers/products_controller.dart';

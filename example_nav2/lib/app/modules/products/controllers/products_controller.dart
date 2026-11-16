@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 import '../../../../models/demo_product.dart';
 

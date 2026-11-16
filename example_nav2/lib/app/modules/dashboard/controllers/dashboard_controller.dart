@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 class DashboardController extends GetxController {
   final now = DateTime.now().obs;

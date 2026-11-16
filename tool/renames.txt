@@ -1,22 +1,16 @@
 # Fluxy rename map, read by tool/migrate.dart.
 #
 # One "Old New" pair per line; everything after # is a comment. Old is one of:
-#   a name           GetxController FluxController      whole word, in code only
-#   a member access  Get.back Nav.back                  Get.back( Nav.back( for calls only
+#   a name           GetxController FluxyController     whole word, in code only
+#   a member access  Get.back Fluxy.back                Get.back( Fluxy.back( for calls only
 #   a URI            package:get/get.dart package:fluxy/fluxy.dart
 #                    (in import / export / part directives; a trailing / on
 #                    both sides rewrites every URI with that prefix)
 #
 # Names are applied in one pass: a pair's new name is never renamed again by
-# another pair. Real names are decided per phase in RENAME-PLAN.md; until then
-# every pair below is an example and stays commented out.
+# another pair. Names are decided per phase in RENAME-PLAN.md; a phase's pairs
+# are added here with its release.
 
-# Phase 1: package name
-# package:get/get.dart package:fluxy/fluxy.dart
-
-# Phase 2: types
-# GetxController FluxController
-# GetStatus AsyncStatus
-
-# Phase 3: facade
-# Get.back( Nav.back(
+# Phase 1 (v0.8.0): package name
+package:get/get.dart package:fluxy/fluxy.dart
+package:get/ package:fluxy/

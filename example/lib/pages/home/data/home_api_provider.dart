@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 import '../../../shared/constants/endpoints.dart';
 import '../domain/entity/country_model.dart';

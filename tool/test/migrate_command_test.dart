@@ -132,9 +132,17 @@ void f() {
     expect(log.toString(), contains('bad.txt:1:'));
   });
 
-  test('the shipped renames.txt parses and is all comments', () async {
+  test('the shipped renames.txt parses and rewrites get imports', () async {
+    write('lib/c.dart', "import 'package:get/state_manager.dart';\n");
     final shipped = File('renames.txt');
-    expect(await run([project.path, '--map', shipped.path, '--dry-run']), 0);
-    expect(log.toString(), contains('No renames'));
+    expect(
+      await run([project.path, '--map', shipped.path, '--format', 'never']),
+      0,
+    );
+    expect(read('lib/c.dart'), "import 'package:fluxy/state_manager.dart';\n");
+    expect(
+      read('lib/a.dart'),
+      startsWith("import 'package:fluxy/fluxy.dart';"),
+    );
   });
 }

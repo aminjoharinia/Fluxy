@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 import 'package:material_ui/material_ui.dart';
 
 // The umbrella package re-exports every Fluxy package; each package has its
 // own tests under packages/*/test.
 void main() {
-  test('one name from each package is reachable through package:get', () {
+  test('one name from each package is reachable through package:fluxy', () {
     expect(Get, isNotNull); // fluxy_core
     expect(0.obs, isA<RxInt>()); // fluxy_state
     expect('k'.tr, 'k'); // fluxy_i18n

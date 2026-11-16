@@ -1,5 +1,5 @@
-/// Fluxy umbrella package: re-exports every Fluxy package, so existing
-/// `import 'package:get/get.dart'` code keeps working.
+/// Fluxy umbrella package: re-exports every Fluxy package, so
+/// `import 'package:fluxy/fluxy.dart'` gives the whole API.
 ///
 /// New projects can depend on only the packages they need:
 /// fluxy_core, fluxy_state, fluxy_nav, fluxy_i18n, fluxy_utils, fluxy_ui.

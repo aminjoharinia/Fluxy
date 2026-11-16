@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:material_ui/material_ui.dart';
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 import '../middleware/auth_middleware.dart';
 import '../modules/dashboard/bindings/dashboard_binding.dart';

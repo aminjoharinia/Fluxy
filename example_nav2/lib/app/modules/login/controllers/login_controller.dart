@@ -1,3 +1,3 @@
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 class LoginController extends GetxController {}

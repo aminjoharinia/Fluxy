@@ -11,13 +11,13 @@ Fluxy is a private fork of [GetX](https://github.com/jonataslaw/getx) (MIT), spl
 | `fluxy_nav` | `GetMaterialApp` / `GetCupertinoApp`, router, `Get.to` / `back`, dialogs, sheets, snackbars |
 | `fluxy_ui` | responsive views, `hp` / `wp`, animation extensions |
 
-The root package is still named `get` and re-exports everything, so `import 'package:get/get.dart'` code works unchanged.
+The root package `fluxy` re-exports everything: `import 'package:fluxy/fluxy.dart'`. It was named `get` until v0.8.0; `dart run tool/migrate.dart <app>` rewrites the imports (see `tool/README.md`).
 
 ## Install
 
 ```yaml
 dependencies:
-  get:                     # everything
+  fluxy:                   # everything
     git:
       url: https://github.com/aminjoharinia/Fluxy.git
       ref: v0.7.3
