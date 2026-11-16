@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'harness.dart';
+import 'ui.dart';
 
 /// The widget scenarios. Each library provides its reactive leaf widget.
 abstract class WidgetSuite {
@@ -61,13 +62,32 @@ Widget _tree(WidgetSuite suite, int n) => Align(
       ),
     );
 
-Future<List<Map<String, Object?>>> runWidgets(WidgetSuite suite) async {
+/// Where the widget scenarios mount their tree. The UI shows it in a small
+/// panel; the headless run makes it the whole app.
+Widget benchHost() => ValueListenableBuilder<Widget>(
+      valueListenable: _host,
+      builder: (_, child, __) => child,
+    );
+
+Future<List<Map<String, Object?>>> runWidgets(
+  WidgetSuite suite, {
+  ScenarioStart? onStart,
+  ScenarioResult? onResult,
+}) async {
   const n = 1000;
   final results = <Map<String, Object?>>[];
   suite.setup(n);
   var counter = 1;
 
-  results.add(await measure('mount', () {
+  Future<Map<String, Object?>> step(String id, Bench Function() make) async {
+    await onStart?.call(id);
+    final result =
+        await measure(id, make, budget: const Duration(milliseconds: 2000));
+    onResult?.call(result);
+    return result;
+  }
+
+  results.add(await step('mount', () {
     return Bench(
       opsPerRun: n,
       run: () async {
@@ -80,12 +100,12 @@ Future<List<Map<String, Object?>>> runWidgets(WidgetSuite suite) async {
         await pumpFrame();
       },
     );
-  }, budget: const Duration(milliseconds: 2000)));
+  }));
 
   _host.value = _tree(suite, n);
   await pumpFrame();
 
-  results.add(await measure('rebuildAll', () {
+  results.add(await step('rebuildAll', () {
     return Bench(
       opsPerRun: n,
       run: () async {
@@ -99,10 +119,10 @@ Future<List<Map<String, Object?>>> runWidgets(WidgetSuite suite) async {
             'rebuilt ${Leaf.builds - before} leaves, expected $n');
       },
     );
-  }, budget: const Duration(milliseconds: 2000)));
+  }));
 
   var next = 0;
-  results.add(await measure('rebuildOne', () {
+  results.add(await step('rebuildOne', () {
     return Bench(
       opsPerRun: 1,
       run: () async {
@@ -115,7 +135,7 @@ Future<List<Map<String, Object?>>> runWidgets(WidgetSuite suite) async {
             'rebuilt ${Leaf.builds - before} leaves, expected 1');
       },
     );
-  }, budget: const Duration(milliseconds: 2000)));
+  }));
 
   _host.value = const SizedBox();
   await pumpFrame();
@@ -123,8 +143,12 @@ Future<List<Map<String, Object?>>> runWidgets(WidgetSuite suite) async {
   return results;
 }
 
-/// Runs everything for one library and writes the JSON to the path given
-/// with `--dart-define=BENCH_OUT=...`, then exits.
+/// With `--dart-define=BENCH_OUT=...` (what `run.sh` does): runs everything
+/// for one library with no UI, writes the JSON there and exits.
+///
+/// Without it (the app opened by hand): shows the benchmark UI, which runs
+/// the same scenarios on demand and charts them next to the saved results
+/// of every library (`results/summary.json`).
 Future<void> runBenchmarks({
   required String library,
   required CoreSuite core,
@@ -132,19 +156,25 @@ Future<void> runBenchmarks({
   String notes = '',
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
+  const out = String.fromEnvironment('BENCH_OUT');
+  if (out.isEmpty) {
+    runApp(widgets.wrap(BenchApp(
+      library: library,
+      notes: notes,
+      core: core,
+      widgets: widgets,
+    )));
+    return;
+  }
   runApp(widgets.wrap(Directionality(
     textDirection: TextDirection.ltr,
-    child: ValueListenableBuilder<Widget>(
-      valueListenable: _host,
-      builder: (_, child, __) => child,
-    ),
+    child: benchHost(),
   )));
   await pumpFrame();
 
   final coreResults = await runCore(core);
   final widgetResults = await runWidgets(widgets);
 
-  const out = String.fromEnvironment('BENCH_OUT');
   final json = const JsonEncoder.withIndent('  ').convert({
     'library': library,
     'notes': notes,
@@ -155,11 +185,6 @@ Future<void> runBenchmarks({
     'mode': const bool.fromEnvironment('dart.vm.product') ? 'release' : 'debug',
     'results': [...coreResults, ...widgetResults],
   });
-  if (out.isEmpty) {
-    // ignore: avoid_print
-    print(json);
-  } else {
-    File(out).writeAsStringSync(json);
-  }
+  File(out).writeAsStringSync(json);
   exit(0);
 }

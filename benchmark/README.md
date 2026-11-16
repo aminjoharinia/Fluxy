@@ -47,3 +47,13 @@ python3 benchmark/report.py
 `run.sh` writes `results/<library>-<n>.json` and `results/summary.json`; `report.py` turns the summary into `results/RESULTS.md` and the CSV files in `results/report/`. Library versions are pinned by each app's `pubspec.lock`; `flutter pub upgrade` in an app moves it to newer releases.
 
 The numbers depend on the machine; compare libraries within one run of the suite, not across machines.
+
+## Charts in the app
+
+Opened by hand (not from `run.sh`), each benchmark app shows a page instead of running headless. It has a Run button and progress, and for every scenario a bar chart comparing this run with the saved results of all six libraries (`results/summary.json`, found by walking up from the app). Below the charts is the correctness table. Bars are on a linear scale, capped at 8× the fastest. A bar past the cap is drawn broken, and its label says how many times slower it is. Results that are fast but wrong (diamond glitches, a batch notifying once per write) are marked ⚠.
+
+```bash
+cd benchmark/apps/fluxy && flutter run -d macos --release
+```
+
+The window repaints between scenarios, so its numbers are noisier than `run.sh`'s. `run.sh` builds with `BENCH_OUT` and never shows the page.

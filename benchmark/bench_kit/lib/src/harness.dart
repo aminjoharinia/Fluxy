@@ -189,15 +189,33 @@ Future<Map<String, Object?>> measure(
   }
 }
 
+/// Called before a scenario starts (the UI shows it; awaited, so it can
+/// let a frame through first).
+typedef ScenarioStart = Future<void> Function(String id);
+
+/// Called with each scenario's result as soon as it is measured.
+typedef ScenarioResult = void Function(Map<String, Object?> result);
+
 /// Runs every core scenario of [suite].
-Future<List<Map<String, Object?>>> runCore(CoreSuite suite) async {
+Future<List<Map<String, Object?>>> runCore(
+  CoreSuite suite, {
+  ScenarioStart? onStart,
+  ScenarioResult? onResult,
+}) async {
+  Future<Map<String, Object?>> step(String id, Bench Function() make) async {
+    await onStart?.call(id);
+    final result = await measure(id, make);
+    onResult?.call(result);
+    return result;
+  }
+
   return [
-    await measure('create', () => suite.create(1000)),
-    await measure('write', () => suite.writeOneListener(10000)),
-    await measure('fanout', () => suite.fanOut(1000, 100)),
-    await measure('wide', () => suite.wideDerived(1000)),
-    await measure('chain', () => suite.deepChain(100, 1000)),
-    await measure('diamond', () => suite.diamond(1000)),
-    await measure('batch', () => suite.batchUpdate(100, 100)),
+    await step('create', () => suite.create(1000)),
+    await step('write', () => suite.writeOneListener(10000)),
+    await step('fanout', () => suite.fanOut(1000, 100)),
+    await step('wide', () => suite.wideDerived(1000)),
+    await step('chain', () => suite.deepChain(100, 1000)),
+    await step('diamond', () => suite.diamond(1000)),
+    await step('batch', () => suite.batchUpdate(100, 100)),
   ];
 }
