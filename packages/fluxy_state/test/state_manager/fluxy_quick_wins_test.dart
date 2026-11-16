@@ -274,30 +274,30 @@ void main() {
   });
 
   group('Get.find', () {
-    tearDown(Get.resetInstance);
+    tearDown(Fluxy.resetInstance);
 
     test('finds, starts lazy instances once, and reports missing ones', () {
       var built = 0;
-      Get.lazyPut(() {
+      Fluxy.lazyPut(() {
         built++;
         return _Controller();
       });
-      final a = Get.find<_Controller>();
-      final b = Get.find<_Controller>();
+      final a = Fluxy.find<_Controller>();
+      final b = Fluxy.find<_Controller>();
       expect(identical(a, b), isTrue);
       expect(built, 1);
       expect(a.initialized, isTrue);
-      expect(() => Get.find<_Listener>(), throwsA(contains('not found')));
-      expect(Get.findOrNull<_Listener>(), isNull);
-      expect(Get.findOrNull<_Controller>(), same(a));
+      expect(() => Fluxy.find<_Listener>(), throwsA(contains('not found')));
+      expect(Fluxy.findOrNull<_Listener>(), isNull);
+      expect(Fluxy.findOrNull<_Controller>(), same(a));
     });
 
     test('tagged instances and Get.spawn', () {
-      Get.put(_Controller(), tag: 'x');
-      expect(Get.find<_Controller>(tag: 'x'), isA<_Controller>());
-      expect(() => Get.find<_Controller>(), throwsA(anything));
-      Get.spawn(() => _Listener());
-      expect(identical(Get.find<_Listener>(), Get.find<_Listener>()), isFalse);
+      Fluxy.put(_Controller(), tag: 'x');
+      expect(Fluxy.find<_Controller>(tag: 'x'), isA<_Controller>());
+      expect(() => Fluxy.find<_Controller>(), throwsA(anything));
+      Fluxy.spawn(() => _Listener());
+      expect(identical(Fluxy.find<_Listener>(), Fluxy.find<_Listener>()), isFalse);
     });
   });
 }

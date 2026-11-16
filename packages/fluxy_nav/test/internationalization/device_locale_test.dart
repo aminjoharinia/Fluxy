@@ -16,47 +16,47 @@ void main() {
     TestWidgetsFlutterBinding.instance.platformDispatcher
       ..clearLocaleTestValue()
       ..clearLocalesTestValue();
-    Get.reset();
-    Get.locale = null;
+    Fluxy.reset();
+    Fluxy.locale = null;
   });
 
   testWidgets('an app that sets its own locale keeps it', (tester) async {
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       locale: const Locale('persian', 'US'),
       home: const SizedBox(),
     ));
     await tester.pumpAndSettle();
     await _changeDeviceLocale(tester);
-    expect(Get.locale, const Locale('persian', 'US'));
+    expect(Fluxy.locale, const Locale('persian', 'US'));
   });
 
   testWidgets('an app without a locale follows the device', (tester) async {
-    await tester.pumpWidget(const GetMaterialApp(home: SizedBox()));
+    await tester.pumpWidget(const FluxyApp(home: SizedBox()));
     await tester.pumpAndSettle();
     await _changeDeviceLocale(tester);
-    expect(Get.locale, const Locale('de'));
+    expect(Fluxy.locale, const Locale('de'));
   });
 
   testWidgets('followDeviceLocale: true follows even with a locale',
       (tester) async {
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       locale: const Locale('persian', 'US'),
       followDeviceLocale: true,
       home: const SizedBox(),
     ));
     await tester.pumpAndSettle();
     await _changeDeviceLocale(tester);
-    expect(Get.locale, const Locale('de'));
+    expect(Fluxy.locale, const Locale('de'));
   });
 
   testWidgets('followDeviceLocale: false never follows', (tester) async {
-    await tester.pumpWidget(const GetMaterialApp(
+    await tester.pumpWidget(const FluxyApp(
       followDeviceLocale: false,
       home: SizedBox(),
     ));
     await tester.pumpAndSettle();
-    final before = Get.locale;
+    final before = Fluxy.locale;
     await _changeDeviceLocale(tester);
-    expect(Get.locale, before);
+    expect(Fluxy.locale, before);
   });
 }

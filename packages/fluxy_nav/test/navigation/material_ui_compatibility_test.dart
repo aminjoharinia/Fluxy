@@ -12,7 +12,7 @@ void main() {
     final darkTheme = ThemeData.dark();
 
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         theme: theme,
         darkTheme: darkTheme,
         themeMode: ThemeMode.dark,
@@ -32,7 +32,7 @@ void main() {
     'Get.changeTheme and Get.changeThemeMode accept standalone Material types',
     (tester) async {
       await tester.pumpWidget(
-        GetMaterialApp(
+        FluxyApp(
           theme: ThemeData(),
           darkTheme: ThemeData.dark(),
           home: const _ThemeProbe(),
@@ -40,8 +40,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      Get.changeTheme(ThemeData.dark());
-      Get.changeThemeMode(ThemeMode.dark);
+      Fluxy.changeTheme(ThemeData.dark());
+      Fluxy.changeThemeMode(ThemeMode.dark);
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(_ThemeProbe));

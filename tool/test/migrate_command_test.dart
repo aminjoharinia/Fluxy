@@ -53,6 +53,7 @@ class B extends GetxController {
     write('build/out.dart', 'GetxController x;\n');
     write('ios/.symlinks/p.dart', 'GetxController x;\n');
     write('lib/readme.txt', 'GetxController\n');
+    write('lib/deprecated_names.dart', 'typedef GetxController = X;\n');
   });
 
   tearDown(() {
@@ -81,6 +82,10 @@ class B extends GetxController {
       expect(read('build/out.dart'), 'GetxController x;\n');
       expect(read('ios/.symlinks/p.dart'), 'GetxController x;\n');
       expect(read('lib/readme.txt'), 'GetxController\n');
+      expect(
+        read('lib/deprecated_names.dart'),
+        'typedef GetxController = X;\n',
+      );
       expect(read('lib/none.dart'), 'class C {}\n');
       // --format never: the unformatted file keeps its layout.
       expect(read('lib/sub/b.dart'), contains('    AsyncStatus<int>?   s;'));

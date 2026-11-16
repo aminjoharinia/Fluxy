@@ -10,8 +10,8 @@ import 'package:fluxy_nav/fluxy_nav.dart';
 /// The Functions will be called in this order
 /// (( [redirect] -> [onPageCalled] -> [onBindingsStart] ->
 /// [onPageBuildStart] -> [onPageBuilt] -> [onPageDispose] ))
-abstract class GetMiddleware {
-  GetMiddleware({this.priority = 0});
+abstract class FluxyMiddleware {
+  FluxyMiddleware({this.priority = 0});
 
   /// The Order of the Middlewares to run.
   ///
@@ -19,10 +19,10 @@ abstract class GetMiddleware {
   /// This Middewares will be called in this order.
   /// ```dart
   /// final middlewares = [
-  ///   GetMiddleware(priority: 2),
-  ///   GetMiddleware(priority: 5),
-  ///   GetMiddleware(priority: 4),
-  ///   GetMiddleware(priority: -8),
+  ///   FluxyMiddleware(priority: 2),
+  ///   FluxyMiddleware(priority: 5),
+  ///   FluxyMiddleware(priority: 4),
+  ///   FluxyMiddleware(priority: -8),
   /// ];
   /// ```
   ///  -8 => 2 => 4 => 5
@@ -35,8 +35,8 @@ abstract class GetMiddleware {
   /// give it null and there will be no redirecting.
   /// {@tool snippet}
   /// ```dart
-  /// GetPage redirect(String route) {
-  ///   final authService = Get.find<AuthService>();
+  /// FluxyPage redirect(String route) {
+  ///   final authService = Fluxy.find<AuthService>();
   ///   return authService.authed.value ? null : RouteSettings(name: '/login');
   /// }
   /// ```
@@ -55,7 +55,7 @@ abstract class GetMiddleware {
   /// {@tool snippet}
   /// ```dart
   /// GetNavConfig? redirect(GetNavConfig route) {
-  ///   final authService = Get.find<AuthService>();
+  ///   final authService = Fluxy.find<AuthService>();
   ///   return authService.authed.value ? null : RouteSettings(name: '/login');
   /// }
   /// ```
@@ -66,20 +66,20 @@ abstract class GetMiddleware {
   /// you can use it to change something about the page or give it new page
   /// {@tool snippet}
   /// ```dart
-  /// GetPage onPageCalled(GetPage page) {
-  ///   final authService = Get.find<AuthService>();
+  /// FluxyPage onPageCalled(FluxyPage page) {
+  ///   final authService = Fluxy.find<AuthService>();
   ///   return page.copyWith(title: 'Welcome ${authService.UserName}');
   /// }
   /// ```
   /// {@end-tool}
-  GetPage? onPageCalled(GetPage? page) => page;
+  FluxyPage? onPageCalled(FluxyPage? page) => page;
 
   /// This function will be called right before the [BindingsInterface] are initialize.
   /// Here you can change [BindingsInterface] for this page
   /// {@tool snippet}
   /// ```dart
   /// List<Bindings> onBindingsStart(List<Bindings> bindings) {
-  ///   final authService = Get.find<AuthService>();
+  ///   final authService = Fluxy.find<AuthService>();
   ///   if (authService.isAdmin) {
   ///     bindings.add(AdminBinding());
   ///   }
@@ -90,10 +90,10 @@ abstract class GetMiddleware {
   List<R>? onBindingsStart<R>(List<R>? bindings) => bindings;
 
   /// This function will be called right after the [BindingsInterface] are initialize.
-  GetPageBuilder? onPageBuildStart(GetPageBuilder? page) => page;
+  FluxyPageBuilder? onPageBuildStart(FluxyPageBuilder? page) => page;
 
   /// This function will be called right after the
-  /// GetPage.page function is called and will give you the result
+  /// FluxyPage.page function is called and will give you the result
   /// of the function. and take the widget that will be showed.
   Widget onPageBuilt(Widget page) => page;
 
@@ -101,17 +101,17 @@ abstract class GetMiddleware {
 }
 
 class MiddlewareRunner {
-  MiddlewareRunner(List<GetMiddleware>? middlewares)
+  MiddlewareRunner(List<FluxyMiddleware>? middlewares)
       : _middlewares = middlewares != null
             ? (List.of(middlewares)..sort(_compareMiddleware))
             : const [];
 
-  final List<GetMiddleware> _middlewares;
+  final List<FluxyMiddleware> _middlewares;
 
-  static int _compareMiddleware(GetMiddleware a, GetMiddleware b) =>
+  static int _compareMiddleware(FluxyMiddleware a, FluxyMiddleware b) =>
       a.priority.compareTo(b.priority);
 
-  GetPage? runOnPageCalled(GetPage? page) {
+  FluxyPage? runOnPageCalled(FluxyPage? page) {
     for (final middleware in _middlewares) {
       page = middleware.onPageCalled(page);
     }
@@ -135,7 +135,7 @@ class MiddlewareRunner {
     return bindings;
   }
 
-  GetPageBuilder? runOnPageBuildStart(GetPageBuilder? page) {
+  FluxyPageBuilder? runOnPageBuildStart(FluxyPageBuilder? page) {
     for (final middleware in _middlewares) {
       page = middleware.onPageBuildStart(page);
     }
@@ -157,8 +157,8 @@ class MiddlewareRunner {
 }
 
 class PageRedirect {
-  GetPage? route;
-  GetPage? unknownRoute;
+  FluxyPage? route;
+  FluxyPage? unknownRoute;
   RouteSettings? settings;
   bool isUnknown;
 
@@ -170,12 +170,12 @@ class PageRedirect {
   });
 
   // redirect all pages that needes redirecting
-  GetPageRoute<T> getPageToRoute<T>(
-      GetPage rou, GetPage? unk, BuildContext context) {
+  FluxyPageRoute<T> getPageToRoute<T>(
+      FluxyPage rou, FluxyPage? unk, BuildContext context) {
     while (needRecheck(context)) {}
     final r = (isUnknown ? unk : rou)!;
 
-    return GetPageRoute<T>(
+    return FluxyPageRoute<T>(
       page: r.page,
       parameter: r.parameters,
       alignment: r.alignment,
@@ -191,9 +191,9 @@ class PageRedirect {
       bindings: r.bindings,
       binding: r.binding,
       binds: r.binds,
-      transitionDuration: r.transitionDuration ?? Get.defaultTransitionDuration,
+      transitionDuration: r.transitionDuration ?? Fluxy.defaultTransitionDuration,
       reverseTransitionDuration:
-          r.reverseTransitionDuration ?? Get.defaultTransitionDuration,
+          r.reverseTransitionDuration ?? Fluxy.defaultTransitionDuration,
       // performIncomeAnimation: _r.performIncomeAnimation,
       // performOutGoingAnimation: _r.performOutGoingAnimation,
       transition: r.transition,
@@ -233,11 +233,11 @@ class PageRedirect {
     return true;
   }
 
-  void addPageParameter(GetPage route) {
+  void addPageParameter(FluxyPage route) {
     if (route.parameters == null) return;
 
-    final parameters = Map<String, String?>.from(Get.parameters);
+    final parameters = Map<String, String?>.from(Fluxy.parameters);
     parameters.addEntries(route.parameters!.entries);
-    // Get.parameters = parameters;
+    // Fluxy.parameters = parameters;
   }
 }

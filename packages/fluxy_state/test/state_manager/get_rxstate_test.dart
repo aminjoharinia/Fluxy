@@ -4,7 +4,7 @@ import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 
 void main() {
-  Get.lazyPut<Controller2>(() => Controller2());
+  Fluxy.lazyPut<Controller2>(() => Controller2());
   testWidgets("GetxController smoke test", (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -83,7 +83,7 @@ class ControllerNonGlobal extends FluxyController {
 }
 
 class Controller extends FluxyController {
-  static Controller get to => Get.find();
+  static Controller get to => Fluxy.find();
 
   RxInt counter = 0.obs;
   RxDouble doubleNum = 0.0.obs;

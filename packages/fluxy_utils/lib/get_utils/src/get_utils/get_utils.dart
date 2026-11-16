@@ -649,7 +649,7 @@ class FluxyUtils {
     String info, {
     bool isError = false,
   }) {
-    Get.log('$prefix $value $info'.trim(), isError: isError);
+    Fluxy.log('$prefix $value $info'.trim(), isError: isError);
   }
 }
 

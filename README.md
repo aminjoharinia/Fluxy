@@ -4,11 +4,11 @@ Fluxy is a private fork of [GetX](https://github.com/jonataslaw/getx) (MIT), spl
 
 | Package | What it holds |
 |---|---|
-| `fluxy_core` | `Get` singleton, logging, `Get.asap`, `Equality` |
-| `fluxy_state` | `.obs` / `Rx*`, `Obx`, glitch-free `Computed`, `effect`, `RxFuture`, `RxCommand`, controllers, workers, DI, `Get.batch`, `peek`, copy-on-write edits |
+| `fluxy_core` | `Fluxy` object, logging, `Fluxy.asap`, `Equality` |
+| `fluxy_state` | `.obs` / `Rx*`, `Obx`, glitch-free `Computed`, `effect`, `RxFuture`, `RxCommand`, controllers, workers, DI, `Fluxy.batch`, `peek`, copy-on-write edits |
 | `fluxy_i18n` | `Translations`, reactive `.tr`, `.trParams`, locale state |
 | `fluxy_utils` | `FluxyPlatform`, validators, extensions, `FluxyQueue` |
-| `fluxy_nav` | `GetMaterialApp` / `GetCupertinoApp`, router, `Get.to` / `back`, dialogs, sheets, snackbars |
+| `fluxy_nav` | `FluxyApp` / `FluxyCupertinoApp`, router, `Fluxy.to` / `back`, dialogs, sheets, snackbars |
 | `fluxy_ui` | responsive views, `hp` / `wp`, animation extensions |
 
 The root package `fluxy` re-exports everything: `import 'package:fluxy/fluxy.dart'`. It was named `get` until v0.8.0; `dart run tool/migrate.dart <app>` rewrites the imports (see `tool/README.md`).
@@ -32,24 +32,24 @@ dependencies:
 ## Quick tour
 
 ```dart
-class CartController extends GetxController {
+class CartController extends FluxyController {
   final items = <Map<String, dynamic>>[].obs;
   final total = 0.0.obs;
 
-  void add(Map<String, dynamic> item) => Get.batch(() {
+  void add(Map<String, dynamic> item) => Fluxy.batch(() {
         items.add(item);                       // one notification each,
         total.value += item['price'] as double; // listeners see both at once
       });
 }
 
-final cart = Get.put(CartController());
+final cart = Fluxy.put(CartController());
 
 Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 ```
 
 - **State:** an `Obx` subscribes to exactly the Rx values its last build read. `Computed` derives values without glitches, `effect` reacts to them, and effects, `Computed`s and workers made in a controller's `onInit` are disposed with it. Write new values instead of editing in place (`mapWith`, `listWith`, `setIn`, `patch`); `rx.peek` reads without subscribing.
-- **Navigation:** `GetMaterialApp.router(getPages: ..., initialRoute: ..., unknownRoute: ...)`. Unknown addresses reach `unknownRoute`; web uses hash URLs unless you call `setUrlStrategy()` before `runApp`.
-- **Translations:** `.tr` inside an `Obx` updates on a language change; `Get.updateLocale(locale)` rebuilds the rest.
+- **Navigation:** `FluxyApp.router(getPages: ..., initialRoute: ..., unknownRoute: ...)`. Unknown addresses reach `unknownRoute`; web uses hash URLs unless you call `setUrlStrategy()` before `runApp`.
+- **Translations:** `.tr` inside an `Obx` updates on a language change; `Fluxy.updateLocale(locale)` rebuilds the rest.
 
 What changed from GetX, release by release: [FLUXY.md](FLUXY.md). The upstream GetX guides in [`documentation/`](documentation/) still describe most of the API, but not the changes listed there (and they mention `GetConnect`, which is removed).
 

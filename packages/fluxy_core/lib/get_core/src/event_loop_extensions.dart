@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'get_interface.dart';
 
-extension LoopEventsExt on GetInterface {
+extension LoopEventsExt on FluxyInterface {
   Future<T> toEnd<T>(FutureOr<T> Function() computation) async {
     await Future.delayed(Duration.zero);
     final val = computation();

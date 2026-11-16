@@ -1,12 +1,10 @@
 import 'get_interface.dart';
 
-///Use to instead of Navigator.push, off instead of Navigator.pushReplacement,
-///offAll instead of Navigator.pushAndRemoveUntil. For named routes just
-///add "named" after them. Example: toNamed, offNamed, and AllNamed.
-///To return to the previous screen, use back().
-///No need to pass any context to Get, just put the name of the route inside
-///the parentheses and the magic will occur.
-class _GetImpl extends GetInterface {}
+class _FluxyImpl extends FluxyInterface {}
 
+/// The Fluxy object: navigation, dialogs, snackbars, dependency injection,
+/// locale and the other app-wide helpers, added to it by each Fluxy package
+/// through extensions on [FluxyInterface] (`Fluxy.to(...)`, `Fluxy.back()`,
+/// `Fluxy.put(...)`, `Fluxy.find<T>()`, ...). No context needed.
 // ignore: non_constant_identifier_names
-final Get = _GetImpl();
+final Fluxy = _FluxyImpl();

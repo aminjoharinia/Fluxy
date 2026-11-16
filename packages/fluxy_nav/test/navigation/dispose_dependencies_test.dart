@@ -12,41 +12,41 @@ void main() {
       Wrapper(child: Container()),
     );
 
-    expect(Get.isRegistered<Controller2>(), false);
-    expect(Get.isRegistered<Controller>(), false);
+    expect(Fluxy.isRegistered<Controller2>(), false);
+    expect(Fluxy.isRegistered<Controller>(), false);
 
-    Get.to(() => const First());
+    Fluxy.to(() => const First());
 
     await tester.pumpAndSettle();
 
     expect(find.byType(First), findsOneWidget);
 
-    expect(Get.isRegistered<Controller>(), true);
+    expect(Fluxy.isRegistered<Controller>(), true);
 
-    Get.to(() => const Second());
+    Fluxy.to(() => const Second());
 
     await tester.pumpAndSettle();
 
     expect(find.byType(Second), findsOneWidget);
 
-    expect(Get.isRegistered<Controller>(), true);
-    expect(Get.isRegistered<Controller2>(), true);
+    expect(Fluxy.isRegistered<Controller>(), true);
+    expect(Fluxy.isRegistered<Controller2>(), true);
 
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
     expect(find.byType(First), findsOneWidget);
 
-    expect(Get.isRegistered<Controller>(), true);
-    expect(Get.isRegistered<Controller2>(), false);
+    expect(Fluxy.isRegistered<Controller>(), true);
+    expect(Fluxy.isRegistered<Controller2>(), false);
 
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
-    expect(Get.isRegistered<Controller>(), false);
-    expect(Get.isRegistered<Controller2>(), false);
+    expect(Fluxy.isRegistered<Controller>(), false);
+    expect(Fluxy.isRegistered<Controller2>(), false);
   });
 }
 
@@ -59,7 +59,7 @@ class First extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(Controller());
+    Fluxy.put(Controller());
     return const Center(
       child: Text("first"),
     );
@@ -71,7 +71,7 @@ class Second extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(Controller2());
+    Fluxy.put(Controller2());
     return const Center(
       child: Text("second"),
     );

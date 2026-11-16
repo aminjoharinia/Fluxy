@@ -13,27 +13,27 @@ String? _extractRouteName(Route? route) {
     return route!.settings.name;
   }
 
-  if (route is GetPageRoute) {
+  if (route is FluxyPageRoute) {
     return route.routeName;
   }
 
-  if (route is GetDialogRoute) {
+  if (route is FluxyDialogRoute) {
     return 'DIALOG ${route.hashCode}';
   }
 
-  if (route is GetModalBottomSheetRoute) {
+  if (route is FluxyModalBottomSheetRoute) {
     return 'BOTTOMSHEET ${route.hashCode}';
   }
 
   return null;
 }
 
-class GetObserver extends NavigatorObserver {
+class FluxyObserver extends NavigatorObserver {
   final Function(Routing?)? routing;
 
   final Routing? _routeSend;
 
-  GetObserver([this.routing, this._routeSend]);
+  FluxyObserver([this.routing, this._routeSend]);
 
   @override
   void didPop(Route route, Route? previousRoute) {
@@ -42,9 +42,9 @@ class GetObserver extends NavigatorObserver {
     final newRoute = _RouteData.ofRoute(previousRoute);
 
     if (currentRoute.isBottomSheet || currentRoute.isDialog) {
-      Get.log("CLOSE ${currentRoute.name}");
+      Fluxy.log("CLOSE ${currentRoute.name}");
     } else if (currentRoute.isGetPageRoute) {
-      Get.log("CLOSE TO ROUTE ${currentRoute.name}");
+      Fluxy.log("CLOSE TO ROUTE ${currentRoute.name}");
     }
     if (previousRoute != null) {
       RouterReportManager.instance.reportCurrentRoute(previousRoute);
@@ -79,9 +79,9 @@ class GetObserver extends NavigatorObserver {
     final newRoute = _RouteData.ofRoute(route);
 
     if (newRoute.isBottomSheet || newRoute.isDialog) {
-      Get.log("OPEN ${newRoute.name}");
+      Fluxy.log("OPEN ${newRoute.name}");
     } else if (newRoute.isGetPageRoute) {
-      Get.log("GOING TO ROUTE ${newRoute.name}");
+      Fluxy.log("GOING TO ROUTE ${newRoute.name}");
     }
 
     RouterReportManager.instance.reportCurrentRoute(route);
@@ -115,8 +115,8 @@ class GetObserver extends NavigatorObserver {
     final currentRoute = _RouteData.ofRoute(route);
     final previousRouteName = _extractRouteName(previousRoute);
 
-    Get.log("REMOVING ROUTE $routeName");
-    Get.log("PREVIOUS ROUTE $previousRouteName");
+    Fluxy.log("REMOVING ROUTE $routeName");
+    Fluxy.log("PREVIOUS ROUTE $previousRouteName");
 
     _routeSend?.update((value) {
       value.route = previousRoute;
@@ -128,7 +128,7 @@ class GetObserver extends NavigatorObserver {
       value.isDialog = currentRoute.isDialog ? false : value.isDialog;
     });
 
-    if (route is GetPageRoute) {
+    if (route is FluxyPageRoute) {
       RouterReportManager.instance.reportRouteWillDispose(route);
     }
     routing?.call(_routeSend);
@@ -141,8 +141,8 @@ class GetObserver extends NavigatorObserver {
     final oldName = _extractRouteName(oldRoute);
     final currentRoute = _RouteData.ofRoute(oldRoute);
 
-    Get.log("REPLACE ROUTE $oldName");
-    Get.log("NEW ROUTE $newName");
+    Fluxy.log("REPLACE ROUTE $oldName");
+    Fluxy.log("NEW ROUTE $newName");
 
     if (newRoute != null) {
       RouterReportManager.instance.reportCurrentRoute(newRoute);
@@ -163,7 +163,7 @@ class GetObserver extends NavigatorObserver {
           currentRoute.isBottomSheet ? false : value.isBottomSheet;
       value.isDialog = currentRoute.isDialog ? false : value.isDialog;
     });
-    if (oldRoute is GetPageRoute) {
+    if (oldRoute is FluxyPageRoute) {
       RouterReportManager.instance.reportRouteWillDispose(oldRoute);
     }
 
@@ -215,9 +215,9 @@ class _RouteData {
   factory _RouteData.ofRoute(Route? route) {
     return _RouteData(
       name: _extractRouteName(route),
-      isGetPageRoute: route is GetPageRoute,
-      isDialog: route is GetDialogRoute,
-      isBottomSheet: route is GetModalBottomSheetRoute,
+      isGetPageRoute: route is FluxyPageRoute,
+      isDialog: route is FluxyDialogRoute,
+      isBottomSheet: route is FluxyModalBottomSheetRoute,
     );
   }
 }

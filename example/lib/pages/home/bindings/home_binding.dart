@@ -10,8 +10,10 @@ class HomeBinding extends Binding {
   List<Bind> dependencies() {
     return [
       Bind.lazyPut<IHomeProvider>(() => HomeProvider()),
-      Bind.lazyPut<IHomeRepository>(() => HomeRepository(provider: Get.find())),
-      Bind.lazyPut(() => HomeController(homeRepository: Get.find())),
+      Bind.lazyPut<IHomeRepository>(
+        () => HomeRepository(provider: Fluxy.find()),
+      ),
+      Bind.lazyPut(() => HomeController(homeRepository: Fluxy.find())),
     ];
   }
 }

@@ -51,7 +51,7 @@ class _Parent extends FluxyController {
   @override
   void onInit() {
     super.onInit();
-    child = Get.put(_Child());
+    child = Fluxy.put(_Child());
     e = effect(() => _count.value);
   }
 }
@@ -59,19 +59,19 @@ class _Parent extends FluxyController {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() {
-    Get.resetInstance();
+    Fluxy.resetInstance();
     _count.value = 0;
   });
 
   test('what onInit creates is disposed after onClose', () {
-    final c = Get.put(_OwningController());
+    final c = Fluxy.put(_OwningController());
     c.doubled.addListener(() {});
     expect(c.tripled.value, 0);
     _count.value = 1;
     expect(c.log, ['effect 0', 'ever 1', 'effect 1'],
         reason: 'ever runs inside the notify, effects right after it');
 
-    Get.delete<_OwningController>();
+    Fluxy.delete<_OwningController>();
     expect(c.log.sublist(3), ['onClose', 'cleanup 2', 'cleanup 1'],
         reason: 'cleanups after onClose, newest first');
     expect(c.logger.isDisposed, isTrue);
@@ -86,24 +86,24 @@ void main() {
   });
 
   test('disposing an owned object early is fine', () {
-    final c = Get.put(_OwningController());
+    final c = Fluxy.put(_OwningController());
     c.logger.dispose();
     c.doubled.dispose();
     c.worker.dispose();
-    expect(() => Get.delete<_OwningController>(), returnsNormally);
+    expect(() => Fluxy.delete<_OwningController>(), returnsNormally);
   });
 
   test('a controller put inside onInit owns its own effects', () {
-    final p = Get.put(_Parent());
-    Get.delete<_Child>();
+    final p = Fluxy.put(_Parent());
+    Fluxy.delete<_Child>();
     expect(p.child.e.isDisposed, isTrue);
     expect(p.e.isDisposed, isFalse);
-    Get.delete<_Parent>();
+    Fluxy.delete<_Parent>();
     expect(p.e.isDisposed, isTrue);
   });
 
   test('own() accepts the common disposables', () {
-    final c = Get.put(_OwningController());
+    final c = Fluxy.put(_OwningController());
     final rx = 0.obs;
     final sub = Stream<void>.periodic(const Duration(days: 1)).listen((_) {});
     final controller = StreamController<int>();
@@ -114,14 +114,14 @@ void main() {
     c.own(controller);
     c.own(timer);
     c.own(notifier);
-    Get.delete<_OwningController>();
+    Fluxy.delete<_OwningController>();
     expect(rx.isDisposed, isTrue);
     expect(controller.isClosed, isTrue);
     expect(timer.isActive, isFalse);
   });
 
   test('own() rejects what it cannot dispose', () {
-    final c = Get.put(_OwningController());
+    final c = Fluxy.put(_OwningController());
     expect(() => c.own('text'), throwsArgumentError);
   });
 

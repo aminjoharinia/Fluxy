@@ -114,18 +114,18 @@ void main() {
 
   group('Get singleton', () {
     test('defaults', () {
-      expect(Get.smartManagement, SmartManagement.full);
-      expect(Get.isLogEnable, kDebugMode);
+      expect(Fluxy.smartManagement, SmartManagement.full);
+      expect(Fluxy.isLogEnable, kDebugMode);
     });
 
     test('log goes to the configured writer', () {
       final lines = <(String, bool)>[];
-      final previous = Get.log;
-      Get.log = (text, {bool isError = false}) => lines.add((text, isError));
-      addTearDown(() => Get.log = previous);
+      final previous = Fluxy.log;
+      Fluxy.log = (text, {bool isError = false}) => lines.add((text, isError));
+      addTearDown(() => Fluxy.log = previous);
 
-      Get.log('hello');
-      Get.log('bad', isError: true);
+      Fluxy.log('hello');
+      Fluxy.log('bad', isError: true);
       expect(lines, [('hello', false), ('bad', true)]);
     });
 
@@ -136,7 +136,7 @@ void main() {
 
     test('toEnd runs after the current event', () async {
       final order = <String>[];
-      final done = Get.toEnd(() => order.add('later'));
+      final done = Fluxy.toEnd(() => order.add('later'));
       order.add('now');
       await done;
       expect(order, ['now', 'later']);
@@ -144,19 +144,24 @@ void main() {
 
     test('asap runs now when the condition holds, later otherwise', () async {
       final order = <String>[];
-      final now = Get.asap(() => order.add('sync'), condition: () => true);
+      final now = Fluxy.asap(() => order.add('sync'), condition: () => true);
       order.add('after sync');
       await now;
-      final later = Get.asap(() => order.add('async'));
+      final later = Fluxy.asap(() => order.add('async'));
       order.add('after async');
       await later;
       expect(order, ['sync', 'after sync', 'after async', 'async']);
     });
 
     test('asap returns the computed value', () async {
-      expect(await Get.asap(() => 42), 42);
-      expect(await Get.toEnd(() => 'x'), 'x');
+      expect(await Fluxy.asap(() => 42), 42);
+      expect(await Fluxy.toEnd(() => 'x'), 'x');
     });
+  });
+
+  test('the deprecated Get is the same object as Fluxy', () {
+    // ignore: deprecated_member_use_from_same_package
+    expect(identical(Get, Fluxy), isTrue);
   });
 
   test('Engine.instance is the widgets binding', () {

@@ -13,7 +13,7 @@ void main() {
 
     await tester.pump();
 
-    Get.defaultDialog(
+    Fluxy.defaultDialog(
         onConfirm: () {}, middleText: "Dialog made in 3 lines of code");
 
     await tester.pumpAndSettle();
@@ -28,7 +28,7 @@ void main() {
 
     await tester.pump();
 
-    Get.dialog(const YourDialogWidget());
+    Fluxy.dialog(const YourDialogWidget());
 
     await tester.pumpAndSettle();
 
@@ -44,11 +44,11 @@ void main() {
 
       await tester.pump();
 
-      Get.dialog(const YourDialogWidget());
+      Fluxy.dialog(const YourDialogWidget());
       await tester.pumpAndSettle();
 
       expect(find.byType(YourDialogWidget), findsOneWidget);
-      expect(Get.isDialogOpen, true);
+      expect(Fluxy.isDialogOpen, true);
     }
 
     /// Tear down the test by checking after closing the dialog
@@ -56,21 +56,21 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(YourDialogWidget), findsNothing);
-      expect(Get.isDialogOpen, false);
+      expect(Fluxy.isDialogOpen, false);
       await tester.pumpAndSettle();
     }
 
     testWidgets("Get dialog close - with backLegacy", (tester) async {
       await setUpCloseTest(tester);
       // Close using backLegacy
-      Get.backLegacy();
+      Fluxy.backLegacy();
       await tearDownCloseTest(tester);
     });
 
     testWidgets("Get dialog close - with closeDialog", (tester) async {
       await setUpCloseTest(tester);
       // Close using closeDialog
-      Get.closeDialog();
+      Fluxy.closeDialog();
       await tearDownCloseTest(tester);
     });
   });
@@ -84,22 +84,22 @@ void main() {
 
       await tester.pump();
 
-      final result = Get.dialog(const YourDialogWidget());
+      final result = Fluxy.dialog(const YourDialogWidget());
       await tester.pumpAndSettle();
 
       expect(find.byType(YourDialogWidget), findsOneWidget);
-      expect(Get.isDialogOpen, true);
+      expect(Fluxy.isDialogOpen, true);
 
       const dialogResult = "My dialog result";
 
-      Get.closeDialog(result: dialogResult);
+      Fluxy.closeDialog(result: dialogResult);
       await tester.pumpAndSettle();
 
       final returnedResult = await result;
       expect(returnedResult, dialogResult);
 
       expect(find.byType(YourDialogWidget), findsNothing);
-      expect(Get.isDialogOpen, false);
+      expect(Fluxy.isDialogOpen, false);
       await tester.pumpAndSettle();
     });
 
@@ -111,13 +111,13 @@ void main() {
 
       await tester.pump();
 
-      Get.bottomSheet(const YourDialogWidget());
+      Fluxy.bottomSheet(const YourDialogWidget());
       await tester.pumpAndSettle();
 
       expect(find.byType(YourDialogWidget), findsOneWidget);
-      expect(Get.isDialogOpen, false);
+      expect(Fluxy.isDialogOpen, false);
 
-      Get.closeDialog();
+      Fluxy.closeDialog();
       await tester.pumpAndSettle();
 
       expect(find.byType(YourDialogWidget), findsOneWidget);

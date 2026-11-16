@@ -4,11 +4,11 @@ Fluxy is a fork of [GetX](https://github.com/jonataslaw/getx) (from commit `a294
 
 | Package | What it holds | Depends on |
 |---|---|---|
-| [`fluxy_core`](packages/fluxy_core) | `Get` singleton, logging, engine, `Equality` | — |
+| [`fluxy_core`](packages/fluxy_core) | `Fluxy` object, logging, engine, `Equality` | — |
 | [`fluxy_state`](packages/fluxy_state) | Rx, `Obx`, `Computed`, `RxFuture`, controllers, workers, DI, copy-on-write edits | core |
 | [`fluxy_i18n`](packages/fluxy_i18n) | `Translations`, `.tr`, locale state | core, state |
 | [`fluxy_utils`](packages/fluxy_utils) | `FluxyPlatform`, validators, extensions, queue | core |
-| [`fluxy_nav`](packages/fluxy_nav) | router, `Get.to/back`, dialogs, sheets, snackbars | core, state, i18n, utils |
+| [`fluxy_nav`](packages/fluxy_nav) | router, `Fluxy.to/back`, dialogs, sheets, snackbars | core, state, i18n, utils |
 | [`fluxy_ui`](packages/fluxy_ui) | responsive views, `hp`/`wp`, animations | core, state, utils |
 
 The root package `fluxy` re-exports all of them: `import 'package:fluxy/fluxy.dart'` (named `get` until v0.8.0).
@@ -126,4 +126,4 @@ fluxy_state:
 
 ## Tests
 
-Each package has its own tests in `packages/*/test`; CI (`.github/workflows/main.yml`) runs `flutter analyze` and `flutter test` in every package, so no package can reach outside its listed dependencies. In fluxy_state alone, reset with `Get.resetInstance()`; `Get.reset()` (state and translations) is in fluxy_nav.
+Each package has its own tests in `packages/*/test`; CI (`.github/workflows/main.yml`) runs `flutter analyze` and `flutter test` in every package, so no package can reach outside its listed dependencies. In fluxy_state alone, reset with `Fluxy.resetInstance()`; `Fluxy.reset()` (state and translations) is in fluxy_nav.

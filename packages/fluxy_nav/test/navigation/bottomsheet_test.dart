@@ -13,7 +13,7 @@ void main() {
 
     await tester.pump();
 
-    Get.bottomSheet(Wrap(
+    Fluxy.bottomSheet(Wrap(
       children: <Widget>[
         ListTile(
           leading: const Icon(Icons.music_note),
@@ -35,7 +35,7 @@ void main() {
 
     await tester.pump();
 
-    Get.bottomSheet(Wrap(
+    Fluxy.bottomSheet(Wrap(
       children: <Widget>[
         ListTile(
           leading: const Icon(Icons.music_note),
@@ -47,30 +47,30 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(Get.isBottomSheetOpen, true);
+    expect(Fluxy.isBottomSheetOpen, true);
 
-    Get.backLegacy();
+    Fluxy.backLegacy();
     await tester.pumpAndSettle();
 
-    expect(Get.isBottomSheetOpen, false);
+    expect(Fluxy.isBottomSheetOpen, false);
 
-    // expect(() => Get.bottomSheet(Container(), isScrollControlled: null),
+    // expect(() => Fluxy.bottomSheet(Container(), isScrollControlled: null),
     //     throwsAssertionError);
 
-    // expect(() => Get.bottomSheet(Container(), isDismissible: null),
+    // expect(() => Fluxy.bottomSheet(Container(), isDismissible: null),
     //     throwsAssertionError);
 
-    // expect(() => Get.bottomSheet(Container(), enableDrag: null),
+    // expect(() => Fluxy.bottomSheet(Container(), enableDrag: null),
     //     throwsAssertionError);
 
     await tester.pumpAndSettle();
   });
 
   // testWidgets(
-  //   "GetMaterialApp with debugShowMaterialGrid null",
+  //   "FluxyApp with debugShowMaterialGrid null",
   //   (tester) async {
   //     expect(
-  //       () => GetMaterialApp(
+  //       () => FluxyApp(
   //         debugShowMaterialGrid: null,
   //       ),
   //       throwsAssertionError,

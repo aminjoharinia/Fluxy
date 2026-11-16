@@ -204,7 +204,7 @@ void main() {
       final sum = Computed(() => a.value + b.value);
       var calls = 0;
       sum.addListener(() => calls++);
-      Get.batch(() {
+      Fluxy.batch(() {
         a.value = 10;
         expect(sum.value, 12);
         b.value = 20;

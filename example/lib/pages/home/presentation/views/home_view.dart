@@ -41,7 +41,7 @@ class HomeView extends FluxyView<HomeController> {
               leading: IconButton(
                 icon: const Icon(Icons.add, color: Colors.white, size: 28),
                 onPressed: () {
-                  Get.snackbar(
+                  Fluxy.snackbar(
                     'New Feature',
                     'Coming soon!',
                     snackPosition: SnackPosition.bottom,
@@ -81,7 +81,7 @@ class HomeView extends FluxyView<HomeController> {
                         shadowColor: Colors.blueAccent.withValues(alpha: 0.5),
                       ),
                       onPressed: () {
-                        Get.updateLocale(Get.locale?.languageCode == 'en'
+                        Fluxy.updateLocale(Fluxy.locale?.languageCode == 'en'
                             ? const Locale('pt', 'BR')
                             : const Locale('en', 'EN'));
                       },
@@ -112,10 +112,10 @@ class HomeView extends FluxyView<HomeController> {
                                 color: Colors.white.withValues(alpha: 0.9),
                                 child: ListTile(
                                   onTap: () async {
-                                    final data = await Get.toNamed(
+                                    final data = await Fluxy.toNamed(
                                         '/home/details',
                                         arguments: country);
-                                    if (data != null) Get.log(data);
+                                    if (data != null) Fluxy.log(data);
                                   },
                                   contentPadding: EdgeInsets.symmetric(
                                       horizontal: 20, vertical: 16),

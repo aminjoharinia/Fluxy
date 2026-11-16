@@ -32,7 +32,7 @@ class ProductsView extends FluxyView<ProductsController> {
                     final item = controller.products[index];
                     return ListTile(
                       onTap: () {
-                        Get.toNamed(Routes.PRODUCT_DETAILS(item.id));
+                        Fluxy.toNamed(Routes.PRODUCT_DETAILS(item.id));
                       },
                       title: Text(item.name),
                       subtitle: Text(item.id),

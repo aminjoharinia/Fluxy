@@ -31,6 +31,9 @@ enum FormatMode { auto, always, never }
 /// Directories never scanned.
 const _skippedDirs = {'build', 'node_modules', 'Pods'};
 
+/// Files that declare the old names on purpose (Fluxy's deprecated aliases).
+const _skippedFiles = {'deprecated_names.dart'};
+
 /// Runs the command; returns the exit code (64 for a usage error, 65 for a
 /// bad map, 1 if dart format failed).
 Future<int> runMigrate(
@@ -171,7 +174,8 @@ Future<int> _run(
 }
 
 /// The Dart files under [root], skipping hidden folders (`.dart_tool`,
-/// `.git`, `.symlinks`, ...), `build`, `node_modules` and `Pods`.
+/// `.git`, `.symlinks`, ...), `build`, `node_modules` and `Pods`, and
+/// `deprecated_names.dart` files (they declare the old names on purpose).
 Iterable<File> dartFiles(Directory root) sync* {
   final entries = root.listSync(followLinks: false)
     ..sort((a, b) => a.path.compareTo(b.path));
@@ -180,7 +184,9 @@ Iterable<File> dartFiles(Directory root) sync* {
     if (entry is Directory) {
       if (name.startsWith('.') || _skippedDirs.contains(name)) continue;
       yield* dartFiles(entry);
-    } else if (entry is File && name.endsWith('.dart')) {
+    } else if (entry is File &&
+        name.endsWith('.dart') &&
+        !_skippedFiles.contains(name)) {
       yield entry;
     }
   }

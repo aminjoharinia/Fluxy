@@ -18,7 +18,7 @@ void main() {
     expect('total_confirmed'.tr, 'Total Confirmed');
     expect('total_deaths'.tr, 'Total Deaths');
 
-    Get.updateLocale(const Locale('pt', 'BR'));
+    Fluxy.updateLocale(const Locale('pt', 'BR'));
 
     await tester.pumpAndSettle();
 
@@ -26,7 +26,7 @@ void main() {
     expect('total_confirmed'.tr, 'Total confirmado');
     expect('total_deaths'.tr, 'Total de mortes');
 
-    Get.updateLocale(const Locale('en', 'EN'));
+    Fluxy.updateLocale(const Locale('en', 'EN'));
 
     await tester.pumpAndSettle();
 

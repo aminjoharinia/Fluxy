@@ -2,8 +2,8 @@ import 'package:flutter/widgets.dart';
 
 import 'package:fluxy_state/fluxy_state.dart';
 
-class GetDialogRoute<T> extends PopupRoute<T> {
-  GetDialogRoute({
+class FluxyDialogRoute<T> extends PopupRoute<T> {
+  FluxyDialogRoute({
     required RoutePageBuilder pageBuilder,
     this._barrierDismissible = true,
     this._barrierLabel,

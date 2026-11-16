@@ -23,8 +23,8 @@ const int _kMaxMidSwipePageForwardAnimationTime = 800; // Milliseconds.
 // user releases a page mid swipe.
 const int _kMaxPageBackAnimationTime = 300; // Milliseconds.
 
-class GetBackGestureDetector<T> extends StatefulWidget {
-  const GetBackGestureDetector({
+class FluxyBackGestureDetector<T> extends StatefulWidget {
+  const FluxyBackGestureDetector({
     super.key,
     required this.limitedSwipe,
     required this.gestureWidth,
@@ -40,15 +40,15 @@ class GetBackGestureDetector<T> extends StatefulWidget {
 
   final Widget child;
   final ValueGetter<bool> popGestureEnable;
-  final ValueGetter<GetBackGestureController<T>> onStartPopGesture;
+  final ValueGetter<FluxyBackGestureController<T>> onStartPopGesture;
 
   @override
-  GetBackGestureDetectorState<T> createState() =>
-      GetBackGestureDetectorState<T>();
+  FluxyBackGestureDetectorState<T> createState() =>
+      FluxyBackGestureDetectorState<T>();
 }
 
-class GetBackGestureDetectorState<T> extends State<GetBackGestureDetector<T>> {
-  GetBackGestureController<T>? _backGestureController;
+class FluxyBackGestureDetectorState<T> extends State<FluxyBackGestureDetector<T>> {
+  FluxyBackGestureController<T>? _backGestureController;
 
   void _handleDragStart(DragStartDetails details) {
     assert(mounted);
@@ -147,8 +147,8 @@ class GetBackGestureDetectorState<T> extends State<GetBackGestureDetector<T>> {
   }
 }
 
-class GetBackGestureController<T> {
-  GetBackGestureController({
+class FluxyBackGestureController<T> {
+  FluxyBackGestureController({
     required this.navigator,
     required this.controller,
   }) {
@@ -199,7 +199,7 @@ class GetBackGestureController<T> {
           curve: animationCurve);
     } else {
       // This route is destined to pop at this point. Reuse navigator's pop.
-      Get.back();
+      Fluxy.back();
 
       // The popping may have finished inline if already at the
       // target destination.
@@ -230,7 +230,7 @@ class GetBackGestureController<T> {
   }
 }
 
-mixin GetPageRouteTransitionMixin<T> on PageRoute<T> {
+mixin FluxyPageRouteTransitionMixin<T> on PageRoute<T> {
   ValueNotifier<String?>? _previousTitle;
 
   @override
@@ -320,7 +320,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
   bool canTransitionTo(TransitionRoute<dynamic> nextRoute) {
     // Don't perform outgoing animation if the next route is a
     // fullscreen dialog.
-    return (nextRoute is GetPageRouteTransitionMixin &&
+    return (nextRoute is FluxyPageRouteTransitionMixin &&
             !nextRoute.fullscreenDialog &&
             nextRoute.showCupertinoParallax) ||
         (nextRoute is CupertinoRouteTransitionMixin &&
@@ -341,8 +341,8 @@ Cannot read the previousTitle for a route that has not yet been installed''',
     super.didChangePrevious(previousRoute);
   }
 
-  static bool canSwipe(GetPageRoute route) =>
-      route.popGesture ?? Get.defaultPopGesture ?? FluxyPlatform.isIOS;
+  static bool canSwipe(FluxyPageRoute route) =>
+      route.popGesture ?? Fluxy.defaultPopGesture ?? FluxyPlatform.isIOS;
 
   /// Returns a [CupertinoFullscreenDialogTransition] if [route] is a full
   /// screen dialog, otherwise a [CupertinoPageTransition] is returned.
@@ -372,9 +372,9 @@ Cannot read the previousTitle for a route that has not yet been installed''',
     //
     // In the middle of a back gesture drag, let the transition be linear to
     // match finger motions.
-    final route = rawRoute as GetPageRoute<T>;
+    final route = rawRoute as FluxyPageRoute<T>;
     final linearTransition = route.popGestureInProgress;
-    final finalCurve = route.curve ?? Get.defaultTransitionCurve;
+    final finalCurve = route.curve ?? Fluxy.defaultTransitionCurve;
     final hasCurve = route.curve != null;
     if (route.fullscreenDialog && route.transition == null) {
       return CupertinoFullscreenDialogTransition(
@@ -393,7 +393,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
           route.alignment,
           animation,
           secondaryAnimation,
-          GetBackGestureDetector<T>(
+          FluxyBackGestureDetector<T>(
             popGestureEnable: () =>
                 _isPopGestureEnabled(route, canSwipe(route), context),
             onStartPopGesture: () {
@@ -416,7 +416,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
       // that is never removed.
       animation = animation.drive(CurveTween(curve: finalCurve));
 
-      switch (route.transition ?? Get.defaultTransition) {
+      switch (route.transition ?? Fluxy.defaultTransition) {
         case Transition.leftToRight:
           return SlideLeftTransition().buildTransitions(
               context,
@@ -424,7 +424,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -445,7 +445,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -466,7 +466,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -481,7 +481,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               ));
 
         case Transition.noTransition:
-          return GetBackGestureDetector<T>(
+          return FluxyBackGestureDetector<T>(
             popGestureEnable: () =>
                 _isPopGestureEnabled(route, canSwipe(route), context),
             onStartPopGesture: () {
@@ -502,7 +502,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -523,7 +523,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -544,7 +544,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -565,7 +565,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -586,7 +586,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -605,7 +605,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               primaryRouteAnimation: animation,
               secondaryRouteAnimation: secondaryAnimation,
               linearTransition: linearTransition,
-              child: GetBackGestureDetector<T>(
+              child: FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -626,7 +626,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -646,7 +646,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               context,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -666,7 +666,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               context,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -686,7 +686,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               context,
               iosAnimation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -707,7 +707,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               route.alignment,
               animation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -722,7 +722,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               ));
 
         default:
-          final customTransition = GetRoot.of(context).config.customTransition;
+          final customTransition = FluxyRoot.of(context).config.customTransition;
 
           if (customTransition != null) {
             return customTransition.buildTransition(context, route.curve,
@@ -737,7 +737,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
               context,
               iosAnimation,
               secondaryAnimation,
-              GetBackGestureDetector<T>(
+              FluxyBackGestureDetector<T>(
                 popGestureEnable: () =>
                     _isPopGestureEnabled(route, canSwipe(route), context),
                 onStartPopGesture: () {
@@ -756,7 +756,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
     }
   }
 
-  // Called by GetBackGestureDetector when a pop ("back") drag start
+  // Called by FluxyBackGestureDetector when a pop ("back") drag start
   // gesture is detected. The returned controller handles all of the subsequent
   // drag events.
   /// True if an iOS-style back swipe pop gesture is currently
@@ -795,7 +795,7 @@ Cannot read the previousTitle for a route that has not yet been installed''',
       return false;
     }
     // If we're in a gesture already, we cannot start another.
-    if (GetPageRouteTransitionMixin.isPopGestureInProgress(context)) {
+    if (FluxyPageRouteTransitionMixin.isPopGestureInProgress(context)) {
       return false;
     }
 
@@ -806,10 +806,10 @@ Cannot read the previousTitle for a route that has not yet been installed''',
     return true;
   }
 
-  static GetBackGestureController<T> _startPopGesture<T>(
+  static FluxyBackGestureController<T> _startPopGesture<T>(
     PageRoute<T> route,
   ) {
-    return GetBackGestureController<T>(
+    return FluxyBackGestureController<T>(
       navigator: route.navigator!,
       controller: route.controller!, // protected access
     );

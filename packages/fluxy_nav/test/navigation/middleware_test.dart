@@ -4,28 +4,28 @@ import 'package:fluxy_nav/fluxy_nav.dart';
 
 import 'get_main_test.dart';
 
-class RedirectMiddleware extends GetMiddleware {
+class RedirectMiddleware extends FluxyMiddleware {
   @override
   Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
     return RouteDecoder.fromRoute('/second');
   }
 }
 
-class Redirect2Middleware extends GetMiddleware {
+class Redirect2Middleware extends FluxyMiddleware {
   @override
   Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
     return RouteDecoder.fromRoute('/first');
   }
 }
 
-class RedirectMiddlewareNull extends GetMiddleware {
+class RedirectMiddlewareNull extends FluxyMiddleware {
   @override
   Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
     return null;
   }
 }
 
-class RedirectBypassMiddleware extends GetMiddleware {
+class RedirectBypassMiddleware extends FluxyMiddleware {
   @override
   Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
     return route;
@@ -34,111 +34,111 @@ class RedirectBypassMiddleware extends GetMiddleware {
 
 void main() {
   tearDown(() {
-    Get.reset();
+    Fluxy.reset();
   });
 
   testWidgets("Middleware should redirect to second screen", (tester) async {
     // Test setup
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         initialRoute: '/',
         getPages: [
-          GetPage(name: '/', page: () => const Home()),
-          GetPage(
+          FluxyPage(name: '/', page: () => const Home()),
+          FluxyPage(
             name: '/first',
             page: () => const FirstScreen(),
             middlewares: [RedirectMiddleware()],
           ),
-          GetPage(name: '/second', page: () => const SecondScreen()),
-          GetPage(name: '/third', page: () => const ThirdScreen()),
+          FluxyPage(name: '/second', page: () => const SecondScreen()),
+          FluxyPage(name: '/third', page: () => const ThirdScreen()),
         ],
       ),
     );
 
     // Act
-    Get.toNamed('/first');
+    Fluxy.toNamed('/first');
     await tester.pumpAndSettle();
 
     // Assert
     expect(find.byType(SecondScreen), findsOneWidget);
     expect(find.byType(FirstScreen), findsNothing);
-    expect(Get.currentRoute, '/second');
+    expect(Fluxy.currentRoute, '/second');
   });
 
   testWidgets("Middleware should stop navigation", (tester) async {
     // Test setup
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         initialRoute: '/',
         getPages: [
-          GetPage(name: '/', page: () => const Home()),
-          GetPage(
+          FluxyPage(name: '/', page: () => const Home()),
+          FluxyPage(
             name: '/first',
             page: () => const FirstScreen(),
             middlewares: [RedirectMiddlewareNull()],
           ),
-          GetPage(name: '/second', page: () => const SecondScreen()),
-          GetPage(name: '/third', page: () => const ThirdScreen()),
+          FluxyPage(name: '/second', page: () => const SecondScreen()),
+          FluxyPage(name: '/third', page: () => const ThirdScreen()),
         ],
       ),
     );
 
     // Act
     await tester.pumpAndSettle();
-    Get.toNamed('/first');
+    Fluxy.toNamed('/first');
     await tester.pumpAndSettle();
 
     // Assert
     expect(find.byType(Home), findsOneWidget);
     expect(find.byType(FirstScreen), findsNothing);
-    expect(Get.currentRoute, '/');
+    expect(Fluxy.currentRoute, '/');
   });
 
   testWidgets("Middleware should be bypassed", (tester) async {
     // Test setup
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         initialRoute: '/',
         getPages: [
-          GetPage(name: '/', page: () => const Home()),
-          GetPage(
+          FluxyPage(name: '/', page: () => const Home()),
+          FluxyPage(
             name: '/first',
             page: () => const FirstScreen(),
             middlewares: [RedirectBypassMiddleware()],
           ),
-          GetPage(name: '/second', page: () => const SecondScreen()),
-          GetPage(name: '/third', page: () => const ThirdScreen()),
+          FluxyPage(name: '/second', page: () => const SecondScreen()),
+          FluxyPage(name: '/third', page: () => const ThirdScreen()),
         ],
       ),
     );
 
     // Act
     await tester.pumpAndSettle();
-    Get.toNamed('/first');
+    Fluxy.toNamed('/first');
     await tester.pumpAndSettle();
 
     // Assert
     expect(find.byType(FirstScreen), findsOneWidget);
     expect(find.byType(SecondScreen), findsNothing);
     expect(find.byType(Home), findsNothing);
-    expect(Get.currentRoute, '/first');
+    expect(Fluxy.currentRoute, '/first');
   });
 
   testWidgets("Middleware should redirect twice", (tester) async {
     // Test setup
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         initialRoute: '/',
         getPages: [
-          GetPage(name: '/', page: () => const Home()),
-          GetPage(
+          FluxyPage(name: '/', page: () => const Home()),
+          FluxyPage(
             name: '/first',
             page: () => const FirstScreen(),
             middlewares: [RedirectMiddleware()],
           ),
-          GetPage(name: '/second', page: () => const SecondScreen()),
-          GetPage(name: '/third', page: () => const ThirdScreen()),
-          GetPage(
+          FluxyPage(name: '/second', page: () => const SecondScreen()),
+          FluxyPage(name: '/third', page: () => const ThirdScreen()),
+          FluxyPage(
             name: '/fourth',
             page: () => const FourthScreen(),
             middlewares: [Redirect2Middleware()],
@@ -148,47 +148,47 @@ void main() {
     );
 
     // Act
-    Get.toNamed('/fourth');
+    Fluxy.toNamed('/fourth');
     await tester.pumpAndSettle();
 
     // Assert
     expect(find.byType(SecondScreen), findsOneWidget);
     expect(find.byType(FirstScreen), findsNothing);
-    expect(Get.currentRoute, '/second');
+    expect(Fluxy.currentRoute, '/second');
   });
 
   testWidgets("Navigation history should be correct after redirects",
       (tester) async {
     // Test setup
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         initialRoute: '/',
         getPages: [
-          GetPage(name: '/', page: () => const Home()),
-          GetPage(
+          FluxyPage(name: '/', page: () => const Home()),
+          FluxyPage(
             name: '/first',
             page: () => const FirstScreen(),
             middlewares: [RedirectMiddleware()],
           ),
-          GetPage(name: '/second', page: () => const SecondScreen()),
+          FluxyPage(name: '/second', page: () => const SecondScreen()),
         ],
       ),
     );
 
     // Act
-    Get.toNamed('/first');
+    Fluxy.toNamed('/first');
     await tester.pumpAndSettle();
 
     // Assert
-    expect(Get.currentRoute, '/second');
-    expect(Get.previousRoute, '/');
+    expect(Fluxy.currentRoute, '/second');
+    expect(Fluxy.previousRoute, '/');
 
     // Act: go back
-    Get.back();
+    Fluxy.back();
     await tester.pumpAndSettle();
 
     // Assert
     expect(find.byType(Home), findsOneWidget);
-    expect(Get.currentRoute, '/');
+    expect(Fluxy.currentRoute, '/');
   });
 }

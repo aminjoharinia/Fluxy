@@ -94,7 +94,7 @@ void main() {
       sum.addListener(() => seen.add(sum.peek));
       expect(sum.peek, 11);
 
-      Get.batch(() {
+      Fluxy.batch(() {
         a.value = 2;
         expect(sum.peek, 12, reason: 'reads see the held change');
         b.value = 20;
@@ -222,7 +222,7 @@ void main() {
       final b = 2.obs;
       final seen = <int>[];
       effect(() => seen.add(a.value + b.value));
-      Get.batch(() {
+      Fluxy.batch(() {
         a.value = 10;
         b.value = 20;
       });

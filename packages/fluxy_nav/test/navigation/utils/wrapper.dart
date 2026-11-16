@@ -4,7 +4,7 @@ import 'package:fluxy_nav/fluxy_nav.dart';
 
 class Wrapper extends StatelessWidget {
   final Widget? child;
-  final List<GetPage>? namedRoutes;
+  final List<FluxyPage>? namedRoutes;
   final String? initialRoute;
   final Transition? defaultTransition;
 
@@ -18,7 +18,7 @@ class Wrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return FluxyApp(
       defaultTransition: defaultTransition,
       initialRoute: initialRoute,
       translations: WrapperTranslations(),
@@ -35,7 +35,7 @@ class Wrapper extends StatelessWidget {
 
 class WrapperNamed extends StatelessWidget {
   final Widget? child;
-  final List<GetPage>? namedRoutes;
+  final List<FluxyPage>? namedRoutes;
   final String? initialRoute;
   final Transition? defaultTransition;
 
@@ -49,7 +49,7 @@ class WrapperNamed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return FluxyApp(
       defaultTransition: defaultTransition,
       initialRoute: initialRoute,
       getPages: namedRoutes,

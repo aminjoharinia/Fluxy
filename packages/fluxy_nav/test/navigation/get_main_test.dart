@@ -9,7 +9,7 @@ void main() {
   testWidgets("Get.to navigates to provided route", (tester) async {
     await tester.pumpWidget(Wrapper(child: Container()));
 
-    Get.to(() => const FirstScreen());
+    Fluxy.to(() => const FirstScreen());
 
     await tester.pumpAndSettle();
 
@@ -17,16 +17,16 @@ void main() {
   });
 
   testWidgets("Get.toNamed navigates to provided named route", (tester) async {
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       initialRoute: '/first',
       getPages: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
 
     await tester.pumpAndSettle();
 
@@ -34,21 +34,21 @@ void main() {
   });
 
   testWidgets("unknowroute", (tester) async {
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       initialRoute: '/first',
-      unknownRoute: GetPage(name: '/404', page: () => const Scaffold()),
+      unknownRoute: FluxyPage(name: '/404', page: () => const Scaffold()),
       getPages: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
-    Get.toNamed('/secondd');
+    Fluxy.toNamed('/secondd');
 
     await tester.pumpAndSettle();
 
-    expect(Get.rootController.rootDelegate.currentConfiguration?.route?.name,
+    expect(Fluxy.rootController.rootDelegate.currentConfiguration?.route?.name,
         '/404');
   });
 
@@ -56,7 +56,7 @@ void main() {
     await tester.pumpWidget(const Wrapper(child: FirstScreen()));
     // await tester.pump();
 
-    Get.off(() => const SecondScreen());
+    Fluxy.off(() => const SecondScreen());
 
     await tester.pumpAndSettle();
 
@@ -67,8 +67,8 @@ void main() {
     await tester.pumpWidget(const Wrapper(child: FirstScreen()));
     await tester.pump();
 
-    Get.off(() => const SecondScreen());
-    Get.back();
+    Fluxy.off(() => const SecondScreen());
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -76,18 +76,18 @@ void main() {
   });
 
   testWidgets("Get.offNamed navigates to provided named route", (tester) async {
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       initialRoute: '/first',
       getPages: [
-        GetPage(name: '/first', page: () => const FirstScreen()),
-        GetPage(name: '/second', page: () => const SecondScreen()),
-        GetPage(name: '/third', page: () => const ThirdScreen()),
+        FluxyPage(name: '/first', page: () => const FirstScreen()),
+        FluxyPage(name: '/second', page: () => const SecondScreen()),
+        FluxyPage(name: '/third', page: () => const ThirdScreen()),
       ],
     ));
 
     await tester.pump();
 
-    Get.offNamed('/second');
+    Fluxy.offNamed('/second');
 
     await tester.pumpAndSettle();
 
@@ -95,20 +95,20 @@ void main() {
   });
 
   testWidgets("Get.offNamed removes current route", (tester) async {
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       initialRoute: '/first',
       getPages: [
-        GetPage(name: '/first', page: () => const FirstScreen()),
-        GetPage(name: '/second', page: () => const SecondScreen()),
-        GetPage(name: '/third', page: () => const ThirdScreen()),
+        FluxyPage(name: '/first', page: () => const FirstScreen()),
+        FluxyPage(name: '/second', page: () => const SecondScreen()),
+        FluxyPage(name: '/third', page: () => const ThirdScreen()),
       ],
     ));
 
     await tester.pump();
 
-    Get.offNamed('/second');
+    Fluxy.offNamed('/second');
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -116,22 +116,22 @@ void main() {
   });
 
   testWidgets("Get.offNamed removes only current route", (tester) async {
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       initialRoute: '/first',
       getPages: [
-        GetPage(name: '/first', page: () => const FirstScreen()),
-        GetPage(name: '/second', page: () => const SecondScreen()),
-        GetPage(name: '/third', page: () => const ThirdScreen()),
+        FluxyPage(name: '/first', page: () => const FirstScreen()),
+        FluxyPage(name: '/second', page: () => const SecondScreen()),
+        FluxyPage(name: '/third', page: () => const ThirdScreen()),
       ],
     ));
 
     // await tester.pump();
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
     await tester.pumpAndSettle();
-    Get.offNamed('/third');
+    Fluxy.offNamed('/third');
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
     await tester.pumpAndSettle();
 
     expect(find.byType(FirstScreen), findsOneWidget);
@@ -142,7 +142,7 @@ void main() {
     await tester.pumpWidget(const Wrapper(child: FirstScreen()));
     await tester.pump();
 
-    Get.offAll(() => const SecondScreen());
+    Fluxy.offAll(() => const SecondScreen());
 
     await tester.pumpAndSettle();
 
@@ -153,16 +153,16 @@ void main() {
     await tester.pumpWidget(const Wrapper(child: FirstScreen()));
     await tester.pump();
 
-    Get.to(() => const SecondScreen());
+    Fluxy.to(() => const SecondScreen());
     await tester.pumpAndSettle();
-    Get.offAll(() => const ThirdScreen());
+    Fluxy.offAll(() => const ThirdScreen());
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
     await tester.pumpAndSettle();
 
     expect(find.byType(SecondScreen), findsNothing);
 
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -174,15 +174,15 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
     await tester.pump();
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
 
     await tester.pumpAndSettle();
 
@@ -193,24 +193,24 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
     await tester.pump();
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
     await tester.pumpAndSettle();
-    Get.offAllNamed('/third');
+    Fluxy.offAllNamed('/third');
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
     await tester.pumpAndSettle();
 
     expect(find.byType(SecondScreen), findsNothing);
 
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -221,13 +221,13 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
-    Get.offAndToNamed('/second');
+    Fluxy.offAndToNamed('/second');
 
     await tester.pumpAndSettle();
 
@@ -238,16 +238,16 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
-    Get.offAndToNamed('/second');
+    Fluxy.offAndToNamed('/second');
 
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -257,11 +257,11 @@ void main() {
   testWidgets("Get.offUntil navigates to provided route", (tester) async {
     await tester.pumpWidget(Wrapper(child: Container()));
 
-    Get.to(() => const FirstScreen());
+    Fluxy.to(() => const FirstScreen());
 
     await tester.pumpAndSettle();
 
-    Get.offUntil(
+    Fluxy.offUntil(
         () => const ThirdScreen(), (route) => route.name == '/FirstScreen');
 
     await tester.pumpAndSettle();
@@ -274,19 +274,19 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
     await tester.pumpAndSettle();
 
-    Get.toNamed('/third');
+    Fluxy.toNamed('/third');
     await tester.pumpAndSettle();
 
-    Get.until((route) => route.name == '/first');
+    Fluxy.until((route) => route.name == '/first');
 
     await tester.pumpAndSettle();
 
@@ -300,14 +300,14 @@ void main() {
       (tester) async {
     await tester.pumpWidget(Wrapper(child: Container()));
 
-    Get.to(() => const FirstScreen());
+    Fluxy.to(() => const FirstScreen());
     await tester.pumpAndSettle();
-    Get.to(() => const SecondScreen());
+    Fluxy.to(() => const SecondScreen());
     await tester.pumpAndSettle();
-    Get.offUntil(
+    Fluxy.offUntil(
         () => const ThirdScreen(), (route) => route.name == '/FirstScreen');
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -319,14 +319,14 @@ void main() {
       (tester) async {
     await tester.pumpWidget(Wrapper(child: Container()));
 
-    Get.to(() => const FirstScreen());
+    Fluxy.to(() => const FirstScreen());
     await tester.pumpAndSettle();
-    Get.to(() => const SecondScreen());
+    Fluxy.to(() => const SecondScreen());
     await tester.pumpAndSettle();
-    Get.offUntil(
+    Fluxy.offUntil(
         () => const ThirdScreen(), (route) => route.name == '/FirstScreen');
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -338,112 +338,112 @@ void main() {
       await tester.pumpWidget(WrapperNamed(
         initialRoute: '/first',
         namedRoutes: [
-          GetPage(page: () => const FirstScreen(), name: '/first'),
-          GetPage(page: () => const SecondScreen(), name: '/second'),
-          GetPage(page: () => const ThirdScreen(), name: '/third')
+          FluxyPage(page: () => const FirstScreen(), name: '/first'),
+          FluxyPage(page: () => const SecondScreen(), name: '/second'),
+          FluxyPage(page: () => const ThirdScreen(), name: '/third')
         ],
       ));
 
-      Get.offNamedUntil('/second', (route) => route.name == '/first');
+      Fluxy.offNamedUntil('/second', (route) => route.name == '/first');
       await tester.pumpAndSettle();
 
       expect(find.byType(SecondScreen), findsOneWidget);
-      expect(Get.currentRoute, '/second');
+      expect(Fluxy.currentRoute, '/second');
     });
 
     testWidgets("Removes routes that don't match predicate", (tester) async {
       await tester.pumpWidget(WrapperNamed(
         initialRoute: '/first',
         namedRoutes: [
-          GetPage(page: () => const FirstScreen(), name: '/first'),
-          GetPage(page: () => const SecondScreen(), name: '/second'),
-          GetPage(page: () => const ThirdScreen(), name: '/third')
+          FluxyPage(page: () => const FirstScreen(), name: '/first'),
+          FluxyPage(page: () => const SecondScreen(), name: '/second'),
+          FluxyPage(page: () => const ThirdScreen(), name: '/third')
         ],
       ));
 
-      Get.toNamed('/second');
+      Fluxy.toNamed('/second');
       await tester.pumpAndSettle();
-      Get.offNamedUntil('/third', (route) => route.name == '/first');
+      Fluxy.offNamedUntil('/third', (route) => route.name == '/first');
       await tester.pumpAndSettle();
 
       expect(find.byType(ThirdScreen), findsOneWidget);
-      expect(Get.currentRoute, '/third');
-      expect(Get.previousRoute, '/first');
+      expect(Fluxy.currentRoute, '/third');
+      expect(Fluxy.previousRoute, '/first');
     });
 
     testWidgets("Keeps routes that match predicate", (tester) async {
       await tester.pumpWidget(WrapperNamed(
         initialRoute: '/first',
         namedRoutes: [
-          GetPage(page: () => const FirstScreen(), name: '/first'),
-          GetPage(page: () => const SecondScreen(), name: '/second'),
-          GetPage(page: () => const ThirdScreen(), name: '/third'),
+          FluxyPage(page: () => const FirstScreen(), name: '/first'),
+          FluxyPage(page: () => const SecondScreen(), name: '/second'),
+          FluxyPage(page: () => const ThirdScreen(), name: '/third'),
         ],
       ));
 
-      Get.toNamed('/second');
+      Fluxy.toNamed('/second');
       await tester.pumpAndSettle();
-      Get.offNamedUntil('/third', (route) => route.name == '/first');
+      Fluxy.offNamedUntil('/third', (route) => route.name == '/first');
       await tester.pumpAndSettle();
-      Get.back();
+      Fluxy.back();
       await tester.pumpAndSettle();
 
       expect(find.byType(FirstScreen), findsOneWidget);
-      expect(Get.currentRoute, '/first');
+      expect(Fluxy.currentRoute, '/first');
     });
 
     testWidgets("Handles predicate that never returns true", (tester) async {
       await tester.pumpWidget(WrapperNamed(
         initialRoute: '/first',
         namedRoutes: [
-          GetPage(page: () => const FirstScreen(), name: '/first'),
-          GetPage(page: () => const SecondScreen(), name: '/second'),
-          GetPage(page: () => const ThirdScreen(), name: '/third'),
-          GetPage(page: () => const FourthScreen(), name: '/fourth'),
+          FluxyPage(page: () => const FirstScreen(), name: '/first'),
+          FluxyPage(page: () => const SecondScreen(), name: '/second'),
+          FluxyPage(page: () => const ThirdScreen(), name: '/third'),
+          FluxyPage(page: () => const FourthScreen(), name: '/fourth'),
         ],
       ));
 
-      Get.toNamed('/second');
+      Fluxy.toNamed('/second');
       await tester.pumpAndSettle();
 
-      Get.toNamed('/third');
+      Fluxy.toNamed('/third');
       await tester.pumpAndSettle();
 
-      Get.offNamedUntil('/fourth', (route) => false);
+      Fluxy.offNamedUntil('/fourth', (route) => false);
       await tester.pumpAndSettle();
 
       expect(find.byType(FourthScreen), findsOneWidget);
-      expect(Get.currentRoute, '/fourth');
-      expect(Get.previousRoute, '/first');
+      expect(Fluxy.currentRoute, '/fourth');
+      expect(Fluxy.previousRoute, '/first');
     });
 
     testWidgets("Handles complex navigation scenario", (tester) async {
       await tester.pumpWidget(WrapperNamed(
         initialRoute: '/first',
         namedRoutes: [
-          GetPage(page: () => const FirstScreen(), name: '/first'),
-          GetPage(page: () => const SecondScreen(), name: '/second'),
-          GetPage(page: () => const ThirdScreen(), name: '/third'),
-          GetPage(page: () => const FourthScreen(), name: '/fourth'),
+          FluxyPage(page: () => const FirstScreen(), name: '/first'),
+          FluxyPage(page: () => const SecondScreen(), name: '/second'),
+          FluxyPage(page: () => const ThirdScreen(), name: '/third'),
+          FluxyPage(page: () => const FourthScreen(), name: '/fourth'),
         ],
       ));
 
-      Get.toNamed('/second');
+      Fluxy.toNamed('/second');
       await tester.pumpAndSettle();
-      Get.toNamed('/third');
+      Fluxy.toNamed('/third');
       await tester.pumpAndSettle();
-      Get.offNamedUntil('/fourth', (route) => route.name == '/first');
+      Fluxy.offNamedUntil('/fourth', (route) => route.name == '/first');
       await tester.pumpAndSettle();
 
       expect(find.byType(FourthScreen), findsOneWidget);
-      expect(Get.currentRoute, '/fourth');
-      expect(Get.previousRoute, '/first');
+      expect(Fluxy.currentRoute, '/fourth');
+      expect(Fluxy.previousRoute, '/first');
 
-      Get.back();
+      Fluxy.back();
       await tester.pumpAndSettle();
 
       expect(find.byType(FirstScreen), findsOneWidget);
-      expect(Get.currentRoute, '/first');
+      expect(Fluxy.currentRoute, '/first');
     });
   });
 
@@ -451,13 +451,13 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
-    Get.offNamedUntil('/second', (route) => route.name == '/first');
+    Fluxy.offNamedUntil('/second', (route) => route.name == '/first');
 
     await tester.pumpAndSettle();
 
@@ -470,15 +470,15 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
     await tester.pumpAndSettle();
-    Get.offNamedUntil('/third', (route) => route.name == '/first');
+    Fluxy.offNamedUntil('/third', (route) => route.name == '/first');
 
     await tester.pumpAndSettle();
 
@@ -491,17 +491,17 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third'),
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third'),
       ],
     ));
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
     await tester.pumpAndSettle();
-    Get.offNamedUntil('/third', (route) => route.name == '/first');
+    Fluxy.offNamedUntil('/third', (route) => route.name == '/first');
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -518,12 +518,12 @@ void main() {
 
     // await tester.pump();
 
-    Get.to(() => const FirstScreen());
+    Fluxy.to(() => const FirstScreen());
     await tester.pumpAndSettle();
 
-    Get.to(() => const SecondScreen());
+    Fluxy.to(() => const SecondScreen());
     await tester.pumpAndSettle();
-    Get.back();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 
@@ -542,17 +542,17 @@ void main() {
 
     // await tester.pump();
 
-    Get.to(() => const FirstScreen());
+    Fluxy.to(() => const FirstScreen());
     await tester.pumpAndSettle();
-    Get.to(() => const SecondScreen());
+    Fluxy.to(() => const SecondScreen());
     await tester.pumpAndSettle();
-    Get.snackbar('title', "message");
+    Fluxy.snackbar('title', "message");
     await tester.pumpAndSettle();
-    Get.backLegacy(closeOverlays: true);
+    Fluxy.backLegacy(closeOverlays: true);
 
     await tester.pumpAndSettle();
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
 
     expect(find.byType(FirstScreen), findsOneWidget);
   });
@@ -561,19 +561,19 @@ void main() {
     await tester.pumpWidget(WrapperNamed(
       initialRoute: '/first',
       namedRoutes: [
-        GetPage(page: () => const FirstScreen(), name: '/first'),
-        GetPage(page: () => const SecondScreen(), name: '/second'),
-        GetPage(page: () => const ThirdScreen(), name: '/third')
+        FluxyPage(page: () => const FirstScreen(), name: '/first'),
+        FluxyPage(page: () => const SecondScreen(), name: '/second'),
+        FluxyPage(page: () => const ThirdScreen(), name: '/third')
       ],
     ));
 
     await tester.pump();
 
-    Get.toNamed('/second');
+    Fluxy.toNamed('/second');
     await tester.pumpAndSettle();
-    Get.toNamed('/third');
+    Fluxy.toNamed('/third');
     await tester.pumpAndSettle();
-    Get.until((route) => route.name == '/first');
+    Fluxy.until((route) => route.name == '/first');
     await tester.pumpAndSettle();
 
     expect(find.byType(FirstScreen), findsOneWidget);
@@ -588,7 +588,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -603,7 +603,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -618,7 +618,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -633,7 +633,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -648,7 +648,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -663,7 +663,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -678,7 +678,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -693,7 +693,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -708,7 +708,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 
@@ -723,7 +723,7 @@ void main() {
         ),
       );
 
-      Get.to(() => const FirstScreen());
+      Fluxy.to(() => const FirstScreen());
 
       await tester.pumpAndSettle();
 

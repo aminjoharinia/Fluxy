@@ -4,12 +4,12 @@ import 'package:flutter/widgets.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
-class GetInformationParser extends RouteInformationParser<RouteDecoder> {
-  factory GetInformationParser.createInformationParser({
+class FluxyInformationParser extends RouteInformationParser<RouteDecoder> {
+  factory FluxyInformationParser.createInformationParser({
     String initialRoute = '/',
     bool redirectRootToInitialRoute = false,
   }) {
-    return GetInformationParser(
+    return FluxyInformationParser(
       initialRoute: initialRoute,
       redirectRootToInitialRoute: redirectRootToInitialRoute,
     );
@@ -22,11 +22,11 @@ class GetInformationParser extends RouteInformationParser<RouteDecoder> {
   /// only when `/` is not a registered page.
   final bool redirectRootToInitialRoute;
 
-  GetInformationParser({
+  FluxyInformationParser({
     required this.initialRoute,
     this.redirectRootToInitialRoute = false,
   }) {
-    Get.log('GetInformationParser is created !');
+    Fluxy.log('GetInformationParser is created !');
   }
   @override
   SynchronousFuture<RouteDecoder> parseRouteInformation(
@@ -37,7 +37,7 @@ class GetInformationParser extends RouteInformationParser<RouteDecoder> {
     if (location == '/') {
       // Go to initialRoute when asked to, or when '/' is not a page.
       if (redirectRootToInitialRoute ||
-          !(Get.rootController.rootDelegate)
+          !(Fluxy.rootController.rootDelegate)
           .registeredRoutes
           .any((element) => element.name == '/')) {
         location = initialRoute;
@@ -46,7 +46,7 @@ class GetInformationParser extends RouteInformationParser<RouteDecoder> {
       location = initialRoute;
     }
 
-    Get.log('GetInformationParser: route location: $location');
+    Fluxy.log('GetInformationParser: route location: $location');
 
     return SynchronousFuture(RouteDecoder.fromRoute(location));
   }

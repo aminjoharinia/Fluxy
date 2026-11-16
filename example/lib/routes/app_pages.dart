@@ -12,12 +12,12 @@ class AppPages {
   static const INITIAL = Routes.HOME;
 
   static final routes = [
-    GetPage(
+    FluxyPage(
       name: Routes.HOME,
       page: () => const HomeView(),
       binding: HomeBinding(),
       children: [
-        GetPage(
+        FluxyPage(
             name: Routes.DETAILS,
             page: () => const DetailsView(),
             binding: DetailsBinding()),

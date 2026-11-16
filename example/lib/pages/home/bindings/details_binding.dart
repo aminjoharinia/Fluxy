@@ -6,7 +6,7 @@ class DetailsBinding extends Binding {
   @override
   List<Bind> dependencies() {
     return [
-      Bind.lazyPut(() => DetailsController(homeRepository: Get.find())),
+      Bind.lazyPut(() => DetailsController(homeRepository: Fluxy.find())),
     ];
   }
 }

@@ -96,7 +96,7 @@ class RouteMatcher {
 }
 
 class RouteTreeResult {
-  final GetPage? route;
+  final FluxyPage? route;
   final MatchResult matchResult;
 
   RouteTreeResult({required this.route, required this.matchResult});
@@ -117,7 +117,7 @@ class RouteTreeResult {
     );
   }
 
-  RouteTreeResult copyWith({GetPage? route, MatchResult? matchResult}) {
+  RouteTreeResult copyWith({FluxyPage? route, MatchResult? matchResult}) {
     return RouteTreeResult(
       route: route ?? this.route,
       matchResult: matchResult ?? this.matchResult,
@@ -127,22 +127,22 @@ class RouteTreeResult {
 
 class RouteTree {
   static final instance = RouteTree();
-  final Map<String, GetPage> tree = {};
+  final Map<String, FluxyPage> tree = {};
   final RouteMatcher matcher = RouteMatcher();
 
-  void addRoute(GetPage route) {
+  void addRoute(FluxyPage route) {
     matcher.addRoute(route.name);
     tree[route.name] = route;
     handleChild(route);
   }
 
-  void addRoutes(List<GetPage> routes) {
+  void addRoutes(List<FluxyPage> routes) {
     for (var route in routes) {
       addRoute(route);
     }
   }
 
-  void handleChild(GetPage route) {
+  void handleChild(FluxyPage route) {
     final children = route.children;
     for (var child in children) {
       final middlewares = List.of(route.middlewares);
@@ -159,12 +159,12 @@ class RouteTree {
     }
   }
 
-  void removeRoute(GetPage route) {
+  void removeRoute(FluxyPage route) {
     matcher.removeRoute(route.name);
     tree.remove(route.name);
   }
 
-  void removeRoutes(List<GetPage> routes) {
+  void removeRoutes(List<FluxyPage> routes) {
     for (var route in routes) {
       removeRoute(route);
     }

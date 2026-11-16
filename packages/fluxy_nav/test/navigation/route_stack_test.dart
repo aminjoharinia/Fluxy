@@ -11,36 +11,36 @@ class Detail extends StatelessWidget {
   Widget build(BuildContext context) => Text('detail $id');
 }
 
-List<String?> stack() => Get.rootController.rootDelegate.activePages
+List<String?> stack() => Fluxy.rootController.rootDelegate.activePages
     .map((e) => e.route?.name)
     .toList();
 
-Widget app({PreventDuplicateHandlingMode? aMode}) => GetMaterialApp(
+Widget app({PreventDuplicateHandlingMode? aMode}) => FluxyApp(
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => const Text('home')),
-        GetPage(
+        FluxyPage(name: '/', page: () => const Text('home')),
+        FluxyPage(
           name: '/a',
           page: () => const Text('a'),
           preventDuplicateHandlingMode:
               aMode ?? PreventDuplicateHandlingMode.reorderRoutes,
         ),
-        GetPage(name: '/b', page: () => const Text('b')),
+        FluxyPage(name: '/b', page: () => const Text('b')),
       ],
     );
 
 void main() {
   testWidgets('Get.to with preventDuplicates: false pushes a second page of '
       'the same class, and builds the new one', (t) async {
-    await t.pumpWidget(GetMaterialApp(home: const Text('home')));
+    await t.pumpWidget(FluxyApp(home: const Text('home')));
     await t.pumpAndSettle();
-    Get.to(() => const Detail(1), preventDuplicates: false);
+    Fluxy.to(() => const Detail(1), preventDuplicates: false);
     await t.pumpAndSettle();
-    Get.to(() => const Detail(2), preventDuplicates: false);
+    Fluxy.to(() => const Detail(2), preventDuplicates: false);
     await t.pumpAndSettle();
     expect(stack().where((n) => n == '/Detail').length, 2);
     expect(find.text('detail 2'), findsOneWidget);
-    Get.back();
+    Fluxy.back();
     await t.pumpAndSettle();
     expect(find.text('detail 1'), findsOneWidget);
   });
@@ -49,9 +49,9 @@ void main() {
       (t) async {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
-    Get.toNamed('/a');
+    Fluxy.toNamed('/a');
     await t.pumpAndSettle();
-    Get.toNamed('/a', preventDuplicates: false);
+    Fluxy.toNamed('/a', preventDuplicates: false);
     await t.pumpAndSettle();
     expect(stack(), ['/', '/a', '/a']);
   });
@@ -61,9 +61,9 @@ void main() {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
     var done = false;
-    Get.toNamed('/a')!.then((_) => done = true);
+    Fluxy.toNamed('/a')!.then((_) => done = true);
     await t.pumpAndSettle();
-    Get.offAllNamed('/b');
+    Fluxy.offAllNamed('/b');
     await t.pumpAndSettle();
     expect(done, true);
     expect(stack(), ['/b']);
@@ -74,9 +74,9 @@ void main() {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
     var done = false;
-    Get.toNamed('/a')!.then((_) => done = true);
+    Fluxy.toNamed('/a')!.then((_) => done = true);
     await t.pumpAndSettle();
-    Get.offNamedUntil('/b', (route) => route.name == '/');
+    Fluxy.offNamedUntil('/b', (route) => route.name == '/');
     await t.pumpAndSettle();
     expect(done, true);
     expect(stack(), ['/', '/b']);
@@ -87,9 +87,9 @@ void main() {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
     var done = false;
-    Get.toNamed('/a')!.then((_) => done = true);
+    Fluxy.toNamed('/a')!.then((_) => done = true);
     await t.pumpAndSettle();
-    Get.offNamed('/b');
+    Fluxy.offNamed('/b');
     await t.pumpAndSettle();
     expect(done, true);
   });
@@ -99,11 +99,11 @@ void main() {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
     var done = false;
-    Get.toNamed('/a')!.then((_) => done = true);
+    Fluxy.toNamed('/a')!.then((_) => done = true);
     await t.pumpAndSettle();
-    Get.toNamed('/b');
+    Fluxy.toNamed('/b');
     await t.pumpAndSettle();
-    Get.toNamed('/a');
+    Fluxy.toNamed('/a');
     await t.pumpAndSettle();
     expect(stack(), ['/', '/b', '/a']);
     expect(done, true);
@@ -114,11 +114,11 @@ void main() {
     await t.pumpWidget(
         app(aMode: PreventDuplicateHandlingMode.popUntilOriginalRoute));
     await t.pumpAndSettle();
-    Get.toNamed('/a');
+    Fluxy.toNamed('/a');
     await t.pumpAndSettle();
-    Get.toNamed('/b');
+    Fluxy.toNamed('/b');
     await t.pumpAndSettle();
-    final again = Get.toNamed('/a');
+    final again = Fluxy.toNamed('/a');
     await t.pumpAndSettle();
     expect(stack(), ['/', '/a']);
     expect(find.text('a'), findsOneWidget);
@@ -129,11 +129,11 @@ void main() {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
     var done = false;
-    Get.toNamed('/a')!.then((_) => done = true);
+    Fluxy.toNamed('/a')!.then((_) => done = true);
     await t.pumpAndSettle();
-    Get.toNamed('/b');
+    Fluxy.toNamed('/b');
     await t.pumpAndSettle();
-    Get.removeRoute('/a');
+    Fluxy.removeRoute('/a');
     await t.pumpAndSettle();
     expect(stack(), ['/', '/b']);
     expect(done, true);
@@ -141,7 +141,7 @@ void main() {
 
   testWidgets('GetPage.copyWith keeps preventDuplicateHandlingMode',
       (t) async {
-    final page = GetPage(
+    final page = FluxyPage(
       name: '/x',
       page: () => const SizedBox(),
       preventDuplicateHandlingMode: PreventDuplicateHandlingMode.doNothing,

@@ -14,7 +14,7 @@ import 'get_root.dart';
 /// [ThemeMode], come from `package:material_ui/material_ui.dart`. Applications
 /// using Flutter 3.47 or later should import Material APIs from that package
 /// when configuring this widget.
-class GetMaterialApp extends StatelessWidget {
+class FluxyApp extends StatelessWidget {
   final GlobalKey<NavigatorState>? navigatorKey;
   final GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
   final Widget? home;
@@ -38,7 +38,7 @@ class GetMaterialApp extends StatelessWidget {
   final Locale? locale;
 
   /// Whether a change of the device language (system settings) switches
-  /// the app to it through `Get.updateLocale`.
+  /// the app to it through `Fluxy.updateLocale`.
   /// `null` (the default): only when no [locale] was given, so an app that
   /// picks its own language keeps it.
   final bool? followDeviceLocale;
@@ -71,8 +71,8 @@ class GetMaterialApp extends StatelessWidget {
   final List<Bind> binds;
   final Duration? transitionDuration;
   final bool? defaultGlobalState;
-  final List<GetPage>? getPages;
-  final GetPage? unknownRoute;
+  final List<FluxyPage>? getPages;
+  final FluxyPage? unknownRoute;
   final RouteInformationProvider? routeInformationProvider;
   final RouteInformationParser<Object>? routeInformationParser;
   final RouterDelegate<Object>? routerDelegate;
@@ -80,7 +80,7 @@ class GetMaterialApp extends StatelessWidget {
   final BackButtonDispatcher? backButtonDispatcher;
   final bool useInheritedMediaQuery;
 
-  const GetMaterialApp({
+  const FluxyApp({
     super.key,
     this.navigatorKey,
     this.scaffoldMessengerKey,
@@ -144,7 +144,7 @@ class GetMaterialApp extends StatelessWidget {
        routerDelegate = null,
        routerConfig = null;
 
-  const GetMaterialApp.router({
+  const FluxyApp.router({
     super.key,
     /// Where the app opens when started at `/`, even when `/` is a page.
     this.initialRoute,
@@ -209,7 +209,7 @@ class GetMaterialApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetRoot(
+    return FluxyRoot(
       config: ConfigData(
         backButtonDispatcher: backButtonDispatcher,
         binds: binds,
@@ -250,16 +250,16 @@ class GetMaterialApp extends StatelessWidget {
 
       //     ),
       //     onClose: () {
-      //       Get.clearTranslations();
+      //       Fluxy.clearTranslations();
       //       RouterReportManager.dispose();
-      //       Get.resetInstance(clearRouteBindings: true);
+      //       Fluxy.resetInstance(clearRouteBindings: true);
       //     },
       //   ),
       //   ...binds,
       // ],
       child: Builder(
         builder: (context) {
-          final controller = GetRoot.of(context);
+          final controller = FluxyRoot.of(context);
           return MaterialApp.router(
             routerDelegate: controller.config.routerDelegate,
             routeInformationParser: controller.config.routeInformationParser,
@@ -270,7 +270,7 @@ class GetMaterialApp extends StatelessWidget {
             builder: (context, child) => Directionality(
               textDirection:
                   textDirection ??
-                  (rtlLanguages.contains(Get.locale?.languageCode)
+                  (rtlLanguages.contains(Fluxy.locale?.languageCode)
                       ? TextDirection.rtl
                       : TextDirection.ltr),
               child: builder == null
@@ -286,7 +286,7 @@ class GetMaterialApp extends StatelessWidget {
                 controller.config.theme ??
                 ThemeData.fallback(),
             themeMode: controller.config.themeMode,
-            locale: Get.locale ?? locale,
+            locale: Fluxy.locale ?? locale,
             scaffoldMessengerKey: controller.config.scaffoldMessengerKey,
             localizationsDelegates: localizationsDelegates,
             localeListResolutionCallback: localeListResolutionCallback,

@@ -14,7 +14,7 @@ import 'package:fluxy/fluxy.dart';
 
 //   @override
 //   Widget build(BuildContext context) {
-//     return GetMaterialApp(
+//     return FluxyApp(
 //       theme: ThemeData(useMaterial3: true),
 //       debugShowCheckedModeBanner: false,
 //       enableLog: true,
@@ -38,22 +38,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return FluxyApp(
       getPages: [
-        GetPage(
+        FluxyPage(
             participatesInRootNavigator: true,
             name: '/first',
             page: () => const First()),
-        GetPage(
+        FluxyPage(
           name: '/second',
           page: () => const Second(),
           transition: Transition.downToUp,
         ),
-        GetPage(
+        FluxyPage(
           name: '/third',
           page: () => const Third(),
         ),
-        GetPage(
+        FluxyPage(
           name: '/fourth',
           page: () => const Fourth(),
         ),
@@ -77,14 +77,14 @@ class First extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print('First rebuild');
-    Get.put(FirstController());
+    Fluxy.put(FirstController());
     return Scaffold(
       appBar: AppBar(
         title: const Text('page one'),
         leading: IconButton(
           icon: const Icon(Icons.more),
           onPressed: () {
-            Get.snackbar(
+            Fluxy.snackbar(
               'title',
               "message",
               mainButton:
@@ -94,8 +94,8 @@ class First extends StatelessWidget {
               snackbarStatus: (status) => print(status),
             );
             // print('THEME CHANGED');
-            // Get.changeTheme(
-            //     Get.isDarkMode ? ThemeData.light() : ThemeData.dark());
+            // Fluxy.changeTheme(
+            //     Fluxy.isDarkMode ? ThemeData.light() : ThemeData.dark());
           },
         ),
       ),
@@ -105,7 +105,7 @@ class First extends StatelessWidget {
           width: 300,
           child: ElevatedButton(
             onPressed: () {
-              Get.toNamed('/second?id=123');
+              Fluxy.toNamed('/second?id=123');
             },
             child: const Text('next screen'),
           ),
@@ -130,14 +130,14 @@ class Second extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(SecondController());
+    final controller = Fluxy.put(SecondController());
     print('second rebuild');
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) => print('pop invoked'),
       child: Scaffold(
         appBar: AppBar(
-          title: Text('page two ${Get.parameters["id"]}'),
+          title: Text('page two ${Fluxy.parameters["id"]}'),
         ),
         body: Center(
           child: Column(
@@ -151,7 +151,7 @@ class Second extends StatelessWidget {
                 width: 300,
                 child: ElevatedButton(
                   onPressed: () {
-                    Get.toNamed('/third');
+                    Fluxy.toNamed('/third');
                   },
                   child: const Text('next screen'),
                 ),
@@ -180,8 +180,8 @@ class Third extends StatelessWidget {
           width: 300,
           child: ElevatedButton(
             onPressed: () {
-              Get.offNamedUntil('/fourth', (route) {
-                return Get.currentRoute == '/first';
+              Fluxy.offNamedUntil('/fourth', (route) {
+                return Fluxy.currentRoute == '/first';
               });
             },
             child: const Text('go to first screen'),
@@ -208,7 +208,7 @@ class Fourth extends StatelessWidget {
           width: 300,
           child: ElevatedButton(
             onPressed: () {
-              Get.back();
+              Fluxy.back();
             },
             child: const Text('go to first screen'),
           ),

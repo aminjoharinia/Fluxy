@@ -1,6 +1,6 @@
 # fluxy_utils
 
-Helpers: `GetPlatform`, `GetUtils` validators (`isEmail`, `isURL` ...), string / num / int / double / duration / iterable / widget / context extensions, `GetQueue`.
+Helpers: `FluxyPlatform`, `FluxyUtils` validators (`isEmail`, `isURL` ...), string / num / int / double / duration / iterable / widget / context extensions, `FluxyQueue`.
 
 Depends on: fluxy_core.
 

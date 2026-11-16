@@ -5,7 +5,7 @@ import 'impl/stub_url.dart'
 /// Switches the web app to path URLs (`/Home` instead of `/#/Home`).
 ///
 /// Flutter only accepts this before the app's first frame, so call it
-/// before `runApp` (or create the `GetDelegate` with `showHashOnUrl: false`
+/// before `runApp` (or create the `FluxyDelegate` with `showHashOnUrl: false`
 /// before `runApp`). Called later, Flutter's assert is caught and a message
 /// is logged instead, and the app keeps hash URLs.
 void setUrlStrategy() {

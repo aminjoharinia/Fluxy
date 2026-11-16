@@ -27,7 +27,7 @@ class ProfileView extends FluxyView<ProfileController> {
               child: const Text('Show a test dialog'),
               onPressed: () {
                 //shows a dialog
-                Get.defaultDialog(
+                Fluxy.defaultDialog(
                   title: 'Test Dialog !!',
                   barrierDismissible: true,
                 );
@@ -37,11 +37,11 @@ class ProfileView extends FluxyView<ProfileController> {
               child: const Text('Show a test dialog in Home router outlet'),
               onPressed: () {
                 //shows a dialog
-                Get.defaultDialog(
+                Fluxy.defaultDialog(
                   title: 'Test Dialog In Home Outlet !!',
                   barrierDismissible: true,
                   id: Routes.home,
-                  // navigatorKey: Get.nestedKey(Routes.HOME),
+                  // navigatorKey: Fluxy.nestedKey(Routes.HOME),
                 );
               },
             )

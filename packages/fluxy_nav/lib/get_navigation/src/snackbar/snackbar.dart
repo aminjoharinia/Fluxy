@@ -6,13 +6,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import '../../get_navigation.dart';
 
-typedef OnTap = void Function(GetSnackBar snack);
+typedef OnTap = void Function(FluxySnackBar snack);
 typedef OnHover = void Function(
-    GetSnackBar snack, SnackHoverState snackHoverState);
+    FluxySnackBar snack, SnackHoverState snackHoverState);
 
 typedef SnackbarStatusCallback = void Function(SnackbarStatus? status);
 
-class GetSnackBar extends StatefulWidget {
+class FluxySnackBar extends StatefulWidget {
   /// A callback for you to listen to the different Snack status
   final SnackbarStatusCallback? snackbarStatus;
 
@@ -172,7 +172,7 @@ class GetSnackBar extends StatefulWidget {
   /// Every other widget is ignored if this is not null.
   final Form? userInputForm;
 
-  const GetSnackBar({
+  const FluxySnackBar({
     super.key,
     this.title,
     this.message,
@@ -214,16 +214,16 @@ class GetSnackBar extends StatefulWidget {
   });
 
   @override
-  State createState() => GetSnackBarState();
+  State createState() => FluxySnackBarState();
 
   /// Show the snack. It's call [SnackbarStatus.OPENING] state
   /// followed by [SnackbarStatus.OPEN]
   SnackbarController show() {
-    return Get.showSnackbar(this);
+    return Fluxy.showSnackbar(this);
   }
 }
 
-class GetSnackBarState extends State<GetSnackBar>
+class FluxySnackBarState extends State<FluxySnackBar>
     with TickerProviderStateMixin {
   AnimationController? _fadeController;
   late Animation<double> _fadeAnimation;

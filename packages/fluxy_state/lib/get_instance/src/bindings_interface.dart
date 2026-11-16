@@ -6,10 +6,10 @@ abstract class BindingsInterface<T> {
 }
 
 /// [Bindings] should be extended or implemented.
-/// When using `GetMaterialApp`, all `GetPage`s and navigation
-/// methods (like Get.to()) have a `binding` property that takes an
+/// When using `FluxyApp`, all `FluxyPage`s and navigation
+/// methods (like Fluxy.to()) have a `binding` property that takes an
 /// instance of Bindings to manage the
-/// dependencies() (via Get.put()) for the Route you are opening.
+/// dependencies() (via Fluxy.put()) for the Route you are opening.
 // ignore: one_member_abstracts
 @Deprecated('Use Binding instead')
 abstract class Bindings extends BindingsInterface<void> {
@@ -22,27 +22,27 @@ abstract class Bindings extends BindingsInterface<void> {
 // ///
 // /// Example:
 // /// ```
-// /// GetPage(
+// /// FluxyPage(
 // ///   name: '/',
 // ///   page: () => Home(),
 // ///   // This might cause you an error.
-// ///   // binding: BindingsBuilder(() => Get.put(HomeController())),
-// ///   binding: BindingsBuilder(() { Get.put(HomeController(); })),
+// ///   // binding: BindingsBuilder(() => Fluxy.put(HomeController())),
+// ///   binding: BindingsBuilder(() { Fluxy.put(HomeController(); })),
 // ///   // Using .lazyPut() works fine.
-// ///   // binding: BindingsBuilder(() => Get.lazyPut(() => HomeController())),
+// ///   // binding: BindingsBuilder(() => Fluxy.lazyPut(() => HomeController())),
 // /// ),
 // /// ```
 // class BindingsBuilder<T> extends Bindings {
 //   /// Register your dependencies in the [builder] callback.
 //   final BindingBuilderCallback builder;
 
-//   /// Shortcut to register 1 Controller with Get.put(),
+//   /// Shortcut to register 1 Controller with Fluxy.put(),
 //   /// Prevents the issue of the fat arrow function with the constructor.
-//   /// BindingsBuilder(() => Get.put(HomeController())),
+//   /// BindingsBuilder(() => Fluxy.put(HomeController())),
 //   ///
 //   /// Sample:
 //   /// ```
-//   /// GetPage(
+//   /// FluxyPage(
 //   ///   name: '/',
 //   ///   page: () => Home(),
 //   ///   binding: BindingsBuilder.put(() => HomeController()),
@@ -51,12 +51,12 @@ abstract class Bindings extends BindingsInterface<void> {
 //   factory BindingsBuilder.put(InstanceBuilderCallback<T> builder,
 //       {String? tag, bool permanent = false}) {
 //     return BindingsBuilder(
-//         () => Get.put<T>(builder(), tag: tag, permanent: permanent));
+//         () => Fluxy.put<T>(builder(), tag: tag, permanent: permanent));
 //   }
 
-//   /// WARNING: don't use `()=> Get.put(Controller())`,
+//   /// WARNING: don't use `()=> Fluxy.put(Controller())`,
 //   /// if only passing 1 callback use `BindingsBuilder.put(Controller())`
-//   /// or `BindingsBuilder(()=> Get.lazyPut(Controller()))`
+//   /// or `BindingsBuilder(()=> Fluxy.lazyPut(Controller()))`
 //   BindingsBuilder(this.builder);
 
 //   @override

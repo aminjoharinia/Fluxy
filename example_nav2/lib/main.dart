@@ -6,7 +6,7 @@ import 'app/routes/app_pages.dart';
 
 void main() {
   runApp(
-    GetMaterialApp(
+    FluxyApp(
       title: "Application",
       binds: [
         Bind.put(AuthService()),
@@ -16,7 +16,7 @@ void main() {
       // builder: (context, child) {
       //   return FutureBuilder<void>(
       //     key: ValueKey('initFuture'),
-      //     future: Get.find<SplashService>().init(),
+      //     future: Fluxy.find<SplashService>().init(),
       //     builder: (context, snapshot) {
       //       if (snapshot.connectionState == ConnectionState.done) {
       //         return child ?? SizedBox.shrink();
@@ -25,10 +25,10 @@ void main() {
       //     },
       //   );
       // },
-      // routeInformationParser: GetInformationParser(
+      // routeInformationParser: FluxyInformationParser(
       //     // initialRoute: Routes.HOME,
       //     ),
-      // routerDelegate: GetDelegate(
+      // routerDelegate: FluxyDelegate(
       //   backButtonPopMode: PopMode.History,
       //   preventDuplicateHandlingMode:
       //       PreventDuplicateHandlingMode.ReorderRoutes,

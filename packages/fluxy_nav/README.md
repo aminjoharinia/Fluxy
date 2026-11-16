@@ -1,6 +1,6 @@
 # fluxy_nav
 
-Navigation: `GetMaterialApp` / `GetCupertinoApp` (+ `.router`), `GetDelegate`, `GetPage`, `Get.to / off / back`, transitions, middleware, nested `GetRouterOutlet`, dialogs, bottom sheets and snackbars.
+Navigation: `FluxyApp` / `FluxyCupertinoApp` (+ `.router`), `FluxyDelegate`, `FluxyPage`, `Fluxy.to / off / back`, transitions, middleware, nested `FluxyRouterOutlet`, dialogs, bottom sheets and snackbars.
 
 Depends on: fluxy_core, fluxy_state, fluxy_i18n, fluxy_utils.
 

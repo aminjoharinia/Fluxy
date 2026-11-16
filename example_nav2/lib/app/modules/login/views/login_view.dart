@@ -34,7 +34,7 @@ class LoginView extends FluxyView<LoginController> {
               onPressed: () {
                 AuthService.to.login();
                 final thenTo = context.params['then'];
-                Get.offNamed(thenTo ?? Routes.home);
+                Fluxy.offNamed(thenTo ?? Routes.home);
               },
             ),
           ],

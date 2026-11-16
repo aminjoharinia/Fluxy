@@ -10,15 +10,15 @@ import 'package:fluxy_nav/fluxy_nav.dart';
 import '../root/get_root.dart';
 
 class SnackbarController {
-  final key = GlobalKey<GetSnackBarState>();
+  final key = GlobalKey<FluxySnackBarState>();
 
   static bool get isSnackbarBeingShown =>
-      GetRootState.controller.config.snackBarQueue.isJobInProgress;
+      FluxyRootState.controller.config.snackBarQueue.isJobInProgress;
 
   late Animation<double> _filterBlurAnimation;
   late Animation<Color?> _filterColorAnimation;
 
-  final GetSnackBar snackbar;
+  final FluxySnackBar snackbar;
   final _transitionCompleter = Completer();
 
   late SnackbarStatusCallback? _snackbarStatus;
@@ -64,7 +64,7 @@ class SnackbarController {
   /// Only one GetSnackbar will be displayed at a time, and this method returns
   /// a future to when the snackbar disappears.
   Future<void> show() {
-    return GetRootState.controller.config.snackBarQueue.addJob(this);
+    return FluxyRootState.controller.config.snackBarQueue.addJob(this);
   }
 
   void _cancelTimer() {
@@ -94,8 +94,8 @@ class SnackbarController {
   bool _isTesting = false;
 
   void _configureOverlay() {
-    _isTesting = Get.overlayContext == null;
-    _overlayState = _isTesting ? OverlayState() : Get.key.currentState?.overlay;
+    _isTesting = Fluxy.overlayContext == null;
+    _overlayState = _isTesting ? OverlayState() : Fluxy.key.currentState?.overlay;
     _overlayEntries.clear();
     _overlayEntries.addAll(_createOverlayEntries(_getBodyWidget()));
     if (!_isTesting) {
@@ -352,11 +352,11 @@ class SnackbarController {
   }
 
   static Future<void> cancelAllSnackbars() async {
-    await GetRootState.controller.config.snackBarQueue.cancelAllJobs();
+    await FluxyRootState.controller.config.snackBarQueue.cancelAllJobs();
   }
 
   static Future<void> closeCurrentSnackbar() async {
-    await GetRootState.controller.config.snackBarQueue.closeCurrentJob();
+    await FluxyRootState.controller.config.snackBarQueue.closeCurrentJob();
   }
 }
 

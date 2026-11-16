@@ -3,20 +3,20 @@ import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 import 'package:material_ui/material_ui.dart';
 
-List<GetPage> _pages() => [
-      GetPage(name: '/', page: () => const Text('root')),
-      GetPage(name: '/Home', page: () => const Text('home')),
-      GetPage(name: '/Landing', page: () => const Text('landing')),
+List<FluxyPage> _pages() => [
+      FluxyPage(name: '/', page: () => const Text('root')),
+      FluxyPage(name: '/Home', page: () => const Text('home')),
+      FluxyPage(name: '/Landing', page: () => const Text('landing')),
     ];
 
-final _unknown = GetPage(name: '/NotFound', page: () => const Text('unknown'));
+final _unknown = FluxyPage(name: '/NotFound', page: () => const Text('unknown'));
 
 void main() {
-  tearDown(Get.reset);
+  tearDown(Fluxy.reset);
 
   group('route matching', () {
     test('only a route for the whole path matches', () {
-      final d = GetDelegate(pages: _pages(), notFoundRoute: _unknown);
+      final d = FluxyDelegate(pages: _pages(), notFoundRoute: _unknown);
       expect(d.matchRoute('/Home').route?.name, '/Home');
       expect(d.matchRoute('/Home/').route?.name, '/Home');
       expect(d.matchRoute('/Home?tab=2').route?.name, '/Home');
@@ -28,9 +28,9 @@ void main() {
     });
 
     test('path parameters still match', () {
-      final d = GetDelegate(pages: [
-        GetPage(name: '/', page: () => const SizedBox()),
-        GetPage(name: '/item/:id', page: () => const SizedBox()),
+      final d = FluxyDelegate(pages: [
+        FluxyPage(name: '/', page: () => const SizedBox()),
+        FluxyPage(name: '/item/:id', page: () => const SizedBox()),
       ]);
       final m = d.matchRoute('/item/42');
       expect(m.route?.name, '/item/42');
@@ -38,12 +38,12 @@ void main() {
     });
 
     testWidgets('an unknown address opens the unknown route', (tester) async {
-      await tester.pumpWidget(GetMaterialApp.router(
+      await tester.pumpWidget(FluxyApp.router(
         getPages: _pages(),
         unknownRoute: _unknown,
       ));
       await tester.pumpAndSettle();
-      Get.toNamed('/nope');
+      Fluxy.toNamed('/nope');
       await tester.pumpAndSettle();
       expect(find.text('unknown'), findsOneWidget);
     });
@@ -52,7 +52,7 @@ void main() {
   group('initialRoute', () {
     testWidgets('an explicit initialRoute wins over a registered "/"',
         (tester) async {
-      await tester.pumpWidget(GetMaterialApp.router(
+      await tester.pumpWidget(FluxyApp.router(
         getPages: _pages(),
         initialRoute: '/Landing',
       ));
@@ -61,15 +61,15 @@ void main() {
     });
 
     testWidgets('without one, "/" opens its own page', (tester) async {
-      await tester.pumpWidget(GetMaterialApp.router(getPages: _pages()));
+      await tester.pumpWidget(FluxyApp.router(getPages: _pages()));
       await tester.pumpAndSettle();
       expect(find.text('root'), findsOneWidget);
     });
 
     test('parser: redirect only when asked or when "/" is no page', () {
-      final redirect = GetInformationParser(
+      final redirect = FluxyInformationParser(
           initialRoute: '/Landing', redirectRootToInitialRoute: true);
-      final plain = GetInformationParser(initialRoute: '/Landing');
+      final plain = FluxyInformationParser(initialRoute: '/Landing');
       expect(redirect.redirectRootToInitialRoute, isTrue);
       expect(plain.redirectRootToInitialRoute, isFalse);
     });
@@ -78,29 +78,29 @@ void main() {
   group('routing observer', () {
     testWidgets('an app-provided delegate still keeps Get.routing current',
         (tester) async {
-      final delegate = GetDelegate(pages: _pages());
-      await tester.pumpWidget(GetMaterialApp.router(
+      final delegate = FluxyDelegate(pages: _pages());
+      await tester.pumpWidget(FluxyApp.router(
         getPages: _pages(),
         routerDelegate: delegate,
       ));
       await tester.pumpAndSettle();
       expect(delegate.routingObserver, isNotNull);
 
-      Get.dialog(const Text('dialog'));
+      Fluxy.dialog(const Text('dialog'));
       await tester.pumpAndSettle();
-      expect(Get.isDialogOpen, isTrue);
-      Get.back();
+      expect(Fluxy.isDialogOpen, isTrue);
+      Fluxy.back();
       await tester.pumpAndSettle();
-      expect(Get.isDialogOpen, isFalse);
+      expect(Fluxy.isDialogOpen, isFalse);
     });
 
     testWidgets('no second observer when the app listed a GetObserver',
         (tester) async {
-      final delegate = GetDelegate(
+      final delegate = FluxyDelegate(
         pages: _pages(),
-        navigatorObservers: [GetObserver()],
+        navigatorObservers: [FluxyObserver()],
       );
-      await tester.pumpWidget(GetMaterialApp.router(
+      await tester.pumpWidget(FluxyApp.router(
         getPages: _pages(),
         routerDelegate: delegate,
       ));
@@ -111,24 +111,24 @@ void main() {
 
   group('navigation fixes', () {
     testWidgets('path parameters win over query parameters', (tester) async {
-      await tester.pumpWidget(GetMaterialApp.router(getPages: [
+      await tester.pumpWidget(FluxyApp.router(getPages: [
         ..._pages(),
-        GetPage(name: '/item/:id', page: () => const Text('item')),
+        FluxyPage(name: '/item/:id', page: () => const Text('item')),
       ]));
       await tester.pumpAndSettle();
-      Get.toNamed('/item/42?id=7&tab=2');
+      Fluxy.toNamed('/item/42?id=7&tab=2');
       await tester.pumpAndSettle();
       expect(find.text('item'), findsOneWidget);
-      expect(Get.parameters['id'], '42');
-      expect(Get.parameters['tab'], '2');
+      expect(Fluxy.parameters['id'], '42');
+      expect(Fluxy.parameters['tab'], '2');
     });
 
     testWidgets('showOverlay removes its overlay when the task throws an Error',
         (tester) async {
-      await tester.pumpWidget(GetMaterialApp.router(getPages: _pages()));
+      await tester.pumpWidget(FluxyApp.router(getPages: _pages()));
       await tester.pumpAndSettle();
       Object? caught;
-      Get.showOverlay<void>(
+      Fluxy.showOverlay<void>(
         asyncFunction: () async {
           await Future<void>.delayed(const Duration(milliseconds: 10));
           throw StateError('boom');
@@ -145,9 +145,9 @@ void main() {
 
     testWidgets('page transitions still run (curve via CurveTween)',
         (tester) async {
-      await tester.pumpWidget(GetMaterialApp.router(getPages: [
+      await tester.pumpWidget(FluxyApp.router(getPages: [
         ..._pages(),
-        GetPage(
+        FluxyPage(
           name: '/zoom',
           page: () => const Text('zoom'),
           transition: Transition.zoom,
@@ -155,14 +155,14 @@ void main() {
         ),
       ]));
       await tester.pumpAndSettle();
-      Get.toNamed('/zoom');
+      Fluxy.toNamed('/zoom');
       await tester.pump(); // push (async)
       await tester.pump(); // first transition frame
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.text('zoom'), findsOneWidget, reason: 'mid-transition');
       expect(tester.takeException(), isNull);
       await tester.pumpAndSettle();
-      Get.back();
+      Fluxy.back();
       await tester.pumpAndSettle();
       expect(find.text('zoom'), findsNothing);
     });

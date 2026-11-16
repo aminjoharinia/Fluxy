@@ -8,14 +8,14 @@ import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
-class GetDelegate extends RouterDelegate<RouteDecoder>
+class FluxyDelegate extends RouterDelegate<RouteDecoder>
     with
         ChangeNotifier,
         PopNavigatorRouterDelegateMixin<RouteDecoder>,
         IGetNavigation {
-  factory GetDelegate.createDelegate({
-    GetPage<dynamic>? notFoundRoute,
-    List<GetPage> pages = const [],
+  factory FluxyDelegate.createDelegate({
+    FluxyPage<dynamic>? notFoundRoute,
+    List<FluxyPage> pages = const [],
     List<NavigatorObserver>? navigatorObservers,
     TransitionDelegate<dynamic>? transitionDelegate,
     PopMode backButtonPopMode = PopMode.history,
@@ -23,7 +23,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
         PreventDuplicateHandlingMode.reorderRoutes,
     GlobalKey<NavigatorState>? navigatorKey,
   }) {
-    return GetDelegate(
+    return FluxyDelegate(
       notFoundRoute: notFoundRoute,
       navigatorObservers: navigatorObservers,
       transitionDelegate: transitionDelegate,
@@ -38,28 +38,28 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   final PopMode backButtonPopMode;
   final PreventDuplicateHandlingMode preventDuplicateHandlingMode;
 
-  final GetPage notFoundRoute;
+  final FluxyPage notFoundRoute;
 
   final List<NavigatorObserver>? navigatorObservers;
 
-  /// The observer that keeps `Get.routing` (and so `Get.isDialogOpen`,
-  /// `Get.isBottomSheetOpen`, `Get.currentRoute`) up to date. `GetRoot` sets
+  /// The observer that keeps `Fluxy.routing` (and so `Fluxy.isDialogOpen`,
+  /// `Fluxy.isBottomSheetOpen`, `Fluxy.currentRoute`) up to date. `FluxyRoot` sets
   /// it on the root delegate, including one the app passes in, unless the
-  /// app already listed a [GetObserver] in [navigatorObservers].
-  GetObserver? routingObserver;
+  /// app already listed a [FluxyObserver] in [navigatorObservers].
+  FluxyObserver? routingObserver;
 
   final TransitionDelegate<dynamic>? transitionDelegate;
 
-  final Iterable<GetPage> Function(RouteDecoder currentNavStack)?
+  final Iterable<FluxyPage> Function(RouteDecoder currentNavStack)?
   pickPagesForRootNavigator;
 
   List<RouteDecoder> get activePages => _activePages;
 
   final _routeTree = ParseRouteTree(routes: []);
 
-  List<GetPage> get registeredRoutes => _routeTree.routes;
+  List<FluxyPage> get registeredRoutes => _routeTree.routes;
 
-  void addPages(List<GetPage> getPages) {
+  void addPages(List<FluxyPage> getPages) {
     _routeTree.addRoutes(getPages);
   }
 
@@ -67,11 +67,11 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     _routeTree.routes.clear();
   }
 
-  void addPage(GetPage getPage) {
+  void addPage(FluxyPage getPage) {
     _routeTree.addRoute(getPage);
   }
 
-  void removePage(GetPage getPage) {
+  void removePage(FluxyPage getPage) {
     _routeTree.removeRoute(getPage);
   }
 
@@ -79,15 +79,15 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     return _routeTree.matchRoute(name, arguments: arguments);
   }
 
-  // GlobalKey<NavigatorState> get navigatorKey => Get.key;
+  // GlobalKey<NavigatorState> get navigatorKey => Fluxy.key;
 
   @override
   GlobalKey<NavigatorState> navigatorKey;
 
   final String? restorationScopeId;
 
-  GetDelegate({
-    GetPage? notFoundRoute,
+  FluxyDelegate({
+    FluxyPage? notFoundRoute,
     this.navigatorObservers,
     this.transitionDelegate,
     this.backButtonPopMode = PopMode.history,
@@ -97,9 +97,9 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     this.restorationScopeId,
     bool showHashOnUrl = true,
     GlobalKey<NavigatorState>? navigatorKey,
-    required List<GetPage> pages,
+    required List<FluxyPage> pages,
   }) : navigatorKey = navigatorKey ?? GlobalKey<NavigatorState>(),
-       notFoundRoute = notFoundRoute ??= GetPage(
+       notFoundRoute = notFoundRoute ??= FluxyPage(
          name: '/404',
          page: () =>
              const Scaffold(body: Center(child: Text('Route not found'))),
@@ -110,7 +110,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     if (!showHashOnUrl && FluxyPlatform.isWeb) setUrlStrategy();
     addPages(pages);
     addPage(notFoundRoute);
-    Get.log('GetDelegate is created !');
+    Fluxy.log('GetDelegate is created !');
   }
 
   Future<RouteDecoder?> runMiddleware(RouteDecoder config) async {
@@ -128,7 +128,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
       }
       if (config != redirectRes) {
         config.route?.completer?.complete();
-        Get.log('Redirect to ${redirectRes.pageSettings?.name}');
+        Fluxy.log('Redirect to ${redirectRes.pageSettings?.name}');
       }
 
       iterator = redirectRes;
@@ -302,8 +302,8 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
 
   /// gets the visual pages from the current _activePages entry
   ///
-  /// visual pages must have [GetPage.participatesInRootNavigator] set to true
-  Iterable<GetPage> getVisualPages(RouteDecoder? currentHistory) {
+  /// visual pages must have [FluxyPage.participatesInRootNavigator] set to true
+  Iterable<FluxyPage> getVisualPages(RouteDecoder? currentHistory) {
     final res = currentHistory!.currentTreeBranch.where(
       (r) => r.participatesInRootNavigator != null,
     );
@@ -322,14 +322,14 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   Widget build(BuildContext context) {
     final currentHistory = currentConfiguration;
     final pages = currentHistory == null
-        ? <GetPage>[]
+        ? <FluxyPage>[]
         : pickPagesForRootNavigator?.call(currentHistory).toList() ??
               getVisualPages(currentHistory).toList();
     if (pages.isEmpty) {
       return ColoredBox(color: Theme.of(context).scaffoldBackgroundColor);
     }
-    return GetHeroScope(
-      child: GetNavigator(
+    return FluxyHeroScope(
+      child: FluxyNavigator(
         key: navigatorKey,
         onPopPage: _onPopVisualRoute,
         pages: pages,
@@ -356,7 +356,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   }
 
   /// Completes the future of a page that leaves the stack, so code awaiting
-  /// `Get.toNamed(...)` for it doesn't wait forever.
+  /// `Fluxy.toNamed(...)` for it doesn't wait forever.
   void _complete(RouteDecoder removed, [Object? result]) {
     final completer = removed.route?.completer;
     if (completer?.isCompleted == false) completer!.complete(result);
@@ -364,8 +364,8 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
 
   /// Matches [page] by name (for parameters and parent pages) but builds
   /// [page] itself. An older page with the same name can still be in the
-  /// route tree (two `Get.to(() => Detail(..))`), and the first match wins.
-  RouteDecoder _decoderForPage<T>(PageSettings args, GetPage<T> page) {
+  /// route tree (two `Fluxy.to(() => Detail(..))`), and the first match wins.
+  RouteDecoder _decoderForPage<T>(PageSettings args, FluxyPage<T> page) {
     final decoder = _getRouteDecoder<T>(args)!;
     final matched = decoder.route!;
     decoder.route = page.copyWith(
@@ -425,18 +425,18 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     //   routeName = routeName + page.hashCode.toString();
     // }
 
-    final getPage = GetPage<T>(
+    final getPage = FluxyPage<T>(
       name: routeName,
       opaque: opaque ?? true,
       page: page,
       gestureWidth: gestureWidth,
       showCupertinoParallax: showCupertinoParallax,
-      popGesture: popGesture ?? Get.defaultPopGesture,
-      transition: transition ?? Get.defaultTransition,
-      curve: curve ?? Get.defaultTransitionCurve,
+      popGesture: popGesture ?? Fluxy.defaultPopGesture,
+      transition: transition ?? Fluxy.defaultTransition,
+      curve: curve ?? Fluxy.defaultTransitionCurve,
       fullscreenDialog: fullscreenDialog,
       bindings: bindings,
-      transitionDuration: duration ?? Get.defaultTransitionDuration,
+      transitionDuration: duration ?? Fluxy.defaultTransitionDuration,
       preventDuplicates: preventDuplicates,
       preventDuplicateHandlingMode: preventDuplicateHandlingMode,
     );
@@ -467,18 +467,18 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     double Function(BuildContext context)? gestureWidth,
   }) async {
     routeName ??= _cleanRouteName("/${page.runtimeType}");
-    final route = GetPage<T>(
+    final route = FluxyPage<T>(
       name: routeName,
       opaque: opaque ?? true,
       page: page,
       gestureWidth: gestureWidth,
       showCupertinoParallax: showCupertinoParallax,
-      popGesture: popGesture ?? Get.defaultPopGesture,
-      transition: transition ?? Get.defaultTransition,
-      curve: curve ?? Get.defaultTransitionCurve,
+      popGesture: popGesture ?? Fluxy.defaultPopGesture,
+      transition: transition ?? Fluxy.defaultTransition,
+      curve: curve ?? Fluxy.defaultTransitionCurve,
       fullscreenDialog: fullscreenDialog,
       bindings: bindings,
-      transitionDuration: duration ?? Get.defaultTransitionDuration,
+      transitionDuration: duration ?? Fluxy.defaultTransitionDuration,
     );
 
     final args = _buildPageSettings(routeName, arguments);
@@ -488,7 +488,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   @override
   Future<T?>? offAll<T>(
     Widget Function() page, {
-    bool Function(GetPage route)? predicate,
+    bool Function(FluxyPage route)? predicate,
     bool opaque = true,
     bool? popGesture,
     String? id,
@@ -503,18 +503,18 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     double Function(BuildContext context)? gestureWidth,
   }) async {
     routeName ??= _cleanRouteName("/${page.runtimeType}");
-    final route = GetPage<T>(
+    final route = FluxyPage<T>(
       name: routeName,
       opaque: opaque,
       page: page,
       gestureWidth: gestureWidth,
       showCupertinoParallax: showCupertinoParallax,
-      popGesture: popGesture ?? Get.defaultPopGesture,
-      transition: transition ?? Get.defaultTransition,
-      curve: curve ?? Get.defaultTransitionCurve,
+      popGesture: popGesture ?? Fluxy.defaultPopGesture,
+      transition: transition ?? Fluxy.defaultTransition,
+      curve: curve ?? Fluxy.defaultTransitionCurve,
       fullscreenDialog: fullscreenDialog,
       bindings: bindings,
-      transitionDuration: duration ?? Get.defaultTransitionDuration,
+      transitionDuration: duration ?? Fluxy.defaultTransitionDuration,
     );
 
     final args = _buildPageSettings(routeName, arguments);
@@ -531,7 +531,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   @override
   Future<T?>? offAllNamed<T>(
     String newRouteName, {
-    // bool Function(GetPage route)? predicate,
+    // bool Function(FluxyPage route)? predicate,
     dynamic arguments,
     String? id,
     Map<String, String>? parameters,
@@ -550,7 +550,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   @override
   Future<T?>? offNamedUntil<T>(
     String page, {
-    bool Function(GetPage route)? predicate,
+    bool Function(FluxyPage route)? predicate,
     dynamic arguments,
     String? id,
     Map<String, String>? parameters,
@@ -585,7 +585,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   @override
   Future<T?> toNamedAndOffUntil<T>(
     String page,
-    bool Function(GetPage) predicate, [
+    bool Function(FluxyPage) predicate, [
     Object? data,
   ]) async {
     final arguments = _buildPageSettings(page, data);
@@ -604,7 +604,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   @override
   Future<T?> offUntil<T>(
     Widget Function() page,
-    bool Function(GetPage) predicate, [
+    bool Function(FluxyPage) predicate, [
     Object? arguments,
   ]) async {
     while (_activePages.isNotEmpty && !predicate(_activePages.last.route!)) {
@@ -678,7 +678,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
   }
 
   @override
-  void backUntil(bool Function(GetPage) predicate) {
+  void backUntil(bool Function(FluxyPage) predicate) {
     while (_activePages.length > 1 && !predicate(_activePages.last.route!)) {
       _popWithResult();
     }
@@ -686,7 +686,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     notifyListeners();
   }
 
-  Future<T?> _replace<T>(PageSettings arguments, GetPage<T> page) async {
+  Future<T?> _replace<T>(PageSettings arguments, FluxyPage<T> page) async {
     final index = _activePages.length > 1 ? _activePages.length - 1 : 0;
     _routeTree.addRoute(page);
 
@@ -893,7 +893,7 @@ class GetDelegate extends RouterDelegate<RouteDecoder>
     }
     _popWithResult(result);
     // final settings = route.settings;
-    // if (settings is GetPage) {
+    // if (settings is FluxyPage) {
     //   final config = _activePages.cast<RouteDecoder?>().firstWhere(
     //         (element) => element?.route == settings,
     //         orElse: () => null,

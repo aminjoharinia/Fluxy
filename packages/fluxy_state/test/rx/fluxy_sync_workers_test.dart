@@ -20,7 +20,7 @@ void main() {
     final n = 0.obs;
     final seen = <int>[];
     ever(n, seen.add);
-    Get.batch(() {
+    Fluxy.batch(() {
       n.value = 1;
       n.value = 2;
     });

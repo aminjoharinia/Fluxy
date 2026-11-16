@@ -21,8 +21,8 @@ class ConfigData {
   final List<Bind> binds;
   final Duration? transitionDuration;
   final bool? defaultGlobalState;
-  final List<GetPage>? getPages;
-  final GetPage? unknownRoute;
+  final List<FluxyPage>? getPages;
+  final FluxyPage? unknownRoute;
   final RouteInformationProvider? routeInformationProvider;
   final RouteInformationParser<Object>? routeInformationParser;
   final RouterDelegate<Object>? routerDelegate;
@@ -36,7 +36,7 @@ class ConfigData {
   final Locale? fallbackLocale;
 
   /// Whether a change of the device language (system settings) switches
-  /// the app to it through `Get.updateLocale`.
+  /// the app to it through `Fluxy.updateLocale`.
   /// `null` (the default): only when no [locale] was given, so an app that
   /// picks its own language keeps it.
   final bool? followDeviceLocale;
@@ -114,8 +114,8 @@ class ConfigData {
     List<Bind>? binds,
     Duration? transitionDuration,
     bool? defaultGlobalState,
-    List<GetPage>? getPages,
-    GetPage? unknownRoute,
+    List<FluxyPage>? getPages,
+    FluxyPage? unknownRoute,
     RouteInformationProvider? routeInformationProvider,
     RouteInformationParser<Object>? routeInformationParser,
     RouterDelegate<Object>? routerDelegate,
@@ -291,8 +291,8 @@ class ConfigData {
   }
 }
 
-class GetRoot extends StatefulWidget {
-  const GetRoot({
+class FluxyRoot extends StatefulWidget {
+  const FluxyRoot({
     super.key,
     required this.config,
     required this.child,
@@ -300,17 +300,17 @@ class GetRoot extends StatefulWidget {
   final ConfigData config;
   final Widget child;
   @override
-  State<GetRoot> createState() => GetRootState();
+  State<FluxyRoot> createState() => FluxyRootState();
 
-  static bool get treeInitialized => GetRootState._controller != null;
+  static bool get treeInitialized => FluxyRootState._controller != null;
 
-  static GetRootState of(BuildContext context) {
+  static FluxyRootState of(BuildContext context) {
     // Handles the case where the input context is a navigator element.
-    GetRootState? root;
-    if (context is StatefulElement && context.state is GetRootState) {
-      root = context.state as GetRootState;
+    FluxyRootState? root;
+    if (context is StatefulElement && context.state is FluxyRootState) {
+      root = context.state as FluxyRootState;
     }
-    root = context.findRootAncestorStateOfType<GetRootState>() ?? root;
+    root = context.findRootAncestorStateOfType<FluxyRootState>() ?? root;
     assert(() {
       if (root == null) {
         throw FlutterError(
@@ -325,10 +325,10 @@ class GetRoot extends StatefulWidget {
   }
 }
 
-class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
-  static GetRootState? _controller;
-  static GetRootState? get maybeController => _controller;
-  static GetRootState get controller {
+class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
+  static FluxyRootState? _controller;
+  static FluxyRootState? get maybeController => _controller;
+  static FluxyRootState get controller {
     if (_controller == null) {
       throw Exception('GetRoot is not part of the tree');
     } else {
@@ -341,14 +341,14 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
   @override
   void initState() {
     config = widget.config;
-    GetRootState._controller = this;
+    FluxyRootState._controller = this;
     Engine.instance.addObserver(this);
     onInit();
     super.initState();
   }
 
   // @override
-  // void didUpdateWidget(covariant GetRoot oldWidget) {
+  // void didUpdateWidget(covariant FluxyRoot oldWidget) {
   //   if (oldWidget.config != widget.config) {
   //     config = widget.config;
   //   }
@@ -358,11 +358,11 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
 
   void onClose() {
     config.onDispose?.call();
-    Get.clearTranslations();
+    Fluxy.clearTranslations();
     config.snackBarQueue.disposeControllers();
     RouterReportManager.instance.clearRouteKeys();
     RouterReportManager.dispose();
-    Get.resetInstance(clearRouteBindings: true);
+    Fluxy.resetInstance(clearRouteBindings: true);
     _controller = null;
     Engine.instance.removeObserver(this);
   }
@@ -379,10 +379,10 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
     }
 
     if (config.routerDelegate == null) {
-      final newDelegate = GetDelegate.createDelegate(
+      final newDelegate = FluxyDelegate.createDelegate(
         pages: config.getPages ??
             [
-              GetPage(
+              FluxyPage(
                 name: cleanRouteName("/${config.home.runtimeType}"),
                 page: () => config.home!,
               ),
@@ -394,20 +394,20 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
       config = config.copyWith(routerDelegate: newDelegate);
     }
 
-    // Keep Get.routing current for the root navigator, whether GetRoot made
+    // Keep Fluxy.routing current for the root navigator, whether FluxyRoot made
     // the delegate or the app passed its own.
     final delegate = config.routerDelegate;
-    if (delegate is GetDelegate &&
+    if (delegate is FluxyDelegate &&
         delegate.routingObserver == null &&
-        !(delegate.navigatorObservers?.any((o) => o is GetObserver) ??
+        !(delegate.navigatorObservers?.any((o) => o is FluxyObserver) ??
             false)) {
       delegate.routingObserver =
-          GetObserver(config.routingCallback, config.routing);
+          FluxyObserver(config.routingCallback, config.routing);
     }
 
     if (config.routeInformationParser == null) {
       final newRouteInformationParser =
-          GetInformationParser.createInformationParser(
+          FluxyInformationParser.createInformationParser(
         initialRoute: config.initialRoute ??
             config.getPages?.first.name ??
             cleanRouteName("/${config.home.runtimeType}"),
@@ -419,23 +419,23 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
           config.copyWith(routeInformationParser: newRouteInformationParser);
     }
 
-    if (config.locale != null) Get.locale = config.locale;
+    if (config.locale != null) Fluxy.locale = config.locale;
 
     if (config.fallbackLocale != null) {
-      Get.fallbackLocale = config.fallbackLocale;
+      Fluxy.fallbackLocale = config.fallbackLocale;
     }
 
     if (config.translations != null) {
-      Get.addTranslations(config.translations!.keys);
+      Fluxy.addTranslations(config.translations!.keys);
     } else if (config.translationsKeys != null) {
-      Get.addTranslations(config.translationsKeys!);
+      Fluxy.addTranslations(config.translationsKeys!);
     }
 
-    Get.smartManagement = config.smartManagement;
+    Fluxy.smartManagement = config.smartManagement;
     config.onInit?.call();
 
-    Get.isLogEnable = config.enableLog ?? kDebugMode;
-    Get.log = config.logWriterCallback ?? defaultLogWriterCallback;
+    Fluxy.isLogEnable = config.enableLog ?? kDebugMode;
+    Fluxy.log = config.logWriterCallback ?? defaultLogWriterCallback;
 
     if (config.defaultTransition == null) {
       config = config.copyWith(defaultTransition: getThemeTransition());
@@ -456,7 +456,7 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
 
   set testMode(bool isTest) {
     config = config.copyWith(testMode: isTest);
-    GetTestMode.active = isTest;
+    FluxyTestMode.active = isTest;
   }
 
   void onReady() {
@@ -466,7 +466,7 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
   Transition? getThemeTransition() {
     final platform = context.theme.platform;
     final matchingTransition =
-        Get.theme.pageTransitionsTheme.builders[platform];
+        Fluxy.theme.pageTransitionsTheme.builders[platform];
     switch (matchingTransition) {
       case CupertinoPageTransitionsBuilder():
         return Transition.cupertino;
@@ -485,10 +485,10 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
   void didChangeLocales(List<Locale>? locales) {
     final follow = config.followDeviceLocale ?? config.locale == null;
     if (!follow) return;
-    Get.asap(() {
-      final locale = Get.deviceLocale;
+    Fluxy.asap(() {
+      final locale = Fluxy.deviceLocale;
       if (locale != null) {
-        Get.updateLocale(locale);
+        Fluxy.updateLocale(locale);
       }
     });
   }
@@ -525,7 +525,7 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
 
   GlobalKey<NavigatorState> get key => rootDelegate.navigatorKey;
 
-  GetDelegate get rootDelegate => config.routerDelegate as GetDelegate;
+  FluxyDelegate get rootDelegate => config.routerDelegate as FluxyDelegate;
 
   RouteInformationParser<Object> get informationParser =>
       config.routeInformationParser!;
@@ -535,15 +535,15 @@ class GetRootState extends State<GetRoot> with WidgetsBindingObserver {
     return key;
   }
 
-  Map<String, GetDelegate> keys = {};
+  Map<String, FluxyDelegate> keys = {};
 
-  GetDelegate? nestedKey(String? key) {
+  FluxyDelegate? nestedKey(String? key) {
     if (key == null) {
       return rootDelegate;
     }
     keys.putIfAbsent(
       key,
-      () => GetDelegate(
+      () => FluxyDelegate(
         showHashOnUrl: true,
         //debugLabel: 'Getx nested key: ${key.toString()}',
         pages: RouteDecoder.fromRoute(key).currentChildren ?? [],

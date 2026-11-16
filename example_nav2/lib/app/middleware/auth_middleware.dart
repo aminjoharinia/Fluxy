@@ -3,7 +3,7 @@ import 'package:fluxy/fluxy.dart';
 import '../../services/auth_service.dart';
 import '../routes/app_pages.dart';
 
-class EnsureAuthMiddleware extends GetMiddleware {
+class EnsureAuthMiddleware extends FluxyMiddleware {
   @override
   Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
     // you can do whatever you want here
@@ -18,7 +18,7 @@ class EnsureAuthMiddleware extends GetMiddleware {
   }
 }
 
-class EnsureNotAuthedMiddleware extends GetMiddleware {
+class EnsureNotAuthedMiddleware extends FluxyMiddleware {
   @override
   Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
     if (AuthService.to.isLoggedInValue) {

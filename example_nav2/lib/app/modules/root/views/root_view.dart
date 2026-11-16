@@ -21,7 +21,7 @@ class RootView extends FluxyView<RootController> {
       ),
       //body: HomeView(),
 
-      body: GetRouterOutlet(
+      body: FluxyRouterOutlet(
         initialRoute: Routes.home,
         anchorRoute: '/',
       ),

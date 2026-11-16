@@ -59,7 +59,7 @@ class TestHomeBinding extends Binding {
   List<Bind> dependencies() => [
         Bind.lazyPut<IHomeRepository>(() => repository),
         Bind.lazyPut<HomeController>(
-          () => HomeController(homeRepository: Get.find()),
+          () => HomeController(homeRepository: Fluxy.find()),
         ),
       ];
 }
@@ -72,7 +72,7 @@ class TestDetailsBinding extends Binding {
   List<Bind> dependencies() => [
         Bind.lazyPut<IHomeRepository>(() => repository),
         Bind.lazyPut<DetailsController>(
-          () => DetailsController(homeRepository: Get.find()),
+          () => DetailsController(homeRepository: Fluxy.find()),
         ),
       ];
 }
@@ -81,15 +81,15 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setUpAll(() {
     HttpOverrides.global = null;
-    GetTestMode.active = true;
+    FluxyTestMode.active = true;
   });
 
-  setUp(() => Get.reset());
+  setUp(() => Fluxy.reset());
 
   group('HomeController Tests', () {
     test('Success Scenario', () async {
       TestHomeBinding(repository: MockRepositorySuccess()).dependencies();
-      final controller = Get.find<HomeController>();
+      final controller = Fluxy.find<HomeController>();
 
       expect(controller.initialized, isTrue);
 
@@ -102,7 +102,7 @@ void main() {
 
     test('Failure Scenario', () async {
       TestHomeBinding(repository: MockRepositoryFailure()).dependencies();
-      final controller = Get.find<HomeController>();
+      final controller = Fluxy.find<HomeController>();
 
       expect(controller.initialized, isTrue);
 
@@ -116,8 +116,8 @@ void main() {
   group('DetailsController Tests', () {
     test('Success Scenario', () async {
       TestDetailsBinding(repository: MockRepositorySuccess()).dependencies();
-      GetTestMode.setTestArguments(country1);
-      final controller = Get.find<DetailsController>();
+      FluxyTestMode.setTestArguments(country1);
+      final controller = Fluxy.find<DetailsController>();
 
       expect(controller.initialized, isTrue);
 
@@ -132,8 +132,8 @@ void main() {
 
     test('Failure Scenario', () async {
       TestDetailsBinding(repository: MockRepositoryFailure()).dependencies();
-      GetTestMode.setTestArguments(country1);
-      final controller = Get.find<DetailsController>();
+      FluxyTestMode.setTestArguments(country1);
+      final controller = Fluxy.find<DetailsController>();
 
       expect(controller.initialized, isTrue);
 

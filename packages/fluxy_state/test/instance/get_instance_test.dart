@@ -36,238 +36,238 @@ void main() {
 
   TestWidgetsFlutterBinding.ensureInitialized();
   test('Get.put test', () async {
-    final instance = Get.put<Controller>(Controller());
-    expect(instance, Get.find<Controller>());
-    Get.resetInstance();
+    final instance = Fluxy.put<Controller>(Controller());
+    expect(instance, Fluxy.find<Controller>());
+    Fluxy.resetInstance();
   });
 
   test('Get start and delete called just one time', () async {
-    Get
+    Fluxy
       ..put(Controller())
       ..put(Controller());
 
-    final controller = Get.find<Controller>();
+    final controller = Fluxy.find<Controller>();
     expect(controller.init, 1);
 
-    Get
+    Fluxy
       ..delete<Controller>()
       ..delete<Controller>();
     expect(controller.close, 1);
-    Get.resetInstance();
+    Fluxy.resetInstance();
   });
 
   test('Get.put tag test', () async {
-    final instance = Get.put<Controller>(Controller(), tag: 'one');
-    final instance2 = Get.put<Controller>(Controller(), tag: 'two');
+    final instance = Fluxy.put<Controller>(Controller(), tag: 'one');
+    final instance2 = Fluxy.put<Controller>(Controller(), tag: 'two');
     expect(instance == instance2, false);
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'two'),
+    expect(Fluxy.find<Controller>(tag: 'one') == Fluxy.find<Controller>(tag: 'two'),
         false);
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'one'),
+    expect(Fluxy.find<Controller>(tag: 'one') == Fluxy.find<Controller>(tag: 'one'),
         true);
-    expect(Get.find<Controller>(tag: 'two') == Get.find<Controller>(tag: 'two'),
+    expect(Fluxy.find<Controller>(tag: 'two') == Fluxy.find<Controller>(tag: 'two'),
         true);
-    Get.resetInstance();
+    Fluxy.resetInstance();
   });
 
   test('Get.lazyPut tag test', () async {
-    Get.lazyPut<Controller>(() => Controller(), tag: 'one');
-    Get.lazyPut<Controller>(() => Controller(), tag: 'two');
+    Fluxy.lazyPut<Controller>(() => Controller(), tag: 'one');
+    Fluxy.lazyPut<Controller>(() => Controller(), tag: 'two');
 
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'two'),
+    expect(Fluxy.find<Controller>(tag: 'one') == Fluxy.find<Controller>(tag: 'two'),
         false);
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'one'),
+    expect(Fluxy.find<Controller>(tag: 'one') == Fluxy.find<Controller>(tag: 'one'),
         true);
-    expect(Get.find<Controller>(tag: 'two') == Get.find<Controller>(tag: 'two'),
+    expect(Fluxy.find<Controller>(tag: 'two') == Fluxy.find<Controller>(tag: 'two'),
         true);
-    Get.resetInstance();
+    Fluxy.resetInstance();
   });
 
   test('Get.lazyPut test', () async {
     final controller = Controller();
-    Get.lazyPut<Controller>(() => controller);
-    final ct1 = Get.find<Controller>();
+    Fluxy.lazyPut<Controller>(() => controller);
+    final ct1 = Fluxy.find<Controller>();
     expect(ct1, controller);
-    Get.resetInstance();
+    Fluxy.resetInstance();
   });
 
   test('Get.lazyPut fenix test', () async {
-    Get.lazyPut<Controller>(() => Controller(), fenix: true);
-    Get.find<Controller>().increment();
+    Fluxy.lazyPut<Controller>(() => Controller(), fenix: true);
+    Fluxy.find<Controller>().increment();
 
-    expect(Get.find<Controller>().count, 1);
-    Get.delete<Controller>();
-    expect(Get.find<Controller>().count, 0);
-    Get.resetInstance();
+    expect(Fluxy.find<Controller>().count, 1);
+    Fluxy.delete<Controller>();
+    expect(Fluxy.find<Controller>().count, 0);
+    Fluxy.resetInstance();
   });
 
   test('Get.lazyPut without fenix', () async {
-    Get.lazyPut<Controller>(() => Controller());
-    Get.find<Controller>().increment();
+    Fluxy.lazyPut<Controller>(() => Controller());
+    Fluxy.find<Controller>().increment();
 
-    expect(Get.find<Controller>().count, 1);
-    Get.delete<Controller>();
+    expect(Fluxy.find<Controller>().count, 1);
+    Fluxy.delete<Controller>();
     expect(
-        () => Get.find<Controller>(), throwsA(const m.TypeMatcher<String>()));
-    Get.resetInstance();
+        () => Fluxy.find<Controller>(), throwsA(const m.TypeMatcher<String>()));
+    Fluxy.resetInstance();
   });
 
   test('Get.reloadInstance test', () async {
-    Get.lazyPut<Controller>(() => Controller());
-    var ct1 = Get.find<Controller>();
+    Fluxy.lazyPut<Controller>(() => Controller());
+    var ct1 = Fluxy.find<Controller>();
     ct1.increment();
     expect(ct1.count, 1);
-    ct1 = Get.find<Controller>();
+    ct1 = Fluxy.find<Controller>();
     expect(ct1.count, 1);
-    Get.reload<Controller>();
-    ct1 = Get.find<Controller>();
+    Fluxy.reload<Controller>();
+    ct1 = Fluxy.find<Controller>();
     expect(ct1.count, 0);
-    Get.resetInstance();
+    Fluxy.resetInstance();
   });
 
   test('GetxService test', () async {
-    Get.lazyPut<PermanentService>(() => PermanentService());
-    var sv1 = Get.find<PermanentService>();
-    var sv2 = Get.find<PermanentService>();
+    Fluxy.lazyPut<PermanentService>(() => PermanentService());
+    var sv1 = Fluxy.find<PermanentService>();
+    var sv2 = Fluxy.find<PermanentService>();
     expect(sv1, sv2);
-    expect(Get.isRegistered<PermanentService>(), true);
-    Get.delete<PermanentService>();
-    expect(Get.isRegistered<PermanentService>(), true);
-    Get.delete<PermanentService>(force: true);
-    expect(Get.isRegistered<PermanentService>(), false);
-    Get.resetInstance();
+    expect(Fluxy.isRegistered<PermanentService>(), true);
+    Fluxy.delete<PermanentService>();
+    expect(Fluxy.isRegistered<PermanentService>(), true);
+    Fluxy.delete<PermanentService>(force: true);
+    expect(Fluxy.isRegistered<PermanentService>(), false);
+    Fluxy.resetInstance();
   });
 
   test('Get.lazyPut with abstract class test', () async {
     final api = Api();
-    Get.lazyPut<Service>(() => api);
-    final ct1 = Get.find<Service>();
+    Fluxy.lazyPut<Service>(() => api);
+    final ct1 = Fluxy.find<Service>();
     expect(ct1, api);
-    Get.resetInstance();
+    Fluxy.resetInstance();
   });
 
   test('Get.create with abstract class test', () async {
-    Get.spawn<Service>(() => Api());
-    final ct1 = Get.find<Service>();
-    final ct2 = Get.find<Service>();
+    Fluxy.spawn<Service>(() => Api());
+    final ct1 = Fluxy.find<Service>();
+    final ct2 = Fluxy.find<Service>();
     // expect(ct1 is Service, true);
     // expect(ct2 is Service, true);
     expect(ct1 == ct2, false);
-    Get.resetInstance();
+    Fluxy.resetInstance();
   });
 
   group('test put, delete and check onInit execution', () {
-    tearDownAll(Get.resetInstance);
+    tearDownAll(Fluxy.resetInstance);
 
     test('Get.put test with init check', () async {
-      final instance = Get.put(DisposableController());
-      expect(instance, Get.find<DisposableController>());
+      final instance = Fluxy.put(DisposableController());
+      expect(instance, Fluxy.find<DisposableController>());
       expect(instance.initialized, true);
     });
 
     test('Get.delete test with disposable controller', () async {
-      // Get.put(DisposableController());
-      expect(Get.delete<DisposableController>(), true);
-      expect(() => Get.find<DisposableController>(),
+      // Fluxy.put(DisposableController());
+      expect(Fluxy.delete<DisposableController>(), true);
+      expect(() => Fluxy.find<DisposableController>(),
           throwsA(const m.TypeMatcher<String>()));
     });
 
     test('Get.put test after delete with disposable controller and init check',
         () async {
-      final instance = Get.put<DisposableController>(DisposableController());
-      expect(instance, Get.find<DisposableController>());
+      final instance = Fluxy.put<DisposableController>(DisposableController());
+      expect(instance, Fluxy.find<DisposableController>());
       expect(instance.initialized, true);
     });
   });
 
   group('Get.replace test for replacing parent instance that is', () {
-    tearDown(Get.resetInstance);
+    tearDown(Fluxy.resetInstance);
     test('temporary', () async {
-      Get.put(DisposableController());
-      Get.replace<DisposableController>(Controller());
-      final instance = Get.find<DisposableController>();
+      Fluxy.put(DisposableController());
+      Fluxy.replace<DisposableController>(Controller());
+      final instance = Fluxy.find<DisposableController>();
       expect(instance is Controller, isTrue);
       expect((instance as Controller).init, greaterThan(0));
     });
 
     test('permanent', () async {
-      Get.put(DisposableController(), permanent: true);
-      Get.replace<DisposableController>(Controller());
-      final instance = Get.find<DisposableController>();
+      Fluxy.put(DisposableController(), permanent: true);
+      Fluxy.replace<DisposableController>(Controller());
+      final instance = Fluxy.find<DisposableController>();
       expect(instance is Controller, isTrue);
       expect((instance as Controller).init, greaterThan(0));
     });
 
     test('tagged temporary', () async {
       const tag = 'tag';
-      Get.put(DisposableController(), tag: tag);
-      Get.replace<DisposableController>(Controller(), tag: tag);
-      final instance = Get.find<DisposableController>(tag: tag);
+      Fluxy.put(DisposableController(), tag: tag);
+      Fluxy.replace<DisposableController>(Controller(), tag: tag);
+      final instance = Fluxy.find<DisposableController>(tag: tag);
       expect(instance is Controller, isTrue);
       expect((instance as Controller).init, greaterThan(0));
     });
 
     test('tagged permanent', () async {
       const tag = 'tag';
-      Get.put(DisposableController(), permanent: true, tag: tag);
-      Get.replace<DisposableController>(Controller(), tag: tag);
-      final instance = Get.find<DisposableController>(tag: tag);
+      Fluxy.put(DisposableController(), permanent: true, tag: tag);
+      Fluxy.replace<DisposableController>(Controller(), tag: tag);
+      final instance = Fluxy.find<DisposableController>(tag: tag);
       expect(instance is Controller, isTrue);
       expect((instance as Controller).init, greaterThan(0));
     });
 
     test('a generic parent type', () async {
       const tag = 'tag';
-      Get.put<MyController>(DisposableController(), permanent: true, tag: tag);
-      Get.replace<MyController>(Controller(), tag: tag);
-      final instance = Get.find<MyController>(tag: tag);
+      Fluxy.put<MyController>(DisposableController(), permanent: true, tag: tag);
+      Fluxy.replace<MyController>(Controller(), tag: tag);
+      final instance = Fluxy.find<MyController>(tag: tag);
       expect(instance is Controller, isTrue);
       expect((instance as Controller).init, greaterThan(0));
     });
   });
 
   group('Get.lazyReplace replaces parent instance', () {
-    tearDown(Get.resetInstance);
+    tearDown(Fluxy.resetInstance);
     test('without fenix', () async {
-      Get.put(DisposableController());
-      Get.lazyReplace<DisposableController>(() => Controller());
-      final instance = Get.find<DisposableController>();
+      Fluxy.put(DisposableController());
+      Fluxy.lazyReplace<DisposableController>(() => Controller());
+      final instance = Fluxy.find<DisposableController>();
       expect(instance, isA<Controller>());
       expect((instance as Controller).init, greaterThan(0));
     });
 
     test('with fenix', () async {
-      Get.put(DisposableController());
-      Get.lazyReplace<DisposableController>(() => Controller(), fenix: true);
-      expect(Get.find<DisposableController>(), isA<Controller>());
-      (Get.find<DisposableController>() as Controller).increment();
+      Fluxy.put(DisposableController());
+      Fluxy.lazyReplace<DisposableController>(() => Controller(), fenix: true);
+      expect(Fluxy.find<DisposableController>(), isA<Controller>());
+      (Fluxy.find<DisposableController>() as Controller).increment();
 
-      expect((Get.find<DisposableController>() as Controller).count, 1);
-      Get.delete<DisposableController>();
-      expect((Get.find<DisposableController>() as Controller).count, 0);
+      expect((Fluxy.find<DisposableController>() as Controller).count, 1);
+      Fluxy.delete<DisposableController>();
+      expect((Fluxy.find<DisposableController>() as Controller).count, 0);
     });
 
     test('with fenix when parent is permanent', () async {
-      Get.put(DisposableController(), permanent: true);
-      Get.lazyReplace<DisposableController>(() => Controller());
-      final instance = Get.find<DisposableController>();
+      Fluxy.put(DisposableController(), permanent: true);
+      Fluxy.lazyReplace<DisposableController>(() => Controller());
+      final instance = Fluxy.find<DisposableController>();
       expect(instance, isA<Controller>());
       (instance as Controller).increment();
 
-      expect((Get.find<DisposableController>() as Controller).count, 1);
-      Get.delete<DisposableController>();
-      expect((Get.find<DisposableController>() as Controller).count, 0);
+      expect((Fluxy.find<DisposableController>() as Controller).count, 1);
+      Fluxy.delete<DisposableController>();
+      expect((Fluxy.find<DisposableController>() as Controller).count, 0);
     });
   });
 
   group('Get.findOrNull test', () {
-    tearDown(Get.resetInstance);
+    tearDown(Fluxy.resetInstance);
     test('checking results', () async {
-      Get.put<int>(1);
-      int? result = Get.findOrNull<int>();
+      Fluxy.put<int>(1);
+      int? result = Fluxy.findOrNull<int>();
       expect(result, 1);
 
-      Get.delete<int>();
-      result = Get.findOrNull<int>();
+      Fluxy.delete<int>();
+      result = Fluxy.findOrNull<int>();
       expect(result, null);
     });
   });
@@ -302,23 +302,23 @@ class _FooBar {}
 
 void fluxyKeyTests() {
   group('instance keys are Types, not type names', () {
-    tearDown(Get.resetInstance);
+    tearDown(Fluxy.resetInstance);
 
     test('two classes with the same name from different libraries', () {
-      Get.put(same_a.Controller());
-      Get.put(same_b.Controller());
-      expect(Get.find<same_a.Controller>().from, 'a');
-      expect(Get.find<same_b.Controller>().from, 'b');
+      Fluxy.put(same_a.Controller());
+      Fluxy.put(same_b.Controller());
+      expect(Fluxy.find<same_a.Controller>().from, 'a');
+      expect(Fluxy.find<same_b.Controller>().from, 'b');
     });
 
     test('a tag can no longer collide with another type name', () {
       // Old keys: '_Foo' + 'Bar' == '_FooBar'.
       final fooBar = _FooBar();
-      Get.put(fooBar);
-      Get.put(_Foo(), tag: 'Bar');
-      expect(Get.find<_FooBar>(), same(fooBar));
-      expect(Get.isRegistered<_Foo>(tag: 'Bar'), isTrue);
-      expect(Get.isRegistered<_Foo>(), isFalse);
+      Fluxy.put(fooBar);
+      Fluxy.put(_Foo(), tag: 'Bar');
+      expect(Fluxy.find<_FooBar>(), same(fooBar));
+      expect(Fluxy.isRegistered<_Foo>(tag: 'Bar'), isTrue);
+      expect(Fluxy.isRegistered<_Foo>(), isFalse);
     });
   });
 }

@@ -6,51 +6,51 @@ import 'package:fluxy_nav/fluxy_nav.dart';
 void main() {
   test('Parse Page with children', () {
     final testParams = {'hi': 'value'};
-    final pageTree = GetPage(
+    final pageTree = FluxyPage(
       name: '/city',
       page: () => Container(),
       children: [
-        GetPage(
+        FluxyPage(
           name: '/home',
           page: () => Container(),
           transition: Transition.rightToLeftWithFade,
           children: [
-            GetPage(
+            FluxyPage(
               name: '/bed-room',
               transition: Transition.size,
               page: () => Container(),
             ),
-            GetPage(
+            FluxyPage(
               name: '/living-room',
               transition: Transition.topLevel,
               page: () => Container(),
             ),
           ],
         ),
-        GetPage(
+        FluxyPage(
           name: '/work',
           transition: Transition.upToDown,
           page: () => Container(),
           children: [
-            GetPage(
+            FluxyPage(
               name: '/office',
               transition: Transition.zoom,
               page: () => Container(),
               children: [
-                GetPage(
+                FluxyPage(
                   name: '/pen',
                   transition: Transition.cupertino,
                   page: () => Container(),
                   parameters: testParams,
                 ),
-                GetPage(
+                FluxyPage(
                   name: '/paper',
                   page: () => Container(),
                   transition: Transition.downToUp,
                 ),
               ],
             ),
-            GetPage(
+            FluxyPage(
               name: '/meeting-room',
               transition: Transition.fade,
               page: () => Container(),
@@ -60,7 +60,7 @@ void main() {
       ],
     );
 
-    final tree = ParseRouteTree(routes: <GetPage>[]);
+    final tree = ParseRouteTree(routes: <FluxyPage>[]);
 
     tree.addRoute(pageTree);
 
@@ -77,39 +77,39 @@ void main() {
 
   test('Parse Page without children', () {
     final pageTree = [
-      GetPage(
+      FluxyPage(
           name: '/city',
           page: () => Container(),
           transition: Transition.cupertino),
-      GetPage(
+      FluxyPage(
           name: '/city/home',
           page: () => Container(),
           transition: Transition.downToUp),
-      GetPage(
+      FluxyPage(
           name: '/city/home/bed-room',
           page: () => Container(),
           transition: Transition.fade),
-      GetPage(
+      FluxyPage(
           name: '/city/home/living-room',
           page: () => Container(),
           transition: Transition.fadeIn),
-      GetPage(
+      FluxyPage(
           name: '/city/work',
           page: () => Container(),
           transition: Transition.leftToRight),
-      GetPage(
+      FluxyPage(
           name: '/city/work/office',
           page: () => Container(),
           transition: Transition.leftToRightWithFade),
-      GetPage(
+      FluxyPage(
           name: '/city/work/office/pen',
           page: () => Container(),
           transition: Transition.native),
-      GetPage(
+      FluxyPage(
           name: '/city/work/office/paper',
           page: () => Container(),
           transition: Transition.noTransition),
-      GetPage(
+      FluxyPage(
           name: '/city/work/meeting-room',
           page: () => Container(),
           transition: Transition.rightToLeft),
@@ -130,85 +130,85 @@ void main() {
   testWidgets(
     'test params from dynamic route',
     (tester) async {
-      await tester.pumpWidget(GetMaterialApp(
+      await tester.pumpWidget(FluxyApp(
         initialRoute: '/first/juan',
         getPages: [
-          GetPage(page: () => Container(), name: '/first/:name'),
-          GetPage(page: () => Container(), name: '/second/:id'),
-          GetPage(page: () => Container(), name: '/third'),
-          GetPage(page: () => Container(), name: '/last/:id/:name/profile'),
-          GetPage(page: () => Container(), name: '/first/second/:token')
+          FluxyPage(page: () => Container(), name: '/first/:name'),
+          FluxyPage(page: () => Container(), name: '/second/:id'),
+          FluxyPage(page: () => Container(), name: '/third'),
+          FluxyPage(page: () => Container(), name: '/last/:id/:name/profile'),
+          FluxyPage(page: () => Container(), name: '/first/second/:token')
         ],
       ));
 
-      expect(Get.parameters['name'], 'juan');
+      expect(Fluxy.parameters['name'], 'juan');
 
-      Get.toNamed('/second/1234');
-
-      await tester.pumpAndSettle();
-
-      expect(Get.parameters['id'], '1234');
-
-      Get.toNamed('/third?name=jonny&job=dev');
+      Fluxy.toNamed('/second/1234');
 
       await tester.pumpAndSettle();
 
-      expect(Get.parameters['name'], 'jonny');
-      expect(Get.parameters['job'], 'dev');
+      expect(Fluxy.parameters['id'], '1234');
 
-      Get.toNamed('/last/1234/ana/profile');
-
-      await tester.pumpAndSettle();
-
-      expect(Get.parameters['id'], '1234');
-      expect(Get.parameters['name'], 'ana');
-
-      Get.toNamed('/last/1234/ana/profile?job=dev');
+      Fluxy.toNamed('/third?name=jonny&job=dev');
 
       await tester.pumpAndSettle();
 
-      expect(Get.parameters['id'], '1234');
-      expect(Get.parameters['name'], 'ana');
-      expect(Get.parameters['job'], 'dev');
+      expect(Fluxy.parameters['name'], 'jonny');
+      expect(Fluxy.parameters['job'], 'dev');
 
-      Get.toNamed(
+      Fluxy.toNamed('/last/1234/ana/profile');
+
+      await tester.pumpAndSettle();
+
+      expect(Fluxy.parameters['id'], '1234');
+      expect(Fluxy.parameters['name'], 'ana');
+
+      Fluxy.toNamed('/last/1234/ana/profile?job=dev');
+
+      await tester.pumpAndSettle();
+
+      expect(Fluxy.parameters['id'], '1234');
+      expect(Fluxy.parameters['name'], 'ana');
+      expect(Fluxy.parameters['job'], 'dev');
+
+      Fluxy.toNamed(
         'https://www.example.com/first/second/fa9662f4-ec3f-11ee-a806-169a3915b383',
       );
       await tester.pumpAndSettle();
-      expect(Get.parameters['token'], 'fa9662f4-ec3f-11ee-a806-169a3915b383');
+      expect(Fluxy.parameters['token'], 'fa9662f4-ec3f-11ee-a806-169a3915b383');
     },
   );
 
   testWidgets(
     'params in url by parameters',
     (tester) async {
-      await tester.pumpWidget(GetMaterialApp(
+      await tester.pumpWidget(FluxyApp(
         initialRoute: '/first/juan',
         getPages: [
-          GetPage(page: () => Container(), name: '/first/:name'),
-          GetPage(page: () => Container(), name: '/italy'),
+          FluxyPage(page: () => Container(), name: '/first/:name'),
+          FluxyPage(page: () => Container(), name: '/italy'),
         ],
       ));
 
-      // Get.parameters = ({"varginias": "varginia", "vinis": "viniiss"});
+      // Fluxy.parameters = ({"varginias": "varginia", "vinis": "viniiss"});
       var parameters = <String, String>{
         "varginias": "varginia",
         "vinis": "viniiss"
       };
-      // print("Get.parameters: ${Get.parameters}");
+      // print("Fluxy.parameters: ${Fluxy.parameters}");
       parameters.addAll({"a": "b", "c": "d"});
-      Get.toNamed("/italy", parameters: parameters);
+      Fluxy.toNamed("/italy", parameters: parameters);
 
       await tester.pumpAndSettle();
-      expect(Get.parameters['varginias'], 'varginia');
-      expect(Get.parameters['vinis'], 'viniiss');
-      expect(Get.parameters['a'], 'b');
-      expect(Get.parameters['c'], 'd');
+      expect(Fluxy.parameters['varginias'], 'varginia');
+      expect(Fluxy.parameters['vinis'], 'viniiss');
+      expect(Fluxy.parameters['a'], 'b');
+      expect(Fluxy.parameters['c'], 'd');
     },
   );
 
   test('copyWith with a new name matches the new pattern', () {
-    final page = GetPage(name: '/user/:id', page: () => Container());
+    final page = FluxyPage(name: '/user/:id', page: () => Container());
     final copy = page.copyWith(name: '/shop/:item');
     expect(copy.path.keys, ['item']);
     expect(copy.path.regex.hasMatch('/shop/42'), isTrue);
@@ -219,8 +219,8 @@ void main() {
   test('matched pages carry the path key and the parameters', () {
     final tree = ParseRouteTree(routes: []);
     tree.addRoutes([
-      GetPage(name: '/', page: () => Container()),
-      GetPage(name: '/user/:id', page: () => Container()),
+      FluxyPage(name: '/', page: () => Container()),
+      FluxyPage(name: '/user/:id', page: () => Container()),
     ]);
     final decoded = tree.matchRoute('/user/7?tab=a');
     final last = decoded.currentTreeBranch.last;

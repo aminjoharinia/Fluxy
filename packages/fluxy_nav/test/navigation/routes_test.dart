@@ -4,14 +4,14 @@ void main() {
   //   // final scaffoldKey = GlobalKey();
 
   //   await tester.pumpWidget(
-  //     GetCupertinoApp(
+  //     FluxyCupertinoApp(
   //       popGesture: true,
   //       home: CupertinoPageScaffold(
   //         // key: scaffoldKey,
   //         child: Center(
   //           child: CupertinoButton(
   //             onPressed: () {
-  //               Get.to(
+  //               Fluxy.to(
   //                   () => CupertinoPageScaffold(
   //                         child: Center(child: Text('route')),
   //                       ),

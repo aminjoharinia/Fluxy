@@ -1,7 +1,7 @@
 import 'package:fluxy/fluxy.dart';
 
 class AuthService extends FluxyService {
-  static AuthService get to => Get.find();
+  static AuthService get to => Fluxy.find();
 
   /// Mocks a login process
   final isLoggedIn = false.obs;

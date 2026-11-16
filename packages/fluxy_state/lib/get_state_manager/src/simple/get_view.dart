@@ -5,7 +5,7 @@ import 'package:fluxy_state/fluxy_state.dart';
 import 'get_widget_cache.dart';
 
 /// FluxyView is a great way of quickly access your Controller
-/// without having to call `Get.find<AwesomeController>()` yourself.
+/// without having to call `Fluxy.find<AwesomeController>()` yourself.
 ///
 /// Sample:
 /// ```
@@ -15,7 +15,7 @@ import 'get_widget_cache.dart';
 ///
 /// class AwesomeView extends FluxyView<AwesomeController> {
 ///   /// if you need you can pass the tag for
-///   /// Get.find<AwesomeController>(tag:"myTag");
+///   /// Fluxy.find<AwesomeController>(tag:"myTag");
 ///   @override
 ///   final String tag = "myTag";
 ///
@@ -35,15 +35,15 @@ abstract class FluxyView<T> extends StatelessWidget {
 
   final String? tag = null;
 
-  T get controller => Get.find<T>(tag: tag)!;
+  T get controller => Fluxy.find<T>(tag: tag)!;
 
   @override
   Widget build(BuildContext context);
 }
 
 /// FluxyWidget is a great way of quickly access your individual Controller
-/// without having to call `Get.find<AwesomeController>()` yourself.
-/// Get save you controller on cache, so, you can to use Get.create() safely
+/// without having to call `Fluxy.find<AwesomeController>()` yourself.
+/// Get save you controller on cache, so, you can to use Fluxy.create() safely
 /// FluxyWidget is perfect to multiples instance of a same controller. Each
 /// FluxyWidget will have your own controller, and will be call events as `onInit`
 /// and `onClose` when the controller get in/get out on memory.
@@ -72,12 +72,12 @@ class _GetCache<S extends FluxyLifeCycleMixin> extends WidgetCache<FluxyWidget<S
   InstanceInfo? info;
   @override
   void onInit() {
-    info = Get.getInstanceInfo<S>(tag: widget!.tag);
+    info = Fluxy.getInstanceInfo<S>(tag: widget!.tag);
 
     _isCreator = info!.isPrepared && info!.isCreate;
 
     if (info!.isRegistered) {
-      _controller = Get.find<S>(tag: widget!.tag);
+      _controller = Fluxy.find<S>(tag: widget!.tag);
     }
 
     FluxyWidget._cache[widget!] = _controller;
@@ -88,10 +88,10 @@ class _GetCache<S extends FluxyLifeCycleMixin> extends WidgetCache<FluxyWidget<S
   @override
   void onClose() {
     if (_isCreator) {
-      Get.asap(() {
+      Fluxy.asap(() {
         widget!.controller.onDelete();
-        Get.log('"${widget!.controller.runtimeType}" onClose() called');
-        Get.log('"${widget!.controller.runtimeType}" deleted from memory');
+        Fluxy.log('"${widget!.controller.runtimeType}" onClose() called');
+        Fluxy.log('"${widget!.controller.runtimeType}" deleted from memory');
         // FluxyWidget._cache[widget!] = null;
       });
     }

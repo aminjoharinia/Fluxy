@@ -8,13 +8,13 @@ import 'package:fluxy_nav/fluxy_nav.dart';
 @immutable
 class RouteDecoder {
   const RouteDecoder(this.currentTreeBranch, this.pageSettings);
-  final List<GetPage> currentTreeBranch;
+  final List<FluxyPage> currentTreeBranch;
   final PageSettings? pageSettings;
 
   factory RouteDecoder.fromRoute(String location) {
     var uri = Uri.parse(location);
     final args = PageSettings(uri);
-    final decoder = (Get.rootController.rootDelegate).matchRoute(
+    final decoder = (Fluxy.rootController.rootDelegate).matchRoute(
       location,
       arguments: args,
     );
@@ -26,13 +26,13 @@ class RouteDecoder {
     return decoder;
   }
 
-  GetPage? get route =>
+  FluxyPage? get route =>
       currentTreeBranch.isEmpty ? null : currentTreeBranch.last;
 
-  GetPage routeOrUnknown(GetPage onUnknow) =>
+  FluxyPage routeOrUnknown(FluxyPage onUnknow) =>
       currentTreeBranch.isEmpty ? onUnknow : currentTreeBranch.last;
 
-  set route(GetPage? getPage) {
+  set route(FluxyPage? getPage) {
     if (getPage == null) return;
     if (currentTreeBranch.isEmpty) {
       currentTreeBranch.add(getPage);
@@ -41,7 +41,7 @@ class RouteDecoder {
     }
   }
 
-  List<GetPage>? get currentChildren => route?.children;
+  List<FluxyPage>? get currentChildren => route?.children;
 
   Map<String, String> get parameters => pageSettings?.params ?? {};
 
@@ -86,7 +86,7 @@ class RouteDecoder {
 class ParseRouteTree {
   ParseRouteTree({required this.routes});
 
-  final List<GetPage> routes;
+  final List<FluxyPage> routes;
 
   RouteDecoder matchRoute(String name, {PageSettings? arguments}) {
     final uri = Uri.parse(name);
@@ -142,29 +142,29 @@ class ParseRouteTree {
     arguments?.params.addAll(params);
 
     //route not found
-    return RouteDecoder(<GetPage>[], arguments);
+    return RouteDecoder(<FluxyPage>[], arguments);
   }
 
-  void addRoutes<T>(List<GetPage<T>> getPages) {
+  void addRoutes<T>(List<FluxyPage<T>> getPages) {
     for (final route in getPages) {
       addRoute(route);
     }
   }
 
-  void removeRoutes<T>(List<GetPage<T>> getPages) {
+  void removeRoutes<T>(List<FluxyPage<T>> getPages) {
     for (final route in getPages) {
       removeRoute(route);
     }
   }
 
-  void removeRoute<T>(GetPage<T> route) {
+  void removeRoute<T>(FluxyPage<T> route) {
     routes.remove(route);
     for (var page in _flattenPage(route)) {
       removeRoute(page);
     }
   }
 
-  void addRoute<T>(GetPage<T> route) {
+  void addRoute<T>(FluxyPage<T> route) {
     routes.add(route);
 
     // Add Page children.
@@ -173,8 +173,8 @@ class ParseRouteTree {
     }
   }
 
-  List<GetPage> _flattenPage(GetPage route) {
-    final result = <GetPage>[];
+  List<FluxyPage> _flattenPage(FluxyPage route) {
+    final result = <FluxyPage>[];
     if (route.children.isEmpty) {
       return result;
     }
@@ -231,11 +231,11 @@ class ParseRouteTree {
     return result;
   }
 
-  /// Change the Path for a [GetPage]
-  GetPage _addChild(
-    GetPage origin,
+  /// Change the Path for a [FluxyPage]
+  FluxyPage _addChild(
+    FluxyPage origin,
     String parentPath,
-    List<GetMiddleware> middlewares,
+    List<FluxyMiddleware> middlewares,
     List<BindingsInterface> bindings,
     List<Bind> binds,
   ) {
@@ -250,7 +250,7 @@ class ParseRouteTree {
     );
   }
 
-  GetPage? _findRoute(String name) {
+  FluxyPage? _findRoute(String name) {
     final value = routes.firstWhereOrNull(
       (route) => route.path.regex.hasMatch(name),
     );

@@ -22,7 +22,7 @@ class ProductsController extends FluxyController {
 
   @override
   void onClose() {
-    Get.printInfo(info: 'Products: onClose');
+    Fluxy.printInfo(info: 'Products: onClose');
     super.onClose();
   }
 }

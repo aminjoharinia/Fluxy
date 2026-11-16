@@ -3,8 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
-class GetModalBottomSheetRoute<T> extends PopupRoute<T> {
-  GetModalBottomSheetRoute({
+class FluxyModalBottomSheetRoute<T> extends PopupRoute<T> {
+  FluxyModalBottomSheetRoute({
     this.builder,
     this.theme,
     this.barrierLabel,
@@ -126,7 +126,7 @@ class _GetModalBottomSheet<T> extends StatefulWidget {
     this.isPersistent = false,
   });
   final bool isPersistent;
-  final GetModalBottomSheetRoute<T>? route;
+  final FluxyModalBottomSheetRoute<T>? route;
   final bool isScrollControlled;
   final Color? backgroundColor;
   final double? elevation;
@@ -225,7 +225,7 @@ class _GetPerModalBottomSheet<T> extends StatefulWidget {
     this.enableDrag = true,
   });
   final bool? isPersistent;
-  final GetModalBottomSheetRoute<T>? route;
+  final FluxyModalBottomSheetRoute<T>? route;
   final bool isScrollControlled;
   final Color? backgroundColor;
   final double? elevation;

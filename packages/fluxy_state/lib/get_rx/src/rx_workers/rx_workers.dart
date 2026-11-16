@@ -19,7 +19,7 @@ typedef WorkerCallback<T> = Function(T callback);
 /// function.
 ///
 /// Workers listen to the Rx directly: the callback runs synchronously, right
-/// when the value changes (after the batch, inside `Get.batch`), with no
+/// when the value changes (after the batch, inside `Fluxy.batch`), with no
 /// stream, no `StreamController` and no microtask in between. Only when
 /// [onError] or [onDone] is given (events only the stream has) does it use
 /// the Rx's stream, as before.
@@ -302,7 +302,7 @@ class Worker {
   //final bool _verbose = true;
   void _log(String msg) {
     //  if (!_verbose) return;
-    Get.log('$runtimeType $type $msg');
+    Fluxy.log('$runtimeType $type $msg');
   }
 
   void dispose() {

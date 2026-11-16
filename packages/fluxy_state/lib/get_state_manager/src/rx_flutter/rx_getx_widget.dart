@@ -62,17 +62,17 @@ class FluxyXState<T extends FluxyLifeCycleMixin> extends State<FluxyX<T>> {
 
   @override
   void initState() {
-    // var isPrepared = Get.isPrepared<T>(tag: widget.tag);
-    final isRegistered = Get.isRegistered<T>(tag: widget.tag);
+    // var isPrepared = Fluxy.isPrepared<T>(tag: widget.tag);
+    final isRegistered = Fluxy.isRegistered<T>(tag: widget.tag);
 
     if (widget.global) {
       if (isRegistered) {
-        _isCreator = Get.isPrepared<T>(tag: widget.tag);
-        controller = Get.find<T>(tag: widget.tag);
+        _isCreator = Fluxy.isPrepared<T>(tag: widget.tag);
+        controller = Fluxy.find<T>(tag: widget.tag);
       } else {
         controller = widget.init;
         _isCreator = true;
-        Get.put<T>(controller!, tag: widget.tag);
+        Fluxy.put<T>(controller!, tag: widget.tag);
       }
     } else {
       controller = widget.init;
@@ -80,7 +80,7 @@ class FluxyXState<T extends FluxyLifeCycleMixin> extends State<FluxyX<T>> {
       controller?.onStart();
     }
     widget.initState?.call(this);
-    if (widget.global && Get.smartManagement == SmartManagement.onlyBuilder) {
+    if (widget.global && Fluxy.smartManagement == SmartManagement.onlyBuilder) {
       controller?.onStart();
     }
 
@@ -105,8 +105,8 @@ class FluxyXState<T extends FluxyLifeCycleMixin> extends State<FluxyX<T>> {
   void dispose() {
     if (widget.dispose != null) widget.dispose!(this);
     if (_isCreator! || widget.assignId) {
-      if (widget.autoRemove && Get.isRegistered<T>(tag: widget.tag)) {
-        Get.delete<T>(tag: widget.tag);
+      if (widget.autoRemove && Fluxy.isRegistered<T>(tag: widget.tag)) {
+        Fluxy.delete<T>(tag: widget.tag);
       }
     }
 

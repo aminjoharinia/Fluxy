@@ -8,7 +8,7 @@ import 'package:fluxy_state/fluxy_state.dart';
 import '../../get_navigation.dart';
 import 'get_root.dart';
 
-class GetCupertinoApp extends StatelessWidget {
+class FluxyCupertinoApp extends StatelessWidget {
   final GlobalKey<NavigatorState>? navigatorKey;
   final Widget? home;
   final Map<String, WidgetBuilder>? routes;
@@ -28,7 +28,7 @@ class GetCupertinoApp extends StatelessWidget {
   final Locale? locale;
 
   /// Whether a change of the device language (system settings) switches
-  /// the app to it through `Get.updateLocale`.
+  /// the app to it through `Fluxy.updateLocale`.
   /// `null` (the default): only when no [locale] was given, so an app that
   /// picks its own language keeps it.
   final bool? followDeviceLocale;
@@ -59,8 +59,8 @@ class GetCupertinoApp extends StatelessWidget {
   final BindingsInterface? initialBinding;
   final Duration? transitionDuration;
   final bool? defaultGlobalState;
-  final List<GetPage>? getPages;
-  final GetPage? unknownRoute;
+  final List<FluxyPage>? getPages;
+  final FluxyPage? unknownRoute;
   final RouteInformationProvider? routeInformationProvider;
   final RouteInformationParser<Object>? routeInformationParser;
   final RouterDelegate<Object>? routerDelegate;
@@ -71,7 +71,7 @@ class GetCupertinoApp extends StatelessWidget {
   final List<Bind> binds;
   final ScrollBehavior? scrollBehavior;
 
-  const GetCupertinoApp({
+  const FluxyCupertinoApp({
     super.key,
     this.theme,
     this.navigatorKey,
@@ -132,7 +132,7 @@ class GetCupertinoApp extends StatelessWidget {
         routerDelegate = null,
         routerConfig = null;
 
-  const GetCupertinoApp.router({
+  const FluxyCupertinoApp.router({
     super.key,
     /// Where the app opens when started at `/`, even when `/` is a page.
     this.initialRoute,
@@ -194,7 +194,7 @@ class GetCupertinoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetRoot(
+    return FluxyRoot(
       config: ConfigData(
         backButtonDispatcher: backButtonDispatcher,
         binds: binds,
@@ -227,7 +227,7 @@ class GetCupertinoApp extends StatelessWidget {
         defaultPopGesture: popGesture,
       ),
       child: Builder(builder: (context) {
-        final controller = GetRoot.of(context);
+        final controller = FluxyRoot.of(context);
         return CupertinoApp.router(
           routerDelegate: controller.config.routerDelegate,
           routeInformationParser: controller.config.routeInformationParser,
@@ -237,7 +237,7 @@ class GetCupertinoApp extends StatelessWidget {
           key: controller.config.unikey,
           builder: (context, child) => Directionality(
             textDirection: textDirection ??
-                (rtlLanguages.contains(Get.locale?.languageCode)
+                (rtlLanguages.contains(Fluxy.locale?.languageCode)
                     ? TextDirection.rtl
                     : TextDirection.ltr),
             child: builder == null
@@ -248,7 +248,7 @@ class GetCupertinoApp extends StatelessWidget {
           onGenerateTitle: onGenerateTitle,
           color: color,
           theme: theme,
-          locale: Get.locale ?? locale,
+          locale: Fluxy.locale ?? locale,
           localizationsDelegates: localizationsDelegates,
           localeListResolutionCallback: localeListResolutionCallback,
           localeResolutionCallback: localeResolutionCallback,

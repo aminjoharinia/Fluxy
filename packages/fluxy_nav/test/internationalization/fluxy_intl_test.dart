@@ -9,30 +9,30 @@ const _en = {'hello': 'Hello', 'only_en': 'only en'};
 const _fa = {'hello': 'سلام'};
 
 void _load() {
-  Get.clearTranslations();
-  Get.addTranslations(const {'en_US': _en, 'persian_US': _fa});
-  Get.fallbackLocale = const Locale('persian', 'US');
-  Get.locale = const Locale('en', 'US');
+  Fluxy.clearTranslations();
+  Fluxy.addTranslations(const {'en_US': _en, 'persian_US': _fa});
+  Fluxy.fallbackLocale = const Locale('persian', 'US');
+  Fluxy.locale = const Locale('en', 'US');
 }
 
 void main() {
   setUp(_load);
   tearDown(() {
-    Get.clearTranslations();
-    Get.locale = null;
-    Get.fallbackLocale = null;
+    Fluxy.clearTranslations();
+    Fluxy.locale = null;
+    Fluxy.fallbackLocale = null;
   });
 
   group('lookup', () {
     test('full locale, then same language, then fallback, then the key', () {
-      Get.addTranslations(const {
+      Fluxy.addTranslations(const {
         'en_GB': {'colour': 'colour'},
         'de': {'only_de': 'nur de'},
       });
-      Get.fallbackLocale = const Locale('de');
-      Get.locale = const Locale('en', 'US');
+      Fluxy.fallbackLocale = const Locale('de');
+      Fluxy.locale = const Locale('en', 'US');
       expect('hello'.tr, 'Hello'); // en_US
-      Get.locale = const Locale('en', 'AU');
+      Fluxy.locale = const Locale('en', 'AU');
       expect('colour'.tr, 'colour'); // same language (en_GB, the last en_*)
       expect('only_de'.tr, 'nur de'); // fallback language
       expect('missing'.tr, 'missing'); // the key
@@ -40,17 +40,17 @@ void main() {
 
     test('a locale change or new dictionary is seen at once', () {
       expect('hello'.tr, 'Hello');
-      Get.locale = const Locale('persian', 'US');
+      Fluxy.locale = const Locale('persian', 'US');
       expect('hello'.tr, 'سلام');
       expect('only_en'.tr, 'only_en'); // fallback is persian: not found
-      Get.appendTranslations(const {
+      Fluxy.appendTranslations(const {
         'persian_US': {'only_en': 'فقط'},
       });
       expect('only_en'.tr, 'فقط');
     });
 
     test('no locale returns the key', () {
-      Get.locale = null;
+      Fluxy.locale = null;
       expect('hello'.tr, 'hello');
     });
   });
@@ -58,7 +58,7 @@ void main() {
   group('appendTranslations', () {
     test('works on dictionaries that were added as const maps', () {
       expect(
-          () => Get.appendTranslations(const {
+          () => Fluxy.appendTranslations(const {
                 'en_US': {'new': 'New'},
               }),
           returnsNormally);
@@ -70,7 +70,7 @@ void main() {
 
   group('trParams', () {
     test('a name only matches a whole placeholder', () {
-      Get.appendTranslations(const {
+      Fluxy.appendTranslations(const {
         'en_US': {'mail': '@admin <@admin_email>'},
       });
       expect(
@@ -80,14 +80,14 @@ void main() {
     });
 
     test('inserted values are not replaced again', () {
-      Get.appendTranslations(const {
+      Fluxy.appendTranslations(const {
         'en_US': {'pair': '@a and @b'},
       });
       expect('pair'.trParams({'a': '@b', 'b': 'B'}), '@b and B');
     });
 
     test('hyphenated names, non-ASCII neighbours, stray @', () {
-      Get.appendTranslations(const {
+      Fluxy.appendTranslations(const {
         'en_US': {
           'h': 'Hi @user-name!',
           'fa': '@nروز پیش',
@@ -100,7 +100,7 @@ void main() {
     });
 
     test('trArgs replaces %s in order', () {
-      Get.appendTranslations(const {
+      Fluxy.appendTranslations(const {
         'en_US': {'args': '%s of %s'},
       });
       expect('args'.trArgs(['1', '2']), '1 of 2');
@@ -115,7 +115,7 @@ void main() {
         child: Obx(() => Text('hello'.tr)),
       ));
       expect(find.text('Hello'), findsOneWidget);
-      Get.locale = const Locale('persian', 'US');
+      Fluxy.locale = const Locale('persian', 'US');
       await tester.pump();
       await tester.pump();
       expect(find.text('سلام'), findsOneWidget);
@@ -123,29 +123,29 @@ void main() {
 
     testWidgets('updateLocale(rebuildAll: false) updates Obx text',
         (tester) async {
-      await tester.pumpWidget(GetMaterialApp(
+      await tester.pumpWidget(FluxyApp(
         locale: const Locale('en', 'US'),
         home: Scaffold(body: Obx(() => Text('hello'.tr))),
       ));
       await tester.pumpAndSettle();
       expect(find.text('Hello'), findsOneWidget);
-      Get.updateLocale(const Locale('persian', 'US'), rebuildAll: false);
+      Fluxy.updateLocale(const Locale('persian', 'US'), rebuildAll: false);
       await tester.pumpAndSettle();
       expect(find.text('سلام'), findsOneWidget);
-      Get.reset();
+      Fluxy.reset();
     });
 
     testWidgets('updateLocale() still rebuilds plain widgets', (tester) async {
-      await tester.pumpWidget(GetMaterialApp(
+      await tester.pumpWidget(FluxyApp(
         locale: const Locale('en', 'US'),
         home: const Scaffold(body: _PlainTr()),
       ));
       await tester.pumpAndSettle();
       expect(find.text('Hello'), findsOneWidget);
-      Get.updateLocale(const Locale('persian', 'US'));
+      Fluxy.updateLocale(const Locale('persian', 'US'));
       await tester.pumpAndSettle();
       expect(find.text('سلام'), findsOneWidget);
-      Get.reset();
+      Fluxy.reset();
     });
   });
 }

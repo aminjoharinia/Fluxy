@@ -25,7 +25,7 @@ class _Futurizer extends FluxyController with StateMixin<String> {
 }
 
 void main() {
-  tearDown(Get.resetInstance);
+  tearDown(Fluxy.resetInstance);
 
   group('Obx', () {
     testWidgets('an Rx change in the frame that unmounts it does not assert',
@@ -63,7 +63,7 @@ void main() {
 
   group('GetBuilder / Bind', () {
     testWidgets('follows a changed id', (tester) async {
-      final controller = Get.put(_IdController());
+      final controller = Fluxy.put(_IdController());
       var builds = 0;
       Widget app(String id) => FluxyBuilder<_IdController>(
             id: id,
@@ -91,9 +91,9 @@ void main() {
         binds: [Bind.put(_IdController())],
         child: const SizedBox(),
       ));
-      expect(Get.isRegistered<_IdController>(), isTrue);
+      expect(Fluxy.isRegistered<_IdController>(), isTrue);
       await tester.pumpWidget(const SizedBox());
-      expect(Get.isRegistered<_IdController>(), isFalse);
+      expect(Fluxy.isRegistered<_IdController>(), isFalse);
     });
 
     testWidgets('Bind.put permanent keeps the instance', (tester) async {
@@ -102,7 +102,7 @@ void main() {
         child: const SizedBox(),
       ));
       await tester.pumpWidget(const SizedBox());
-      expect(Get.isRegistered<_IdController>(), isTrue);
+      expect(Fluxy.isRegistered<_IdController>(), isTrue);
     });
   });
 
@@ -279,14 +279,14 @@ void main() {
   group('lifecycle', () {
     testWidgets('onReady is skipped when deleted before the frame',
         (tester) async {
-      final c = Get.put(_ReadyController());
-      Get.delete<_ReadyController>();
+      final c = Fluxy.put(_ReadyController());
+      Fluxy.delete<_ReadyController>();
       await tester.pump();
       expect(c.ready, 0);
     });
 
     testWidgets('onReady runs after the next frame', (tester) async {
-      final c = Get.put(_ReadyController());
+      final c = Fluxy.put(_ReadyController());
       await tester.pump();
       expect(c.ready, 1);
     });

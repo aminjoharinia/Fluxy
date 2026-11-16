@@ -69,7 +69,7 @@ class _IntlHost {
   }
 }
 
-extension LocalesIntl on GetInterface {
+extension LocalesIntl on FluxyInterface {
   static final _intlHost = _IntlHost();
 
   Locale? get locale => _intlHost.locale;
@@ -77,7 +77,7 @@ extension LocalesIntl on GetInterface {
   Locale? get fallbackLocale => _intlHost.fallbackLocale;
 
   /// Setting it updates every `Obx` that shows `.tr` text. Widgets that read
-  /// `.tr` outside an `Obx` need a rebuild; `Get.updateLocale` does that.
+  /// `.tr` outside an `Obx` need a rebuild; `Fluxy.updateLocale` does that.
   set locale(Locale? newLocale) => _intlHost.locale = newLocale;
 
   set fallbackLocale(Locale? newLocale) => _intlHost.fallbackLocale = newLocale;

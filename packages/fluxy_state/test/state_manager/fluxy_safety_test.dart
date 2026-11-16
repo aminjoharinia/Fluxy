@@ -37,7 +37,7 @@ void main() {
       a.addListener(() => throw StateError('a'));
       b.addListener(() => bCalls++);
 
-      Get.batch(() {
+      Fluxy.batch(() {
         a.value = 1;
         b.value = 1;
       });

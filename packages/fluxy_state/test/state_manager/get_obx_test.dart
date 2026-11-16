@@ -5,7 +5,7 @@ import 'package:fluxy_state/fluxy_state.dart';
 
 void main() {
   testWidgets("GetxController smoke test", (tester) async {
-    final controller = Get.put(Controller());
+    final controller = Fluxy.put(Controller());
     await tester.pumpWidget(
       MaterialApp(
         home: Column(
@@ -53,7 +53,7 @@ void main() {
 }
 
 class Controller extends FluxyController {
-  static Controller get to => Get.find();
+  static Controller get to => Fluxy.find();
 
   RxInt counter = 0.obs;
   RxDouble doubleNum = 0.0.obs;

@@ -38,38 +38,40 @@ Widget _home() => Builder(
 int _shuttles() =>
     find.byKey(_shuttleKey, skipOffstage: false).evaluate().length;
 
-Future<void> _pumpApp(WidgetTester tester, GetDelegate delegate) async {
+Future<void> _pumpApp(WidgetTester tester, FluxyDelegate delegate) async {
   await tester.pumpWidget(
-    GetMaterialApp.router(
-      getPages: [GetPage(name: '/', page: _home)],
+    FluxyApp.router(
+      getPages: [FluxyPage(name: '/', page: _home)],
       routerDelegate: delegate,
-      routeInformationParser: GetInformationParser(initialRoute: '/'),
+      routeInformationParser: FluxyInformationParser(initialRoute: '/'),
     ),
   );
   await tester.pumpAndSettle();
 }
 
 void main() {
-  tearDown(Get.reset);
+  tearDown(Fluxy.reset);
 
   testWidgets('root navigator adds no HeroController of its own', (
     tester,
   ) async {
     await _pumpApp(
       tester,
-      GetDelegate(
-        pages: [GetPage(name: '/', page: _home)],
+      FluxyDelegate(
+        pages: [FluxyPage(name: '/', page: _home)],
       ),
     );
-    final nav = tester.widget<GetNavigator>(find.byType(GetNavigator).first);
+    final nav = tester.widget<FluxyNavigator>(
+      find.byType(FluxyNavigator).first,
+    );
     expect(nav.observers.whereType<HeroController>(), isEmpty);
   });
 
   testWidgets('a hero flies once on the root navigator', (tester) async {
     await _pumpApp(
       tester,
-      GetDelegate(
-        pages: [GetPage(name: '/', page: _home)],
+      FluxyDelegate(
+        pages: [FluxyPage(name: '/', page: _home)],
       ),
     );
     await tester.tap(find.byType(GestureDetector).first);
@@ -83,8 +85,8 @@ void main() {
   testWidgets('a router rebuild mid-flight keeps the single flight', (
     tester,
   ) async {
-    final delegate = GetDelegate(
-      pages: [GetPage(name: '/', page: _home)],
+    final delegate = FluxyDelegate(
+      pages: [FluxyPage(name: '/', page: _home)],
     );
     await _pumpApp(tester, delegate);
     await tester.tap(find.byType(GestureDetector).first);
@@ -104,7 +106,7 @@ void main() {
     late HeroController? first;
     Widget app() => Directionality(
       textDirection: TextDirection.ltr,
-      child: GetHeroScope(
+      child: FluxyHeroScope(
         child: Builder(
           builder: (context) {
             first = HeroControllerScope.maybeOf(context);
@@ -129,7 +131,7 @@ void main() {
         controller: outer,
         child: Column(
           children: [
-            GetHeroScope(
+            FluxyHeroScope(
               child: Builder(
                 builder: (c) {
                   root = HeroControllerScope.maybeOf(c);
@@ -137,7 +139,7 @@ void main() {
                 },
               ),
             ),
-            GetHeroScope(
+            FluxyHeroScope(
               nested: true,
               child: Builder(
                 builder: (c) {

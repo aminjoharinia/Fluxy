@@ -12,7 +12,7 @@ class DetailsController extends StateController<Country> {
   @override
   void onInit() {
     super.onInit();
-    country = Get.arguments;
+    country = Fluxy.arguments;
     final countryName = country?.country;
     if (countryName == null) {
       change(FluxyStatus.error('Country not found'));

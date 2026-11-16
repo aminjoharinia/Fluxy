@@ -2,14 +2,14 @@ import 'package:fluxy_core/fluxy_core.dart';
 
 import '../simple/list_notifier.dart';
 
-/// `Get.batch` and `Get.untrack`.
-extension FluxyReactiveExt on GetInterface {
+/// `Fluxy.batch` and `Fluxy.untrack`.
+extension FluxyReactiveExt on FluxyInterface {
   /// Runs [fn] and holds every Rx change made inside it until it returns.
   /// Then each changed Rx notifies **once**, so `ever` / `listen` / streams
   /// and observers see only the final values.
   ///
   /// ```dart
-  /// Get.batch(() {
+  /// Fluxy.batch(() {
   ///   items.value = newItems;
   ///   total.value = newTotal;
   /// });

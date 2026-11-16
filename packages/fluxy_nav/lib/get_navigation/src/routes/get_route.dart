@@ -9,8 +9,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import '../../get_navigation.dart';
 
-class GetPage<T> extends Page<T> {
-  final GetPageBuilder page;
+class FluxyPage<T> extends Page<T> {
+  final FluxyPageBuilder page;
   final bool? popGesture;
   final Map<String, String>? parameters;
   final String? title;
@@ -44,19 +44,19 @@ class GetPage<T> extends Page<T> {
 
   final bool inheritParentPath;
 
-  final List<GetPage> children;
-  final List<GetMiddleware> middlewares;
+  final List<FluxyPage> children;
+  final List<FluxyMiddleware> middlewares;
   /// The route pattern, compiled on first use. Lazy because [copyWith]
   /// builds a new page on every navigation and most copies never match.
   late final PathDecoded path = _nameToRegex(name);
-  final GetPage? unknownRoute;
+  final FluxyPage? unknownRoute;
   final bool showCupertinoParallax;
 
   final PreventDuplicateHandlingMode preventDuplicateHandlingMode;
 
   static void _defaultPopInvokedHandler(bool didPop, Object? result) {}
 
-  GetPage({
+  FluxyPage({
     required this.name,
     required this.page,
     this.title,
@@ -77,7 +77,7 @@ class GetPage<T> extends Page<T> {
     this.transition,
     this.customTransition,
     this.fullscreenDialog = false,
-    this.children = const <GetPage>[],
+    this.children = const <FluxyPage>[],
     this.middlewares = const [],
     this.unknownRoute,
     this.arguments,
@@ -96,14 +96,14 @@ class GetPage<T> extends Page<T> {
         super(
           key: key ?? ValueKey(name),
           name: name,
-          // arguments: Get.arguments,
+          // arguments: Fluxy.arguments,
         );
-  // settings = RouteSettings(name: name, arguments: Get.arguments);
+  // settings = RouteSettings(name: name, arguments: Fluxy.arguments);
 
-  GetPage<T> copyWith({
+  FluxyPage<T> copyWith({
     LocalKey? key,
     String? name,
-    GetPageBuilder? page,
+    FluxyPageBuilder? page,
     bool? popGesture,
     Map<String, String>? parameters,
     String? title,
@@ -120,9 +120,9 @@ class GetPage<T> extends Page<T> {
     Duration? reverseTransitionDuration,
     bool? fullscreenDialog,
     RouteSettings? settings,
-    List<GetPage<T>>? children,
-    GetPage? unknownRoute,
-    List<GetMiddleware>? middlewares,
+    List<FluxyPage<T>>? children,
+    FluxyPage? unknownRoute,
+    List<FluxyMiddleware>? middlewares,
     bool? preventDuplicates,
     PreventDuplicateHandlingMode? preventDuplicateHandlingMode,
     double Function(BuildContext context)? gestureWidth,
@@ -135,7 +135,7 @@ class GetPage<T> extends Page<T> {
     PopInvokedWithResultCallback<T>? onPopInvoked,
     String? restorationId,
   }) {
-    return GetPage(
+    return FluxyPage(
       key: key ?? this.key,
       participatesInRootNavigator:
           participatesInRootNavigator ?? this.participatesInRootNavigator,
@@ -177,7 +177,7 @@ class GetPage<T> extends Page<T> {
 
   @override
   Route<T> createRoute(BuildContext context) {
-    // return GetPageRoute<T>(settings: this, page: page);
+    // return FluxyPageRoute<T>(settings: this, page: page);
     final page = PageRedirect(
       route: this,
       settings: this,
@@ -211,7 +211,7 @@ class GetPage<T> extends Page<T> {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is GetPage<T> && other.key == key;
+    return other is FluxyPage<T> && other.key == key;
   }
 
   @override

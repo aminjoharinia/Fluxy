@@ -27,7 +27,7 @@ class InstanceInfo {
   }
 }
 
-extension ResetInstance on GetInterface {
+extension ResetInstance on FluxyInterface {
   /// Clears all registered instances (and/or tags).
   /// Even the persistent ones.
   /// This should be used at the end or tearDown of unit tests.
@@ -45,11 +45,11 @@ extension ResetInstance on GetInterface {
   }
 }
 
-extension Inst on GetInterface {
+extension Inst on FluxyInterface {
   T call<T>() => find<T>();
 
   /// Holds references to every registered Instance when using
-  /// `Get.put()`
+  /// `Fluxy.put()`
   /// Registered instances, keyed by `Type` (or a `(Type, tag)` record).
   /// Keys used to be `type.toString()`, which mixes up two classes with the
   /// same name from different libraries and depends on how the compiler
@@ -57,7 +57,7 @@ extension Inst on GetInterface {
   static final Map<Object, _InstanceBuilderFactory> _singl = {};
 
   /// Holds a reference to every registered callback when using
-  /// `Get.lazyPut()`
+  /// `Fluxy.lazyPut()`
   // static final Map<String, _Lazy> _factory = {};
 
   // void injector<S>(
@@ -89,25 +89,25 @@ extension Inst on GetInterface {
 
   /// Creates a new Instance<S> lazily from the `<S>builder()` callback.
   ///
-  /// The first time you call `Get.find()`, the `builder()` callback will create
+  /// The first time you call `Fluxy.find()`, the `builder()` callback will create
   /// the Instance and persisted as a Singleton (like you would
-  /// use `Get.put()`).
+  /// use `Fluxy.put()`).
   ///
-  /// Using `Get.smartManagement` as [SmartManagement.keepFactory] has
+  /// Using `Fluxy.smartManagement` as [SmartManagement.keepFactory] has
   /// the same outcome as using `fenix:true` :
   /// The internal register of `builder()` will remain in memory to recreate
-  /// the Instance if the Instance has been removed with `Get.delete()`.
-  /// Therefore, future calls to `Get.find()` will return the same Instance.
+  /// the Instance if the Instance has been removed with `Fluxy.delete()`.
+  /// Therefore, future calls to `Fluxy.find()` will return the same Instance.
   ///
   /// If you need to make use of FluxyController's life-cycle
   /// (`onInit(), onStart(), onClose()`) [fenix] is a great choice to mix with
-  /// `FluxyBuilder()` and `FluxyX()` widgets, and/or `GetMaterialApp` Navigation.
+  /// `FluxyBuilder()` and `FluxyX()` widgets, and/or `FluxyApp` Navigation.
   ///
-  /// You could use `Get.lazyPut(fenix:true)` in your app's `main()` instead
-  /// of `Bindings()` for each `GetPage`.
+  /// You could use `Fluxy.lazyPut(fenix:true)` in your app's `main()` instead
+  /// of `Bindings()` for each `FluxyPage`.
   /// And the memory management will be similar.
   ///
-  /// Subsequent calls to `Get.lazyPut()` with the same parameters
+  /// Subsequent calls to `Fluxy.lazyPut()` with the same parameters
   /// (<[S]> and optionally [tag] will **not** override the original).
   void lazyPut<S>(
     InstanceBuilderCallback<S> builder, {
@@ -120,7 +120,7 @@ extension Inst on GetInterface {
       name: tag,
       permanent: permanent,
       builder: builder,
-      fenix: fenix ?? Get.smartManagement == SmartManagement.keepFactory,
+      fenix: fenix ?? Fluxy.smartManagement == SmartManagement.keepFactory,
     );
   }
 
@@ -128,15 +128,15 @@ extension Inst on GetInterface {
   /// Every time [find]<[S]>() is used, it calls the builder method to generate
   /// a new Instance [S].
   /// It also registers each `instance.onClose()` with the current
-  /// Route `Get.reference` to keep the lifecycle active.
+  /// Route `Fluxy.reference` to keep the lifecycle active.
   /// Is important to know that the instances created are only stored per Route.
-  /// So, if you call `Get.delete<T>()` the "instance factory" used in this
-  /// method (`Get.spawn<T>()`) will be removed, but NOT the instances
+  /// So, if you call `Fluxy.delete<T>()` the "instance factory" used in this
+  /// method (`Fluxy.spawn<T>()`) will be removed, but NOT the instances
   /// already created by it.
   ///
   /// Example:
   ///
-  /// ```Get.spawn(() => Repl());
+  /// ```Fluxy.spawn(() => Repl());
   /// Repl a = find();
   /// Repl b = find();
   /// print(a==b); (false)```
@@ -186,11 +186,11 @@ extension Inst on GetInterface {
   /// Initializes the dependencies for a Class Instance [S] (or tag),
   /// If its a Controller, it starts the lifecycle process.
   /// Optionally associating the current Route to the lifetime of the instance,
-  /// if `Get.smartManagement` is marked as [SmartManagement.full] or
+  /// if `Fluxy.smartManagement` is marked as [SmartManagement.full] or
   /// [SmartManagement.keepFactory]
-  /// Only flags `isInit` if it's using `Get.create()`
+  /// Only flags `isInit` if it's using `Fluxy.create()`
   /// (not for Singletons access).
-  /// Returns the instance if not initialized, required for Get.create() to
+  /// Returns the instance if not initialized, required for Fluxy.create() to
   /// work properly.
   S? _initDependencies<S>({String? name}) {
     final key = _getKey(S, name);
@@ -204,7 +204,7 @@ extension Inst on GetInterface {
       i = _startController<S>(tag: name);
 
       if (isSingleton) {
-        if (Get.smartManagement != SmartManagement.onlyBuilder) {
+        if (Fluxy.smartManagement != SmartManagement.onlyBuilder) {
           RouterReportManager.instance
               .reportDependencyLinkedToRoute(_getKey(S, name));
         }
@@ -229,7 +229,7 @@ extension Inst on GetInterface {
     final newKey = key ?? _getKey(S, tag);
 
     if (!_singl.containsKey(newKey)) {
-      Get.log('Instance "$newKey" is not registered.', isError: true);
+      Fluxy.log('Instance "$newKey" is not registered.', isError: true);
       return null;
     } else {
       return _singl[newKey];
@@ -253,9 +253,9 @@ extension Inst on GetInterface {
     if (i is FluxyLifeCycleMixin) {
       i.onStart();
       if (tag == null) {
-        Get.log('Instance "$S" has been initialized');
+        Fluxy.log('Instance "$S" has been initialized');
       } else {
-        Get.log('Instance "$S" with tag "$tag" has been initialized');
+        Fluxy.log('Instance "$S" with tag "$tag" has been initialized');
       }
       if (!_singl[key]!.isSingleton!) {
         RouterReportManager.instance.appendRouteByCreate(i);
@@ -293,7 +293,7 @@ extension Inst on GetInterface {
 
     /// although dirty solution, the lifecycle starts inside
     /// `initDependencies`, so we have to return the instance from there
-    /// to make it compatible with `Get.create()`.
+    /// to make it compatible with `Fluxy.create()`.
     final i = _initDependencies<S>(name: tag);
     return i ?? dep.getDependency() as S;
   }
@@ -358,7 +358,7 @@ extension Inst on GetInterface {
     final newKey = key ?? _getKey(S, tag);
 
     if (!_singl.containsKey(newKey)) {
-      Get.log('Instance "$newKey" already removed.', isError: true);
+      Fluxy.log('Instance "$newKey" already removed.', isError: true);
       return false;
     }
 
@@ -374,7 +374,7 @@ extension Inst on GetInterface {
     }
 
     if (builder.permanent && !force) {
-      Get.log(
+      Fluxy.log(
         // ignore: lines_longer_than_80_chars
         '"$newKey" has been marked as permanent, SmartManagement is not authorized to delete it.',
         isError: true,
@@ -389,7 +389,7 @@ extension Inst on GetInterface {
 
     if (i is FluxyLifeCycleMixin) {
       i.onDelete();
-      Get.log('"$newKey" onDelete() called');
+      Fluxy.log('"$newKey" onDelete() called');
     }
 
     if (builder.fenix) {
@@ -399,14 +399,14 @@ extension Inst on GetInterface {
     } else {
       if (dep.lateRemove != null) {
         dep.lateRemove = null;
-        Get.log('"$newKey" deleted from memory');
+        Fluxy.log('"$newKey" deleted from memory');
         return false;
       } else {
         _singl.remove(newKey);
         if (_singl.containsKey(newKey)) {
-          Get.log('Error removing object "$newKey"', isError: true);
+          Fluxy.log('Error removing object "$newKey"', isError: true);
         } else {
-          Get.log('"$newKey" deleted from memory');
+          Fluxy.log('"$newKey" deleted from memory');
         }
         return true;
       }
@@ -427,11 +427,11 @@ extension Inst on GetInterface {
   void reloadAll({bool force = false}) {
     _singl.forEach((key, value) {
       if (value.permanent && !force) {
-        Get.log('Instance "$key" is permanent. Skipping reload');
+        Fluxy.log('Instance "$key" is permanent. Skipping reload');
       } else {
         value.dependency = null;
         value.isInit = false;
-        Get.log('Instance "$key" was reloaded.');
+        Fluxy.log('Instance "$key" was reloaded.');
       }
     });
   }
@@ -447,7 +447,7 @@ extension Inst on GetInterface {
     if (builder == null) return;
 
     if (builder.permanent && !force) {
-      Get.log(
+      Fluxy.log(
         '''Instance "$newKey" is permanent. Use [force = true] to force the restart.''',
         isError: true,
       );
@@ -462,19 +462,19 @@ extension Inst on GetInterface {
 
     if (i is FluxyLifeCycleMixin) {
       i.onDelete();
-      Get.log('"$newKey" onDelete() called');
+      Fluxy.log('"$newKey" onDelete() called');
     }
 
     builder.dependency = null;
     builder.isInit = false;
-    Get.log('Instance "$newKey" was restarted.');
+    Fluxy.log('Instance "$newKey" was restarted.');
   }
 
   /// Check if a Class Instance<[S]> (or [tag]) is registered in memory.
   /// - [tag] is optional, if you used a [tag] to register the Instance.
   bool isRegistered<S>({String? tag}) => _singl.containsKey(_getKey(S, tag));
 
-  /// Checks if a lazy factory callback `Get.lazyPut()` that returns an
+  /// Checks if a lazy factory callback `Fluxy.lazyPut()` that returns an
   /// Instance<[S]> is registered in memory.
   /// - [tag] is optional, if you used a [tag] to register the lazy Instance.
   bool isPrepared<S>({String? tag}) {
@@ -502,7 +502,7 @@ typedef InstanceCreateBuilderCallback<S> = S Function(BuildContext _);
 
 typedef AsyncInstanceBuilderCallback<S> = Future<S> Function();
 
-/// Internal class to register instances with `Get.put<S>()`.
+/// Internal class to register instances with `Fluxy.put<S>()`.
 class _InstanceBuilderFactory<S> {
   /// Marks the Builder as a single instance.
   /// For reusing [dependency] instead of [builderFunc]
@@ -520,7 +520,7 @@ class _InstanceBuilderFactory<S> {
   InstanceBuilderCallback<S> builderFunc;
 
   /// Flag to persist the instance in memory,
-  /// without considering `Get.smartManagement`
+  /// without considering `Fluxy.smartManagement`
   bool permanent = false;
 
   bool isInit = false;
@@ -543,9 +543,9 @@ class _InstanceBuilderFactory<S> {
 
   void _showInitLog() {
     if (tag == null) {
-      Get.log('Instance "$S" has been created');
+      Fluxy.log('Instance "$S" has been created');
     } else {
-      Get.log('Instance "$S" has been created with tag "$tag"');
+      Fluxy.log('Instance "$S" has been created with tag "$tag"');
     }
   }
 

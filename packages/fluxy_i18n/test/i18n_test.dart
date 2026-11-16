@@ -16,10 +16,10 @@ class AppTranslations extends Translations {
 
 void main() {
   setUp(() {
-    Get.clearTranslations();
-    Get.locale = null;
-    Get.fallbackLocale = null;
-    Get.addTranslations(AppTranslations().keys);
+    Fluxy.clearTranslations();
+    Fluxy.locale = null;
+    Fluxy.fallbackLocale = null;
+    Fluxy.addTranslations(AppTranslations().keys);
   });
 
   group('.tr lookup', () {
@@ -28,86 +28,86 @@ void main() {
     });
 
     test('exact lang_country first', () {
-      Get.locale = const Locale('en', 'GB');
+      Fluxy.locale = const Locale('en', 'GB');
       expect('hello'.tr, 'Hello mate');
     });
 
     test('then the same language in another country', () {
-      Get.locale = const Locale('en', 'AU');
+      Fluxy.locale = const Locale('en', 'AU');
       // The last dictionary of that language wins (en_GB after en_US).
       expect('hello'.tr, 'Hello mate');
       expect('only_us'.tr, 'only_us');
     });
 
     test('then the fallback locale, lang_country then lang', () {
-      Get.locale = const Locale('fa', 'IR');
-      Get.fallbackLocale = const Locale('en', 'US');
+      Fluxy.locale = const Locale('fa', 'IR');
+      Fluxy.fallbackLocale = const Locale('en', 'US');
       expect('hello'.tr, 'سلام');
       expect('only_us'.tr, 'US only');
 
-      Get.fallbackLocale = const Locale('de');
+      Fluxy.fallbackLocale = const Locale('de');
       expect('only_de'.tr, 'nur de');
     });
 
     test('missing everywhere: the key itself', () {
-      Get.locale = const Locale('en', 'US');
-      Get.fallbackLocale = const Locale('de');
+      Fluxy.locale = const Locale('en', 'US');
+      Fluxy.fallbackLocale = const Locale('de');
       expect('nope'.tr, 'nope');
     });
   });
 
   group('dictionaries', () {
     test('addTranslations replaces a whole dictionary', () {
-      Get.locale = const Locale('en', 'US');
-      Get.addTranslations({
+      Fluxy.locale = const Locale('en', 'US');
+      Fluxy.addTranslations({
         'en_US': {'bye': 'Bye'},
       });
       expect('bye'.tr, 'Bye');
-      expect(Get.translations['en_US']!.containsKey('hello'), isFalse);
+      expect(Fluxy.translations['en_US']!.containsKey('hello'), isFalse);
     });
 
     test('appendTranslations merges key by key, also into const maps', () {
-      Get.locale = const Locale('en', 'US');
-      Get.appendTranslations(const {
+      Fluxy.locale = const Locale('en', 'US');
+      Fluxy.appendTranslations(const {
         'en_US': {'bye': 'Bye'},
         'it': {'ciao': 'Ciao'},
       });
       expect('bye'.tr, 'Bye');
       expect('hello'.tr, 'Hello');
-      expect(Get.translations['it'], {'ciao': 'Ciao'});
+      expect(Fluxy.translations['it'], {'ciao': 'Ciao'});
     });
 
     test('clearTranslations empties every dictionary', () {
-      Get.locale = const Locale('en', 'US');
-      Get.clearTranslations();
-      expect(Get.translations, isEmpty);
+      Fluxy.locale = const Locale('en', 'US');
+      Fluxy.clearTranslations();
+      expect(Fluxy.translations, isEmpty);
       expect('hello'.tr, 'hello');
     });
 
     test('notifyTranslationsChanged picks up direct edits', () {
-      Get.locale = const Locale('en', 'US');
+      Fluxy.locale = const Locale('en', 'US');
       expect('hello'.tr, 'Hello');
-      Get.translations['en_US'] = {'hello': 'Hi'};
-      Get.notifyTranslationsChanged();
+      Fluxy.translations['en_US'] = {'hello': 'Hi'};
+      Fluxy.notifyTranslationsChanged();
       expect('hello'.tr, 'Hi');
     });
 
     test('every change bumps translationVersion', () {
-      final start = Get.translationVersion.value;
-      Get.locale = const Locale('de');
-      Get.fallbackLocale = const Locale('en', 'US');
-      Get.appendTranslations({
+      final start = Fluxy.translationVersion.value;
+      Fluxy.locale = const Locale('de');
+      Fluxy.fallbackLocale = const Locale('en', 'US');
+      Fluxy.appendTranslations({
         'de': {'x': 'y'},
       });
-      Get.notifyTranslationsChanged();
-      expect(Get.translationVersion.value, start + 4);
+      Fluxy.notifyTranslationsChanged();
+      expect(Fluxy.translationVersion.value, start + 4);
     });
   });
 
   group('arguments', () {
     setUp(() {
-      Get.locale = const Locale('en', 'US');
-      Get.addTranslations({
+      Fluxy.locale = const Locale('en', 'US');
+      Fluxy.addTranslations({
         'en_US': {
           'greet': 'Hi %s and %s',
           'item': 'one item',
@@ -144,7 +144,7 @@ void main() {
   });
 
   testWidgets('an Obx showing .tr rebuilds on locale change', (tester) async {
-    Get.locale = const Locale('en', 'US');
+    Fluxy.locale = const Locale('en', 'US');
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
@@ -153,11 +153,11 @@ void main() {
     );
     expect(find.text('Hello'), findsOneWidget);
 
-    Get.locale = const Locale('de');
+    Fluxy.locale = const Locale('de');
     await tester.pump();
     expect(find.text('Hallo'), findsOneWidget);
 
-    Get.appendTranslations({
+    Fluxy.appendTranslations({
       'de': {'hello': 'Servus'},
     });
     await tester.pump();

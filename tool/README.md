@@ -27,7 +27,7 @@ Pairs are applied in one pass: a new name is never renamed again by another pair
 ### What it skips
 
 - Comments (line, doc, nested block) and string literals; names inside `${...}` and `$name` interpolation are code and are renamed.
-- Hidden folders (`.dart_tool`, `.git`, `ios/.symlinks`, ...), `build`, `node_modules`, `Pods`, and non-Dart files.
+- Hidden folders (`.dart_tool`, `.git`, `ios/.symlinks`, ...), `build`, `node_modules`, `Pods`, non-Dart files, and `deprecated_names.dart` files (Fluxy's deprecated aliases, which declare the old names on purpose).
 
 It does not resolve names: a local declaration that happens to use an old name is renamed too, and the project's analyzer is the check.
 

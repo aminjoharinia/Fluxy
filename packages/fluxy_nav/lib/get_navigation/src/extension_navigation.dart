@@ -13,9 +13,9 @@ import 'root/get_root.dart';
 /// It replaces the Flutter Navigator, but needs no context.
 /// You can to use navigator.push(YourRoute()) rather
 /// Navigator.push(context, YourRoute());
-NavigatorState? get navigator => GetNavigationExt(Get).key.currentState;
+NavigatorState? get navigator => FluxyNavigationExt(Fluxy).key.currentState;
 
-extension ExtensionBottomSheet on GetInterface {
+extension ExtensionBottomSheet on FluxyInterface {
   Future<T?> bottomSheet<T>(
     Widget bottomsheet, {
     Color? backgroundColor,
@@ -35,7 +35,7 @@ extension ExtensionBottomSheet on GetInterface {
     Curve? curve,
   }) {
     return Navigator.of(overlayContext!, rootNavigator: useRootNavigator).push(
-      GetModalBottomSheetRoute<T>(
+      FluxyModalBottomSheetRoute<T>(
         builder: (_) => bottomsheet,
         isPersistent: persistent,
         // theme: Theme.of(key.currentContext, shadowThemeOnly: true),
@@ -65,7 +65,7 @@ extension ExtensionBottomSheet on GetInterface {
   }
 }
 
-extension ExtensionDialog on GetInterface {
+extension ExtensionDialog on FluxyInterface {
   /// Show a dialog.
   /// You can pass a [transitionDuration] and/or [transitionCurve],
   /// overriding the defaults when the dialog shows up and closes.
@@ -132,7 +132,7 @@ extension ExtensionDialog on GetInterface {
     String? id,
   }) {
     assert(!barrierDismissible || barrierLabel != null);
-    final key = navigatorKey ?? Get.nestedKey(id)?.navigatorKey;
+    final key = navigatorKey ?? Fluxy.nestedKey(id)?.navigatorKey;
     final nav =
         key?.currentState ??
         Navigator.of(
@@ -140,7 +140,7 @@ extension ExtensionDialog on GetInterface {
           rootNavigator: true,
         ); //overlay context will always return the root navigator
     return nav.push<T>(
-      GetDialogRoute<T>(
+      FluxyDialogRoute<T>(
         pageBuilder: pageBuilder,
         barrierDismissible: barrierDismissible,
         barrierLabel: barrierLabel,
@@ -310,7 +310,7 @@ extension ExtensionDialog on GetInterface {
   }
 }
 
-extension ExtensionSnackbar on GetInterface {
+extension ExtensionSnackbar on FluxyInterface {
   SnackbarController rawSnackbar({
     String? title,
     String? message,
@@ -349,7 +349,7 @@ extension ExtensionSnackbar on GetInterface {
     Color? overlayColor,
     Form? userInputForm,
   }) {
-    final getSnackBar = GetSnackBar(
+    final getSnackBar = FluxySnackBar(
       snackbarStatus: snackbarStatus,
       title: title,
       message: message,
@@ -399,7 +399,7 @@ extension ExtensionSnackbar on GetInterface {
     return controller;
   }
 
-  SnackbarController showSnackbar(GetSnackBar snackbar) {
+  SnackbarController showSnackbar(FluxySnackBar snackbar) {
     final controller = SnackbarController(snackbar);
     controller.show();
     return controller;
@@ -447,7 +447,7 @@ extension ExtensionSnackbar on GetInterface {
     Color? overlayColor,
     Form? userInputForm,
   }) {
-    final getSnackBar = GetSnackBar(
+    final getSnackBar = FluxySnackBar(
       snackbarStatus: snackbarStatus,
       titleText:
           titleText ??
@@ -516,7 +516,7 @@ extension ExtensionSnackbar on GetInterface {
   }
 }
 
-extension GetNavigationExt on GetInterface {
+extension FluxyNavigationExt on FluxyInterface {
   /// **Navigation.push()** shortcut.<br><br>
   ///
   /// Pushes a new `page` to the stack
@@ -580,11 +580,11 @@ extension GetNavigationExt on GetInterface {
     );
   }
 
-  //   GetPageBuilder _resolvePage(dynamic page, String method) {
-  //     if (page is GetPageBuilder) {
+  //   FluxyPageBuilder _resolvePage(dynamic page, String method) {
+  //     if (page is FluxyPageBuilder) {
   //       return page;
   //     } else if (page is Widget) {
-  //       Get.log(
+  //       Fluxy.log(
   //           '''WARNING, consider using: "Get.$method(() => Page())"
   //instead of "Get.$method(Page())".
   // Using a widget function instead of a widget fully guarantees that the widget
@@ -688,12 +688,12 @@ extension GetNavigationExt on GetInterface {
   /// as explained in documentation
   ///
   /// [predicate] can be used like this:
-  /// `Get.until((route) => Get.currentRoute == '/home')`so when you get to home page,
+  /// `Fluxy.until((route) => Fluxy.currentRoute == '/home')`so when you get to home page,
   ///
   /// or also like this:
-  /// `Get.until((route) => !Get.isDialogOpen())`, to make sure the
+  /// `Fluxy.until((route) => !Fluxy.isDialogOpen())`, to make sure the
   /// dialog is closed
-  void until(bool Function(GetPage<dynamic>) predicate, {String? id}) {
+  void until(bool Function(FluxyPage<dynamic>) predicate, {String? id}) {
     // if (key.currentState.mounted) // add this if appear problems on future with route navigate
     // when widget don't mounted
     return searchDelegate(id).backUntil(predicate);
@@ -710,16 +710,16 @@ extension GetNavigationExt on GetInterface {
   /// as explained in documentation
   ///
   /// [predicate] can be used like this:
-  /// `Get.offNamedUntil(page, ModalRoute.withName('/home'))`
+  /// `Fluxy.offNamedUntil(page, ModalRoute.withName('/home'))`
   /// to pop routes in stack until home,
   /// or like this:
-  /// `Get.offNamedUntil((route) => !Get.isDialogOpen())`,
+  /// `Fluxy.offNamedUntil((route) => !Fluxy.isDialogOpen())`,
   /// to make sure the dialog is closed
   ///
   /// Note: Always put a slash on the route name ('/page1'), to avoid unexpected errors
   Future<T?>? offNamedUntil<T>(
     String page,
-    bool Function(GetPage<dynamic>)? predicate, {
+    bool Function(FluxyPage<dynamic>)? predicate, {
     String? id,
     dynamic arguments,
     Map<String, String>? parameters,
@@ -786,9 +786,9 @@ extension GetNavigationExt on GetInterface {
   /// You can send any type of value to the other route in the [arguments].
   ///
   /// [predicate] can be used like this:
-  /// `Get.until((route) => Get.currentRoute == '/home')`so when you get to home page,
+  /// `Fluxy.until((route) => Fluxy.currentRoute == '/home')`so when you get to home page,
   /// or also like
-  /// `Get.until((route) => !Get.isDialogOpen())`, to make sure the dialog
+  /// `Fluxy.until((route) => !Fluxy.isDialogOpen())`, to make sure the dialog
   /// is closed
   ///
   /// [id] is for when you are using nested navigation,
@@ -797,7 +797,7 @@ extension GetNavigationExt on GetInterface {
   /// Note: Always put a slash on the route ('/page1'), to avoid unexpected errors
   Future<T?>? offAllNamed<T>(
     String newRouteName, {
-    // bool Function(GetPage<dynamic>)? predicate,
+    // bool Function(FluxyPage<dynamic>)? predicate,
     dynamic arguments,
     String? id,
     Map<String, String>? parameters,
@@ -828,7 +828,7 @@ extension GetNavigationExt on GetInterface {
   ///
   /// Pop the current page, snackbar, dialog or bottomsheet in the stack
   ///
-  /// if your set [closeOverlays] to true, Get.back() will close the
+  /// if your set [closeOverlays] to true, Fluxy.back() will close the
   /// currently open snackbar/dialog/bottomsheet AND the current page
   ///
   /// [id] is for when you are using nested navigation,
@@ -842,7 +842,7 @@ extension GetNavigationExt on GetInterface {
     }
 
     // Snackbars, dialogs, and bottom sheets are Navigator overlays
-    // (PopupRoute), not GetPage history. GetX 5 Get.back() previously
+    // (PopupRoute), not FluxyPage history. GetX 5 Fluxy.back() previously
     // only called searchDelegate.back() when _activePages.length > 1,
     // so overlays (and sheets on the root page) never closed.
     if (times == 1 && isSnackbarOpen) {
@@ -881,7 +881,7 @@ extension GetNavigationExt on GetInterface {
 
   /// Pop the current page, snackbar, dialog or bottomsheet in the stack
   ///
-  /// if your set [closeOverlays] to true, Get.back() will close the
+  /// if your set [closeOverlays] to true, Fluxy.back() will close the
   /// currently open snackbar/dialog/bottomsheet AND the current page
   ///
   /// [id] is for when you are using nested navigation,
@@ -1067,7 +1067,7 @@ extension GetNavigationExt on GetInterface {
 
   Future<T?> offUntil<T>(
     Widget Function() page,
-    bool Function(GetPage) predicate, [
+    bool Function(FluxyPage) predicate, [
     Object? arguments,
     String? id,
   ]) {
@@ -1089,9 +1089,9 @@ extension GetNavigationExt on GetInterface {
   /// as a [fullscreenDialog],
   ///
   /// [predicate] can be used like this:
-  /// `Get.until((route) => Get.currentRoute == '/home')`so when you get to home page,
+  /// `Fluxy.until((route) => Fluxy.currentRoute == '/home')`so when you get to home page,
   /// or also like
-  /// `Get.until((route) => !Get.isDialogOpen())`, to make sure the dialog
+  /// `Fluxy.until((route) => !Fluxy.isDialogOpen())`, to make sure the dialog
   /// is closed
   ///
   /// [id] is for when you are using nested navigation,
@@ -1106,7 +1106,7 @@ extension GetNavigationExt on GetInterface {
   /// if you want to push anyway, set [preventDuplicates] to false
   Future<T?>? offAll<T>(
     Widget Function() page, {
-    bool Function(GetPage<dynamic>)? predicate,
+    bool Function(FluxyPage<dynamic>)? predicate,
     bool? opaque,
     bool? popGesture,
     String? id,
@@ -1164,10 +1164,10 @@ extension GetNavigationExt on GetInterface {
   //     bool? defaultGlobalState,
   //     Transition? defaultTransition}) {
   //   if (enableLog != null) {
-  //     Get.isLogEnable = enableLog;
+  //     Fluxy.isLogEnable = enableLog;
   //   }
   //   if (logWriterCallback != null) {
-  //     Get.log = logWriterCallback;
+  //     Fluxy.log = logWriterCallback;
   //   }
   //   if (defaultPopGesture != null) {
   //     _getxController.defaultPopGesture = defaultPopGesture;
@@ -1193,7 +1193,7 @@ extension GetNavigationExt on GetInterface {
   /// `rebuildAll: false` only when all translated text is inside `Obx` (or
   /// rebuilt some other way).
   Future<void> updateLocale(Locale l, {bool rebuildAll = true}) async {
-    Get.locale = l;
+    Fluxy.locale = l;
     if (rebuildAll) {
       await forceAppUpdate();
     } else {
@@ -1240,14 +1240,14 @@ extension GetNavigationExt on GetInterface {
     return rootController.addKey(newKey);
   }
 
-  GetDelegate? nestedKey(String? key) {
+  FluxyDelegate? nestedKey(String? key) {
     return rootController.nestedKey(key);
   }
 
-  GetDelegate searchDelegate(String? k) {
-    GetDelegate key;
+  FluxyDelegate searchDelegate(String? k) {
+    FluxyDelegate key;
     if (k == null) {
-      key = Get.rootController.rootDelegate;
+      key = Fluxy.rootController.rootDelegate;
     } else {
       if (!keys.containsKey(k)) {
         throw 'Route id ($k) not found';
@@ -1257,11 +1257,11 @@ extension GetNavigationExt on GetInterface {
 
     // if (_key.listenersLength == 0 && !testMode) {
     //   throw """You are trying to use contextless navigation without
-    //   a GetMaterialApp or Get.key.
+    //   a FluxyApp or Fluxy.key.
     //   If you are testing your app, you can use:
-    //   [Get.testMode = true], or if you are running your app on
+    //   [Fluxy.testMode = true], or if you are running your app on
     //   a physical device or emulator, you must exchange your [MaterialApp]
-    //   for a [GetMaterialApp].
+    //   for a [FluxyApp].
     //   """;
     // }
 
@@ -1300,11 +1300,11 @@ extension GetNavigationExt on GetInterface {
 
   /// give access to currentContext
   BuildContext? get context =>
-      GetRootState.maybeController?.key.currentContext;
+      FluxyRootState.maybeController?.key.currentContext;
 
   /// give access to current Overlay Context
   BuildContext? get overlayContext {
-    final nav = GetRootState.maybeController?.key.currentState;
+    final nav = FluxyRootState.maybeController?.key.currentState;
     if (nav == null) return null;
     BuildContext? overlay;
     nav.overlay?.context.visitChildElements((element) {
@@ -1381,11 +1381,11 @@ extension GetNavigationExt on GetInterface {
 
   GlobalKey<NavigatorState> get key => rootController.key;
 
-  Map<String, GetDelegate> get keys => rootController.keys;
+  Map<String, FluxyDelegate> get keys => rootController.keys;
 
-  GetRootState get rootController => GetRootState.controller;
+  FluxyRootState get rootController => FluxyRootState.controller;
 
-  ConfigData get _getxController => GetRootState.controller.config;
+  ConfigData get _getxController => FluxyRootState.controller.config;
 
   bool? get defaultPopGesture => _getxController.defaultPopGesture;
   bool get defaultOpaqueRoute => _getxController.defaultOpaqueRoute;
@@ -1408,7 +1408,7 @@ extension GetNavigationExt on GetInterface {
 
   Routing get routing => _getxController.routing;
 
-  bool get _shouldUseMock => GetTestMode.active && !GetRoot.treeInitialized;
+  bool get _shouldUseMock => FluxyTestMode.active && !FluxyRoot.treeInitialized;
 
   /// give current arguments
   dynamic get arguments {
@@ -1417,7 +1417,7 @@ extension GetNavigationExt on GetInterface {
 
   T args<T>() {
     if (_shouldUseMock) {
-      return GetTestMode.arguments as T;
+      return FluxyTestMode.arguments as T;
     }
     return rootController.rootDelegate.arguments<T>();
   }
@@ -1426,15 +1426,15 @@ extension GetNavigationExt on GetInterface {
   //   rootController.parameters = newParameters;
   // }
 
-  // @Deprecated('Use GetTestMode.active=true instead')
-  set testMode(bool isTest) => GetTestMode.active = isTest;
+  // @Deprecated('Use FluxyTestMode.active=true instead')
+  set testMode(bool isTest) => FluxyTestMode.active = isTest;
 
-  // @Deprecated('Use GetTestMode.active instead')
-  bool get testMode => GetTestMode.active;
+  // @Deprecated('Use FluxyTestMode.active instead')
+  bool get testMode => FluxyTestMode.active;
 
   Map<String, String?> get parameters {
     if (_shouldUseMock) {
-      return GetTestMode.parameters;
+      return FluxyTestMode.parameters;
     }
 
     return rootController.rootDelegate.parameters;
@@ -1445,7 +1445,7 @@ extension GetNavigationExt on GetInterface {
       _getxController.routerDelegate as TDelegate?;
 }
 
-extension OverlayExt on GetInterface {
+extension OverlayExt on FluxyInterface {
   Future<T> showOverlay<T>({
     required Future<T> Function() asyncFunction,
     Color opacityColor = Colors.black,
@@ -1453,7 +1453,7 @@ extension OverlayExt on GetInterface {
     double opacity = .5,
   }) async {
     final navigatorState = Navigator.of(
-      Get.overlayContext!,
+      Fluxy.overlayContext!,
       rootNavigator: false,
     );
     final overlayState = navigatorState.overlay!;

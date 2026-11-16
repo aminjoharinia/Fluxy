@@ -7,12 +7,12 @@ void main() {
   testWidgets("test if Get.isSnackbarOpen works with Get.snackbar",
       (tester) async {
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         popGesture: true,
         home: ElevatedButton(
           child: const Text('Open Snackbar'),
           onPressed: () {
-            Get.snackbar(
+            Fluxy.snackbar(
               'title',
               "message",
               duration: const Duration(seconds: 1),
@@ -27,22 +27,22 @@ void main() {
 
     await tester.pump();
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
     await tester.tap(find.text('Open Snackbar'));
 
-    expect(Get.isSnackbarOpen, true);
+    expect(Fluxy.isSnackbarOpen, true);
     await tester.pump(const Duration(seconds: 1));
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
   });
 
   testWidgets("Get.rawSnackbar test", (tester) async {
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         popGesture: true,
         home: ElevatedButton(
           child: const Text('Open Snackbar'),
           onPressed: () {
-            Get.rawSnackbar(
+            Fluxy.rawSnackbar(
               title: 'title',
               message: "message",
               onTap: (_) {},
@@ -61,14 +61,14 @@ void main() {
 
     await tester.pump();
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
     await tester.tap(
       find.text('Open Snackbar'),
     );
 
-    expect(Get.isSnackbarOpen, true);
+    expect(Fluxy.isSnackbarOpen, true);
     await tester.pump(const Duration(seconds: 1));
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
   });
 
   testWidgets("test snackbar queue", (tester) async {
@@ -77,14 +77,14 @@ void main() {
     const messageTwo = Text('titleTwo');
 
     await tester.pumpWidget(
-      GetMaterialApp(
+      FluxyApp(
         popGesture: true,
         home: ElevatedButton(
           child: const Text('Open Snackbar'),
           onPressed: () {
-            Get.rawSnackbar(
+            Fluxy.rawSnackbar(
                 messageText: messageOne, duration: const Duration(seconds: 1));
-            Get.rawSnackbar(
+            Fluxy.rawSnackbar(
                 messageText: messageTwo, duration: const Duration(seconds: 1));
           },
         ),
@@ -93,9 +93,9 @@ void main() {
 
     await tester.pump();
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
     await tester.tap(find.text('Open Snackbar'));
-    expect(Get.isSnackbarOpen, true);
+    expect(Fluxy.isSnackbarOpen, true);
 
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('title'), findsOneWidget);
@@ -103,7 +103,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('title'), findsNothing);
     expect(find.text('titleTwo'), findsOneWidget);
-    Get.closeAllSnackbars();
+    Fluxy.closeAllSnackbars();
     await tester.pumpAndSettle();
   });
 
@@ -111,7 +111,7 @@ void main() {
     const dismissDirection = DismissDirection.down;
     const snackBarTapTarget = Key('snackbar-tap-target');
 
-    const GetSnackBar getBar = GetSnackBar(
+    const FluxySnackBar getBar = FluxySnackBar(
       key: ValueKey('dismissible'),
       message: 'bar1',
       duration: Duration(seconds: 2),
@@ -120,7 +120,7 @@ void main() {
       dismissDirection: dismissDirection,
     );
 
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       home: Scaffold(
         body: Builder(
           builder: (context) {
@@ -129,7 +129,7 @@ void main() {
                 GestureDetector(
                   key: snackBarTapTarget,
                   onTap: () {
-                    Get.showSnackbar(getBar);
+                    Fluxy.showSnackbar(getBar);
                   },
                   behavior: HitTestBehavior.opaque,
                   child: const SizedBox(
@@ -146,20 +146,20 @@ void main() {
 
     await tester.pump();
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
     expect(find.text('bar1'), findsNothing);
 
     await tester.tap(find.byKey(snackBarTapTarget));
     await tester.pumpAndSettle();
 
-    expect(Get.isSnackbarOpen, true);
+    expect(Fluxy.isSnackbarOpen, true);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byWidget(getBar), findsOneWidget);
     await tester.ensureVisible(find.byWidget(getBar));
     await tester.drag(find.byType(Dismissible), const Offset(0.0, 50.0));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
   });
 
   testWidgets("test snackbar onTap", (tester) async {
@@ -167,11 +167,11 @@ void main() {
     const snackBarTapTarget = Key('snackbar-tap-target');
     var counter = 0;
 
-    late final GetSnackBar getBar;
+    late final FluxySnackBar getBar;
 
     late final SnackbarController getBarController;
 
-    await tester.pumpWidget(GetMaterialApp(
+    await tester.pumpWidget(FluxyApp(
       home: Scaffold(
         body: Builder(
           builder: (context) {
@@ -180,7 +180,7 @@ void main() {
                 GestureDetector(
                   key: snackBarTapTarget,
                   onTap: () {
-                    getBar = GetSnackBar(
+                    getBar = FluxySnackBar(
                       message: 'bar1',
                       onTap: (_) {
                         counter++;
@@ -189,7 +189,7 @@ void main() {
                       isDismissible: true,
                       dismissDirection: dismissDirection,
                     );
-                    getBarController = Get.showSnackbar(getBar);
+                    getBarController = Fluxy.showSnackbar(getBar);
                   },
                   behavior: HitTestBehavior.opaque,
                   child: const SizedBox(
@@ -206,13 +206,13 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
     expect(find.text('bar1'), findsNothing);
 
     await tester.tap(find.byKey(snackBarTapTarget));
     await tester.pumpAndSettle();
 
-    expect(Get.isSnackbarOpen, true);
+    expect(Fluxy.isSnackbarOpen, true);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byWidget(getBar), findsOneWidget);
     await tester.ensureVisible(find.byWidget(getBar));
@@ -226,16 +226,16 @@ void main() {
     const icon = Icon(Icons.alarm);
     final action = TextButton(onPressed: () {}, child: const Text('button'));
 
-    late final GetSnackBar getBar;
+    late final FluxySnackBar getBar;
 
-    await tester.pumpWidget(const GetMaterialApp(home: Scaffold()));
+    await tester.pumpWidget(const FluxyApp(home: Scaffold()));
 
     await tester.pump();
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
     expect(find.text('bar1'), findsNothing);
 
-    getBar = GetSnackBar(
+    getBar = FluxySnackBar(
       message: 'bar1',
       icon: icon,
       mainButton: action,
@@ -246,15 +246,15 @@ void main() {
       duration: const Duration(seconds: 1),
       isDismissible: false,
     );
-    Get.showSnackbar(getBar);
+    Fluxy.showSnackbar(getBar);
 
-    expect(Get.isSnackbarOpen, true);
+    expect(Fluxy.isSnackbarOpen, true);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byWidget(getBar), findsOneWidget);
     expect(find.byWidget(icon), findsOneWidget);
     expect(find.byWidget(action), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(Get.isSnackbarOpen, false);
+    expect(Fluxy.isSnackbarOpen, false);
   });
 }

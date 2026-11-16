@@ -1,4 +1,4 @@
-class GetTestMode {
+class FluxyTestMode {
   static bool active = false;
   static Object? _arguments;
 

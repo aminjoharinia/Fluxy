@@ -1,11 +1,12 @@
 # Data-driven fixes: `dart fix --apply` in an app moves it to the new Fluxy names.
-# Generated from the phase 2 pairs in tool/renames.txt.
+# Generated from the phase 2 and 3 pairs in tool/renames.txt (names that are
+# not exported have no entry).
 version: 1
 transforms:
   - title: "Rename to 'FluxyController'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetxController'
     changes:
       - kind: rename
@@ -13,7 +14,7 @@ transforms:
   - title: "Rename to 'FluxyService'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetxService'
     changes:
       - kind: rename
@@ -21,7 +22,7 @@ transforms:
   - title: "Rename to 'FluxyServiceMixin'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetxServiceMixin'
     changes:
       - kind: rename
@@ -29,7 +30,7 @@ transforms:
   - title: "Rename to 'FluxyLifeCycleMixin'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetLifeCycleMixin'
     changes:
       - kind: rename
@@ -37,7 +38,7 @@ transforms:
   - title: "Rename to 'FluxyView'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetView'
     changes:
       - kind: rename
@@ -45,7 +46,7 @@ transforms:
   - title: "Rename to 'FluxyWidget'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetWidget'
     changes:
       - kind: rename
@@ -53,7 +54,7 @@ transforms:
   - title: "Rename to 'FluxyBuilder'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetBuilder'
     changes:
       - kind: rename
@@ -61,7 +62,7 @@ transforms:
   - title: "Rename to 'FluxyControllerBuilder'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetControllerBuilder'
     changes:
       - kind: rename
@@ -69,7 +70,7 @@ transforms:
   - title: "Rename to 'FluxyX'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetX'
     changes:
       - kind: rename
@@ -77,7 +78,7 @@ transforms:
   - title: "Rename to 'FluxyXState'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetXState'
     changes:
       - kind: rename
@@ -85,7 +86,7 @@ transforms:
   - title: "Rename to 'FluxyXControllerBuilder'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetXControllerBuilder'
     changes:
       - kind: rename
@@ -93,7 +94,7 @@ transforms:
   - title: "Rename to 'FluxyStatus'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetStatus'
     changes:
       - kind: rename
@@ -101,7 +102,7 @@ transforms:
   - title: "Rename to 'FluxyListenable'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetListenable'
     changes:
       - kind: rename
@@ -109,7 +110,7 @@ transforms:
   - title: "Rename to 'FluxyNotifier'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetNotifier'
     changes:
       - kind: rename
@@ -117,7 +118,7 @@ transforms:
   - title: "Rename to 'FluxyTickerProviderStateMixin'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetTickerProviderStateMixin'
     changes:
       - kind: rename
@@ -125,7 +126,7 @@ transforms:
   - title: "Rename to 'FluxySingleTickerProviderStateMixin'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetSingleTickerProviderStateMixin'
     changes:
       - kind: rename
@@ -133,7 +134,7 @@ transforms:
   - title: "Rename to 'FluxyReactiveExt'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       extension: 'GetReactiveExt'
     changes:
       - kind: rename
@@ -141,7 +142,7 @@ transforms:
   - title: "Rename to 'FluxyResponsiveView'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetResponsiveView'
     changes:
       - kind: rename
@@ -149,7 +150,7 @@ transforms:
   - title: "Rename to 'FluxyResponsiveWidget'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetResponsiveWidget'
     changes:
       - kind: rename
@@ -157,7 +158,7 @@ transforms:
   - title: "Rename to 'FluxyResponsiveMixin'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetResponsiveMixin'
     changes:
       - kind: rename
@@ -165,7 +166,7 @@ transforms:
   - title: "Rename to 'FluxyAnimatedBuilder'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetAnimatedBuilder'
     changes:
       - kind: rename
@@ -173,7 +174,7 @@ transforms:
   - title: "Rename to 'FluxyAnimatedBuilderState'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetAnimatedBuilderState'
     changes:
       - kind: rename
@@ -181,7 +182,7 @@ transforms:
   - title: "Rename to 'FluxyPlatform'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetPlatform'
     changes:
       - kind: rename
@@ -189,7 +190,7 @@ transforms:
   - title: "Rename to 'FluxyUtils'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetUtils'
     changes:
       - kind: rename
@@ -197,7 +198,7 @@ transforms:
   - title: "Rename to 'FluxyStringUtils'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       extension: 'GetStringUtils'
     changes:
       - kind: rename
@@ -205,7 +206,7 @@ transforms:
   - title: "Rename to 'FluxyNumUtils'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       extension: 'GetNumUtils'
     changes:
       - kind: rename
@@ -213,7 +214,7 @@ transforms:
   - title: "Rename to 'FluxyDurationUtils'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       extension: 'GetDurationUtils'
     changes:
       - kind: rename
@@ -221,7 +222,7 @@ transforms:
   - title: "Rename to 'FluxyDynamicUtils'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       extension: 'GetDynamicUtils'
     changes:
       - kind: rename
@@ -229,7 +230,7 @@ transforms:
   - title: "Rename to 'FluxyQueue'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetQueue'
     changes:
       - kind: rename
@@ -237,7 +238,7 @@ transforms:
   - title: "Rename to 'FluxyQueueCancelledException'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetQueueCancelledException'
     changes:
       - kind: rename
@@ -245,8 +246,200 @@ transforms:
   - title: "Rename to 'FluxyMicrotask'"
     date: 2026-11-17
     element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart']
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
       typedef: 'GetMicrotask'
     changes:
       - kind: rename
         newName: 'FluxyMicrotask'
+  - title: "Rename to 'Fluxy'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      variable: 'Get'
+    changes:
+      - kind: rename
+        newName: 'Fluxy'
+  - title: "Rename to 'FluxyInterface'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetInterface'
+    changes:
+      - kind: rename
+        newName: 'FluxyInterface'
+  - title: "Rename to 'FluxyApp'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetMaterialApp'
+    changes:
+      - kind: rename
+        newName: 'FluxyApp'
+  - title: "Rename to 'FluxyCupertinoApp'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetCupertinoApp'
+    changes:
+      - kind: rename
+        newName: 'FluxyCupertinoApp'
+  - title: "Rename to 'FluxyPage'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetPage'
+    changes:
+      - kind: rename
+        newName: 'FluxyPage'
+  - title: "Rename to 'FluxyPageBuilder'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetPageBuilder'
+    changes:
+      - kind: rename
+        newName: 'FluxyPageBuilder'
+  - title: "Rename to 'FluxyRouteAwarePageBuilder'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetRouteAwarePageBuilder'
+    changes:
+      - kind: rename
+        newName: 'FluxyRouteAwarePageBuilder'
+  - title: "Rename to 'FluxyMiddleware'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetMiddleware'
+    changes:
+      - kind: rename
+        newName: 'FluxyMiddleware'
+  - title: "Rename to 'FluxyDelegate'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetDelegate'
+    changes:
+      - kind: rename
+        newName: 'FluxyDelegate'
+  - title: "Rename to 'FluxyInformationParser'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetInformationParser'
+    changes:
+      - kind: rename
+        newName: 'FluxyInformationParser'
+  - title: "Rename to 'FluxyNavigator'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetNavigator'
+    changes:
+      - kind: rename
+        newName: 'FluxyNavigator'
+  - title: "Rename to 'FluxyObserver'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetObserver'
+    changes:
+      - kind: rename
+        newName: 'FluxyObserver'
+  - title: "Rename to 'FluxyRouterOutlet'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetRouterOutlet'
+    changes:
+      - kind: rename
+        newName: 'FluxyRouterOutlet'
+  - title: "Rename to 'FluxyPageRoute'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetPageRoute'
+    changes:
+      - kind: rename
+        newName: 'FluxyPageRoute'
+  - title: "Rename to 'FluxyModalBottomSheetRoute'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetModalBottomSheetRoute'
+    changes:
+      - kind: rename
+        newName: 'FluxyModalBottomSheetRoute'
+  - title: "Rename to 'FluxyPageRouteTransitionMixin'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetPageRouteTransitionMixin'
+    changes:
+      - kind: rename
+        newName: 'FluxyPageRouteTransitionMixin'
+  - title: "Rename to 'FluxySnackBar'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetSnackBar'
+    changes:
+      - kind: rename
+        newName: 'FluxySnackBar'
+  - title: "Rename to 'FluxySnackBarState'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetSnackBarState'
+    changes:
+      - kind: rename
+        newName: 'FluxySnackBarState'
+  - title: "Rename to 'FluxyHeroScope'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetHeroScope'
+    changes:
+      - kind: rename
+        newName: 'FluxyHeroScope'
+  - title: "Rename to 'FluxyBackGestureController'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetBackGestureController'
+    changes:
+      - kind: rename
+        newName: 'FluxyBackGestureController'
+  - title: "Rename to 'FluxyBackGestureDetector'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetBackGestureDetector'
+    changes:
+      - kind: rename
+        newName: 'FluxyBackGestureDetector'
+  - title: "Rename to 'FluxyBackGestureDetectorState'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      typedef: 'GetBackGestureDetectorState'
+    changes:
+      - kind: rename
+        newName: 'FluxyBackGestureDetectorState'
+  - title: "Rename to 'FluxyNavigationExt'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      extension: 'GetNavigationExt'
+    changes:
+      - kind: rename
+        newName: 'FluxyNavigationExt'
+  - title: "Rename to 'FluxyResetExt'"
+    date: 2026-11-17
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      extension: 'GetResetExt'
+    changes:
+      - kind: rename
+        newName: 'FluxyResetExt'

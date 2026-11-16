@@ -52,3 +52,34 @@ GetDynamicUtils FluxyDynamicUtils
 GetQueue FluxyQueue
 GetQueueCancelledException FluxyQueueCancelledException
 GetMicrotask FluxyMicrotask
+
+# Phase 3 (v1.0.0): the Fluxy object and navigation types. Get stays as a
+# deprecated alias of Fluxy, the types as deprecated typedefs, until v1.1.0.
+Get Fluxy
+GetInterface FluxyInterface
+GetMaterialApp FluxyApp
+GetCupertinoApp FluxyCupertinoApp
+GetPage FluxyPage
+GetPageBuilder FluxyPageBuilder
+GetRouteAwarePageBuilder FluxyRouteAwarePageBuilder
+GetMiddleware FluxyMiddleware
+GetDelegate FluxyDelegate
+GetInformationParser FluxyInformationParser
+GetNavigator FluxyNavigator
+GetObserver FluxyObserver
+GetRouterOutlet FluxyRouterOutlet
+GetRoot FluxyRoot
+GetRootState FluxyRootState
+GetPageRoute FluxyPageRoute
+GetDialogRoute FluxyDialogRoute
+GetModalBottomSheetRoute FluxyModalBottomSheetRoute
+GetPageRouteTransitionMixin FluxyPageRouteTransitionMixin
+GetSnackBar FluxySnackBar
+GetSnackBarState FluxySnackBarState
+GetHeroScope FluxyHeroScope
+GetTestMode FluxyTestMode
+GetBackGestureController FluxyBackGestureController
+GetBackGestureDetector FluxyBackGestureDetector
+GetBackGestureDetectorState FluxyBackGestureDetectorState
+GetNavigationExt FluxyNavigationExt
+GetResetExt FluxyResetExt

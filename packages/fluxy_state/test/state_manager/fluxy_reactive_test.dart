@@ -79,7 +79,7 @@ void main() {
       await tester.rebuild();
       expect(a.listenersLength, 0);
       expect(b.listenersLength, 1);
-      Get.resetInstance();
+      Fluxy.resetInstance();
     });
   });
 
@@ -92,7 +92,7 @@ void main() {
       var builds = 0;
       await tester.pumpWidget(_host(Obx(() {
         builds++;
-        final u = Get.untrack(() => untracked.value);
+        final u = Fluxy.untrack(() => untracked.value);
         return Text('${tracked.value} ${peeked.peek} $u');
       })));
       expect(peeked.listenersLength, 0);
@@ -134,7 +134,7 @@ void main() {
       a.addListener(() => seenA.add(a.peek));
       b.addListener(() => bCalls++);
 
-      Get.batch(() {
+      Fluxy.batch(() {
         a.value = 1;
         a.value = 2;
         b.value = 5;
@@ -148,13 +148,13 @@ void main() {
       final a = 0.obs;
       var calls = 0;
       a.addListener(() => calls++);
-      Get.batch(() {
-        Get.batch(() => a.value = 1);
+      Fluxy.batch(() {
+        Fluxy.batch(() => a.value = 1);
         expect(calls, 0);
         a.value = 2;
       });
       expect(calls, 1);
-      expect(Get.isBatching, isFalse);
+      expect(Fluxy.isBatching, isFalse);
     });
 
     test('changes made before an exception are still notified', () {
@@ -162,20 +162,20 @@ void main() {
       var calls = 0;
       a.addListener(() => calls++);
       expect(
-          () => Get.batch(() {
+          () => Fluxy.batch(() {
                 a.value = 1;
                 throw StateError('boom');
               }),
           throwsStateError);
       expect(calls, 1);
-      expect(Get.isBatching, isFalse);
+      expect(Fluxy.isBatching, isFalse);
     });
 
     test('ever sees one call per batch', () async {
       final a = 0.obs;
       final values = <int>[];
       ever<int>(a, values.add);
-      Get.batch(() {
+      Fluxy.batch(() {
         a.value = 1;
         a.value = 2;
         a.value = 3;
@@ -185,7 +185,7 @@ void main() {
     });
 
     test('returns the value of the block', () {
-      expect(Get.batch(() => 42), 42);
+      expect(Fluxy.batch(() => 42), 42);
     });
   });
 

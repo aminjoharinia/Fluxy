@@ -29,7 +29,7 @@ import 'rx_notifier.dart';
 ///   `c`, and `d` recomputes once.
 /// - Listeners hear about a change once it is fully applied: after the
 ///   listeners of the Rx that changed, before the write returns (after the
-///   batch, inside `Get.batch`). A `Computed` whose upstream result stayed
+///   batch, inside `Fluxy.batch`). A `Computed` whose upstream result stayed
 ///   the same is not recomputed.
 /// - It recomputes only when a source really changed (each source carries a
 ///   version), and notifies its listeners only when the result is different
@@ -37,7 +37,7 @@ import 'rx_notifier.dart';
 /// - With no listeners it holds no subscriptions (nothing keeps it alive) and
 ///   checks its sources' versions on the next read: no recompute if none
 ///   changed.
-/// - Inside `Get.batch` it already gives fresh values when read; listeners
+/// - Inside `Fluxy.batch` it already gives fresh values when read; listeners
 ///   are notified once, after the batch.
 /// - If [compute] throws, the error is kept and thrown at each read until a
 ///   source changes.
@@ -327,7 +327,7 @@ typedef EffectCallback = dynamic Function();
 ///
 /// - It follows what its last run read, like `Obx`.
 /// - It runs synchronously, but after the change that triggered it is fully
-///   applied: once per notify or `Get.batch`, however many of its sources
+///   applied: once per notify or `Fluxy.batch`, however many of its sources
 ///   changed, and always with up-to-date `Computed` values.
 /// - Changes it makes are held until it returns (it runs inside a batch).
 ///   An effect that writes a value it reads loops; that is stopped with a

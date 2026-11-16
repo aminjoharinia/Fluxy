@@ -7,12 +7,12 @@ class ProductDetailsController extends FluxyController {
   @override
   void onInit() {
     super.onInit();
-    Get.log('ProductDetailsController created with id: $productId');
+    Fluxy.log('ProductDetailsController created with id: $productId');
   }
 
   @override
   void onClose() {
-    Get.log('ProductDetailsController close with id: $productId');
+    Fluxy.log('ProductDetailsController close with id: $productId');
 
     super.onClose();
   }

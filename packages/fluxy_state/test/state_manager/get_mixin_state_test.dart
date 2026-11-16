@@ -91,7 +91,7 @@ void main() {
 }
 
 class Controller extends FluxyController {
-  static Controller get to => Get.find();
+  static Controller get to => Fluxy.find();
   int count = 0;
   RxInt counter = 0.obs;
   RxDouble doubleNum = 0.0.obs;

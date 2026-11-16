@@ -29,14 +29,14 @@ class AppPages {
   static const initial = Routes.home;
 
   static final routes = [
-    GetPage(
+    FluxyPage(
       name: '/',
       page: () => const RootView(),
       bindings: [RootBinding()],
       participatesInRootNavigator: true,
       preventDuplicates: true,
       children: [
-        GetPage(
+        FluxyPage(
           middlewares: [
             //only enter this route when not authed
             EnsureNotAuthedMiddleware(),
@@ -45,7 +45,7 @@ class AppPages {
           page: () => const LoginView(),
           bindings: [LoginBinding()],
         ),
-        GetPage(
+        FluxyPage(
           preventDuplicates: true,
           name: _Paths.home,
           page: () => const HomeView(),
@@ -54,14 +54,14 @@ class AppPages {
           ],
           title: null,
           children: [
-            GetPage(
+            FluxyPage(
               name: _Paths.dashboard,
               page: () => const DashboardView(),
               bindings: [
                 DashboardBinding(),
               ],
             ),
-            GetPage(
+            FluxyPage(
               middlewares: [
                 //only enter this route when authed
                 EnsureAuthMiddleware(),
@@ -72,7 +72,7 @@ class AppPages {
               transition: Transition.size,
               bindings: [ProfileBinding()],
             ),
-            GetPage(
+            FluxyPage(
               name: _Paths.products,
               page: () => const ProductsView(),
               title: 'Products',
@@ -81,7 +81,7 @@ class AppPages {
               participatesInRootNavigator: false,
               bindings: [ProductsBinding(), ProductDetailsBinding()],
               children: [
-                GetPage(
+                FluxyPage(
                   name: _Paths.productDetails,
                   transition: Transition.cupertino,
                   showCupertinoParallax: true,
@@ -96,7 +96,7 @@ class AppPages {
             ),
           ],
         ),
-        GetPage(
+        FluxyPage(
           name: _Paths.settings,
           page: () => const SettingsView(),
           bindings: [
@@ -108,7 +108,7 @@ class AppPages {
   ];
 }
 
-class MainMiddleware extends GetMiddleware {
+class MainMiddleware extends FluxyMiddleware {
   @override
   void onPageDispose() {
     log('MainMiddleware onPageDispose');
@@ -122,7 +122,7 @@ class MainMiddleware extends GetMiddleware {
   }
 
   @override
-  GetPage? onPageCalled(GetPage? page) {
+  FluxyPage? onPageCalled(FluxyPage? page) {
     log('MainMiddleware onPageCalled for route: ${page?.name}');
     return super.onPageCalled(page);
   }
@@ -134,7 +134,7 @@ class MainMiddleware extends GetMiddleware {
   }
 
   @override
-  GetPageBuilder? onPageBuildStart(GetPageBuilder? page) {
+  FluxyPageBuilder? onPageBuildStart(FluxyPageBuilder? page) {
     log('MainMiddleware onPageBuildStart');
 
     return super.onPageBuildStart(page);

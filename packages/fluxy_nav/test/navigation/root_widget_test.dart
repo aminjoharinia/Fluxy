@@ -3,10 +3,10 @@
 
 void main() {
   // testWidgets(
-  //   "GetMaterialApp with routes null",
+  //   "FluxyApp with routes null",
   //   (tester) async {
   //     expect(
-  //         () => GetMaterialApp(
+  //         () => FluxyApp(
   //               routes: null,
   //             ),
   //         throwsAssertionError);
@@ -14,30 +14,30 @@ void main() {
   // );
 
   // testWidgets(
-  //   "GetMaterialApp with navigatorObservers null",
+  //   "FluxyApp with navigatorObservers null",
   //   (tester) async {
   //     expect(
-  //         () => GetMaterialApp(
+  //         () => FluxyApp(
   //               navigatorObservers: null,
   //             ),
   //         throwsAssertionError);
   //   },
   // );
   // testWidgets(
-  //   "GetMaterialApp with title null",
+  //   "FluxyApp with title null",
   //   (tester) async {
   //     expect(
-  //         () => GetMaterialApp(
+  //         () => FluxyApp(
   //               title: null,
   //             ),
   //         throwsAssertionError);
   //   },
   // );
   // testWidgets(
-  //   "GetMaterialApp with debugShowMaterialGrid null",
+  //   "FluxyApp with debugShowMaterialGrid null",
   //   (test) async {
   //     expect(
-  //       () => GetMaterialApp(
+  //       () => FluxyApp(
   //         debugShowMaterialGrid: null,
   //       ),
   //       throwsAssertionError,
@@ -45,10 +45,10 @@ void main() {
   //   },
   // );
   // testWidgets(
-  //   "GetMaterialApp with showPerformanceOverlay null",
+  //   "FluxyApp with showPerformanceOverlay null",
   //   (test) async {
   //     expect(
-  //       () => GetMaterialApp(
+  //       () => FluxyApp(
   //         showPerformanceOverlay: null,
   //       ),
   //       throwsAssertionError,
@@ -56,10 +56,10 @@ void main() {
   //   },
   // );
   // testWidgets(
-  //   "GetMaterialApp with showSemanticsDebugger null",
+  //   "FluxyApp with showSemanticsDebugger null",
   //   (test) async {
   //     expect(
-  //       () => GetMaterialApp(
+  //       () => FluxyApp(
   //         showSemanticsDebugger: null,
   //       ),
   //       throwsAssertionError,
@@ -67,10 +67,10 @@ void main() {
   //   },
   // );
   // testWidgets(
-  //   "GetMaterialApp with debugShowCheckedModeBanner null",
+  //   "FluxyApp with debugShowCheckedModeBanner null",
   //   (tester) async {
   //     expect(
-  //         () => GetMaterialApp(
+  //         () => FluxyApp(
   //               debugShowCheckedModeBanner: null,
   //             ),
   //         throwsAssertionError);
@@ -78,10 +78,10 @@ void main() {
   // );
 
   // testWidgets(
-  //   "GetMaterialApp with checkerboardRasterCacheImages null",
+  //   "FluxyApp with checkerboardRasterCacheImages null",
   //   (tester) async {
   //     expect(
-  //         () => GetMaterialApp(
+  //         () => FluxyApp(
   //               checkerboardRasterCacheImages: null,
   //             ),
   //         throwsAssertionError);
@@ -89,10 +89,10 @@ void main() {
   // );
 
   // testWidgets(
-  //   "GetMaterialApp with checkerboardOffscreenLayers null",
+  //   "FluxyApp with checkerboardOffscreenLayers null",
   //   (tester) async {
   //     expect(
-  //       () => GetMaterialApp(
+  //       () => FluxyApp(
   //         checkerboardOffscreenLayers: null,
   //       ),
   //       throwsAssertionError,

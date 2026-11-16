@@ -17,11 +17,11 @@ class HomeView extends FluxyView<HomeController> {
           height: 25,
         ),
         Expanded(
-          child: GetRouterOutlet.builder(
+          child: FluxyRouterOutlet.builder(
             route: Routes.home,
             builder: (context) {
               return Scaffold(
-                body: GetRouterOutlet(
+                body: FluxyRouterOutlet(
                   initialRoute: Routes.dashboard,
                   anchorRoute: Routes.home,
                 ),

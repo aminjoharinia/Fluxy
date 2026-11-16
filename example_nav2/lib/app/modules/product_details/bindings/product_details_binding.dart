@@ -8,7 +8,7 @@ class ProductDetailsBinding extends Binding {
     return [
       Bind.spawn<ProductDetailsController>(
         () => ProductDetailsController(
-          Get.parameters['productId'] ?? '',
+          Fluxy.parameters['productId'] ?? '',
         ),
       )
     ];

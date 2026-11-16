@@ -8,11 +8,11 @@ import 'package:flutter/widgets.dart';
 /// Adding a second controller here gave every hero two flights for the same
 /// tag, and creating it per build swapped it out mid-flight on rebuilds.
 ///
-/// Wrap a navigator in [GetHeroScope] when it has no app scope above it, or
+/// Wrap a navigator in [FluxyHeroScope] when it has no app scope above it, or
 /// when it is nested under another navigator (a scope's controller can serve
 /// only one navigator at a time).
-class GetNavigator extends Navigator {
-  GetNavigator({
+class FluxyNavigator extends Navigator {
+  FluxyNavigator({
     super.key,
     bool Function(Route<dynamic>, dynamic)? onPopPage,
     required super.pages,
@@ -47,8 +47,8 @@ class GetNavigator extends Navigator {
 /// controller is created only when there is none. With [nested] true, the
 /// navigator always gets its own controller, because the parent navigator
 /// already holds the outer one.
-class GetHeroScope extends StatefulWidget {
-  const GetHeroScope({
+class FluxyHeroScope extends StatefulWidget {
+  const FluxyHeroScope({
     super.key,
     required this.child,
     this.nested = false,
@@ -60,10 +60,10 @@ class GetHeroScope extends StatefulWidget {
   final CreateRectTween? createRectTween;
 
   @override
-  State<GetHeroScope> createState() => _GetHeroScopeState();
+  State<FluxyHeroScope> createState() => _GetHeroScopeState();
 }
 
-class _GetHeroScopeState extends State<GetHeroScope> {
+class _GetHeroScopeState extends State<FluxyHeroScope> {
   HeroController? _controller;
 
   @override
