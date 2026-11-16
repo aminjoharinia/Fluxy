@@ -22,11 +22,15 @@ import 'rx_notifier.dart';
 ///   dropped.
 /// - **Glitch-free.** A read always gives the value for the current state of
 ///   every source. When a source changes, a `Computed` only learns that it
-///   *may* be out of date; it recomputes when it is read (or, while
-///   something listens, right away), after first bringing any `Computed`
-///   source up to date. So with `b` and `c` both derived from `a` and
-///   `d = b + c`, a change of `a` never shows `d` a new `b` with an old `c`,
-///   and `d` recomputes once.
+///   *may* be out of date (it is marked, and so are the `Computed`s that
+///   read it); it recomputes when it is read, after first bringing any
+///   `Computed` source up to date. So with `b` and `c` both derived from `a`
+///   and `d = b + c`, a change of `a` never shows `d` a new `b` with an old
+///   `c`, and `d` recomputes once.
+/// - Listeners hear about a change once it is fully applied: after the
+///   listeners of the Rx that changed, before the write returns (after the
+///   batch, inside `Get.batch`). A `Computed` whose upstream result stayed
+///   the same is not recomputed.
 /// - It recomputes only when a source really changed (each source carries a
 ///   version), and notifies its listeners only when the result is different
 ///   (`==`, or [equals]).
@@ -41,8 +45,10 @@ import 'rx_notifier.dart';
 /// Created inside a controller's `onInit` / `onReady`, it is disposed with the
 /// controller; elsewhere, wrap it in the controller's `own(...)` or call
 /// [dispose] when it is no longer needed.
-class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
+class Computed<T> extends ListNotifierSingle
+    implements ValueListenable<T>, ReactiveDependent, ScheduledReaction {
   Computed(this._compute, {this.equals}) {
+    markAsDerived();
     // Created inside a controller's onInit / onReady: disposed with it.
     ReactiveOwner.register(() {
       if (!isDisposed) dispose();
@@ -65,22 +71,49 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
   /// Goes up when the result (or error) changes.
   int _valueVersion = 0;
 
+  /// The result (or error) changed: the version tracked reads record too.
+  void _bumpVersion() => setDerivedVersion(++_valueVersion);
+
   /// [_valueVersion] the listeners were last told about.
   int _notifiedVersion = 0;
 
-  /// [Notifier.globalVersion] when the sources were last checked.
+  /// [Notifier.globalVersion] when the sources were last checked. Only used
+  /// while not [_subscribed]; a subscribed one is told about changes.
   int _checkedAt = -1;
+
+  /// Subscribed to its sources (something listens to it, or it is a source
+  /// of a subscribed `Computed`). Then a change of a source marks it
+  /// ([markStale]) instead of making it recompute.
+  bool _subscribed = false;
+
+  static const _clean = 0;
+
+  /// A `Computed` it reads may have changed: check those first.
+  static const _maybeStale = 1;
+
+  /// An Rx it reads changed: recompute.
+  static const _stale = 2;
+
+  /// Freshness while [_subscribed].
+  int _state = _clean;
 
   /// The current value. Inside an `Obx`, subscribes it to this value.
   @override
   T get value {
+    // Up to date before the read is reported: the tracker records the
+    // version as it is now (see [setDerivedVersion]).
+    _validate();
     reportRead();
-    return peek;
+    return _current;
   }
 
   /// The current value, without subscribing the building observer.
   T get peek {
     _validate();
+    return _current;
+  }
+
+  T get _current {
     final error = _error;
     if (error != null) Error.throwWithStackTrace(error, _stackTrace!);
     return _value;
@@ -94,19 +127,28 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
     return _valueVersion;
   }
 
-  @override
-  @protected
-  bool get bumpsGlobalVersion => false;
-
-  void _validate({bool sourceNotified = false}) {
+  void _validate() {
     if (_computing) {
       throw StateError('A Computed read its own value while computing it.');
     }
-    final now = Notifier.instance.globalVersion;
+    if (_subscribed) {
+      final state = _state;
+      if (state == _clean) return;
+      // Clean before it runs: a mark that arrives meanwhile is kept.
+      _state = _clean;
+      try {
+        // Only maybe stale: recompute if a Computed source really changed
+        // (checking it brings it up to date first).
+        if (state == _stale || !_hasRun || _sources.changed) _recompute();
+      } catch (_) {
+        _state = _stale;
+        rethrow;
+      }
+      return;
+    }
+    final now = Notifier.currentGlobalVersion;
     if (_hasRun && _checkedAt == now) return;
-    // A source that notified did change (an Rx notifies on a change, a
-    // Computed only when its result changed), so skip the version scan.
-    if (!_hasRun || sourceNotified || _sources.changed) _recompute();
+    if (!_hasRun || _sources.changed) _recompute();
     _checkedAt = now;
   }
 
@@ -128,7 +170,7 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
     if (error != null) {
       _error = error;
       _stackTrace = stackTrace;
-      _valueVersion++;
+      _bumpVersion();
       return;
     }
     final wasError = _error != null;
@@ -138,18 +180,44 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
         wasError ||
         !(equals?.call(_value, next) ?? _value == next)) {
       _value = next;
-      _valueVersion++;
+      _bumpVersion();
     }
   }
 
-  void _sourceChanged() {
+  /// A source changed (see [ReactiveDependent]). Nothing is computed here:
+  /// the first mark since it was last up to date passes a "maybe" mark on
+  /// to the `Computed`s that read it and, if something listens to it,
+  /// schedules [runScheduled] for when the change is fully applied.
+  @override
+  @protected
+  void markStale(bool direct) {
+    if (!_subscribed || isDisposed) return;
+    final was = _state;
+    if (direct) {
+      if (was == _stale) return;
+      _state = _stale;
+    } else {
+      if (was != _clean) return;
+      _state = _maybeStale;
+    }
+    if (was != _clean) return; // already passed on and scheduled
+    markDependentsStale();
+    // Scheduled only on the step from up to date to stale, so almost never
+    // twice before it runs (and a second run finds nothing new).
+    if (listenersLength > 0) Notifier.instance.scheduleUnique(this);
+  }
+
+  /// Brings it up to date and tells its listeners if the result changed.
+  @override
+  @protected
+  void runScheduled() {
     if (isDisposed) return;
     try {
-      _validate(sourceNotified: true);
+      _validate();
     } catch (_) {
-      // Only a cycle gets here (compute errors are kept as the value). Do
-      // not throw into the source's notify loop; the listener's read throws.
-      _valueVersion++;
+      // Only a cycle gets here (compute errors are kept as the value). The
+      // listener's read throws.
+      _bumpVersion();
     }
     if (_valueVersion != _notifiedVersion) {
       _notifiedVersion = _valueVersion;
@@ -157,23 +225,38 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
     }
   }
 
+  bool get _hasSubscribers => listenersLength > 0 || dependentsLength > 0;
+
   void _wake() {
     try {
       _validate();
     } catch (_) {}
-    _notifiedVersion = _valueVersion;
-    _sources.listen(_sourceChanged);
+    _subscribed = true;
+    _state = _clean;
+    _sources.listenAsDependent(this);
   }
 
   void _maybeSleep() {
-    if (!isDisposed && listenersLength == 0) _sources.unlisten();
+    if (isDisposed || _hasSubscribers || !_subscribed) return;
+    _sources.unlisten();
+    _subscribed = false;
+    // Not told about changes any more: check the sources on the next read.
+    _checkedAt = -1;
   }
 
   @override
   Disposer addListener(GetStateUpdate listener) {
-    final wake = listenersLength == 0;
+    final first = listenersLength == 0;
+    final wake = first && dependentsLength == 0;
     final remove = super.addListener(listener);
     if (wake) _wake();
+    if (first) {
+      // Listeners hear about changes from here on.
+      try {
+        _validate();
+      } catch (_) {}
+      _notifiedVersion = _valueVersion;
+    }
     return () {
       remove();
       _maybeSleep();
@@ -187,8 +270,25 @@ class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
   }
 
   @override
+  @protected
+  Disposer addDependent(ReactiveDependent dependent) {
+    final wake = !_hasSubscribers;
+    super.addDependent(dependent);
+    if (wake) _wake();
+    return () => removeDependent(dependent);
+  }
+
+  @override
+  @protected
+  void removeDependent(ReactiveDependent dependent) {
+    super.removeDependent(dependent);
+    _maybeSleep();
+  }
+
+  @override
   void dispose() {
     _sources.dispose();
+    _subscribed = false;
     super.dispose();
   }
 

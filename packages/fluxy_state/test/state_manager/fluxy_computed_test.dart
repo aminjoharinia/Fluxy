@@ -51,12 +51,12 @@ void main() {
       final pick = Computed(() => useA.value ? a.value : b.value);
       pick.addListener(() {});
       expect(pick.value, 1);
-      expect(a.listenersLength, 1);
+      expect(a.subscribersLength, 1);
 
       useA.value = false;
       expect(pick.peek, 10);
-      expect(a.listenersLength, 0);
-      expect(b.listenersLength, 1);
+      expect(a.subscribersLength, 0);
+      expect(b.subscribersLength, 1);
     });
 
     test('a chain of computed values', () {
@@ -81,7 +81,7 @@ void main() {
       list.add(2);
       expect(calls, 1);
       copy.dispose();
-      expect(list.listenersLength, 0);
+      expect(list.subscribersLength, 0);
     });
 
     testWidgets('an Obx rebuilds only when the computed result changes',

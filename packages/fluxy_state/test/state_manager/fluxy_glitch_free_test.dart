@@ -169,14 +169,14 @@ void main() {
 
       mode.value = 1;
       expect(sum.peek, 3 + 10 + 10 + 2);
-      expect(a.listenersLength, 1, reason: 'a duplicate read subscribes once');
+      expect(a.subscribersLength, 1, reason: 'a duplicate read subscribes once');
       c.value = 4;
       expect(sum.peek, 4 + 10 + 10 + 2);
 
       mode.value = 2;
       expect(sum.peek, 10);
-      expect(b.listenersLength, 0);
-      expect(c.listenersLength, 0);
+      expect(b.subscribersLength, 0);
+      expect(c.subscribersLength, 0);
       b.value = 99;
       c.value = 99;
       expect(sum.peek, 10);
@@ -196,7 +196,7 @@ void main() {
       expect(c.peek, 3);
       fail.value = true;
       expect(() => c.peek, throwsStateError);
-      expect(b.listenersLength, 1, reason: 'kept: it may matter again');
+      expect(b.subscribersLength, 1, reason: 'kept: it may matter again');
       fail.value = false;
       b.value = 5;
       expect(c.peek, 6);
@@ -214,7 +214,7 @@ void main() {
       e.dispose();
       n.value = 3;
       expect(seen, [1, 2]);
-      expect(n.listenersLength, 0);
+      expect(n.subscribersLength, 0);
     });
 
     test('once per batch', () {
@@ -278,7 +278,7 @@ void main() {
         useA.value ? a.value : b.value;
       });
       useA.value = false;
-      expect(a.listenersLength, 0);
+      expect(a.subscribersLength, 0);
       a.value = 5;
       expect(runs, 2);
       b.value = 5;
@@ -303,7 +303,7 @@ void main() {
     test('an effect writing what it reads is stopped', () {
       final n = 0.obs;
       expect(() => effect(() => n.value = n.value + 1), throwsStateError);
-      expect(n.listenersLength, 0, reason: 'disposed');
+      expect(n.subscribersLength, 0, reason: 'disposed');
     });
 
     test('a first-run error is thrown, later ones reported', () {

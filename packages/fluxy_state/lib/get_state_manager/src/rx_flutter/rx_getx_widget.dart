@@ -129,13 +129,13 @@ class GetXState<T extends GetLifeCycleMixin> extends State<GetX<T>> {
   }
 
   final disposers = <Disposer>[];
-  final subscriptions = ObserverSubscriptions();
+  late final subscriptions = TrackedSources()..listen(_update);
+  late final _notifyData = NotifyData(
+      disposers: disposers, subscriptions: subscriptions, updater: _update);
 
   @override
-  Widget build(BuildContext context) => Notifier.instance.append(
-      NotifyData(
-          disposers: disposers, subscriptions: subscriptions, updater: _update),
-      () => widget.builder(controller!));
+  Widget build(BuildContext context) =>
+      Notifier.instance.append(_notifyData, () => widget.builder(controller!));
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {

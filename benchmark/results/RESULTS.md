@@ -4,16 +4,16 @@ Apple M4 Pro, macOS 26.6.2 (Build 25G83), Flutter 3.50.0 • channel stable. Rel
 
 | Scenario | Fluxy | GetX 5 (upstream) | GetX 4.7.3 | Riverpod 3.5 | BLoC 9.2 | Signals 7.1 |
 |---|---|---|---|---|---|---|
-| Create + dispose | **64 µs** | **64 µs** | 100 µs | 1.49 ms | 143 µs | 92 µs |
-| Write, 1 listener | **98 µs** | 162 µs | 109 µs | 1.43 ms | 295 µs | 318 µs |
-| Fan-out | **176 µs** | 261 µs | 593 µs | 1.47 ms | 2.53 ms | 2.86 ms |
-| Wide derived | 4.55 ms | 5.19 ms | **1.20 ms** | 2.33 s | 7.60 ms | 10.69 ms |
-| Deep chain | 5.19 ms | 3.86 ms | 3.29 ms | 400.03 ms | 11.38 ms | **3.27 ms** |
-| Diamond | 117 µs | 119 µs | **70 µs** | 11.24 ms | 7.11 ms | 113 µs |
-| Batch update | 458 µs | 5.47 ms | 1.42 ms | 5.65 ms | 1.47 ms | **182 µs** |
-| Mount + unmount | 1.28 ms | **1.06 ms** | 1.68 ms | 1.68 ms | 1.19 ms | 1.24 ms |
-| Rebuild all | 391 µs | 401 µs | **379 µs** | 563 µs | 427 µs | 452 µs |
-| Rebuild one of 1,000 | 234 µs | 233 µs | 231 µs | **216 µs** | 233 µs | 236 µs |
+| Create + dispose | 65 µs | **63 µs** | 101 µs | 1.48 ms | 140 µs | 90 µs |
+| Write, 1 listener | **100 µs** | 162 µs | 107 µs | 1.30 ms | 289 µs | 313 µs |
+| Fan-out | **183 µs** | 249 µs | 583 µs | 1.46 ms | 2.49 ms | 2.76 ms |
+| Wide derived | 3.40 ms | 4.92 ms | **1.22 ms** | 2.27 s | 7.62 ms | 10.82 ms |
+| Deep chain | 4.04 ms | 3.49 ms | **2.99 ms** | 379.10 ms | 11.34 ms | 3.19 ms |
+| Diamond | 92 µs | 115 µs | **68 µs** | 11.37 ms | 7.08 ms | 115 µs |
+| Batch update | **132 µs** | 5.18 ms | 1.41 ms | 5.41 ms | 1.49 ms | 178 µs |
+| Mount + unmount | **1.03 ms** | 1.04 ms | 1.59 ms | 1.71 ms | 1.10 ms | 1.21 ms |
+| Rebuild all | **334 µs** | 397 µs | 373 µs | 556 µs | 419 µs | 447 µs |
+| Rebuild one of 1,000 | **215 µs** | 226 µs | 229 µs | 217 µs | 234 µs | 232 µs |
 
 ## Correctness
 

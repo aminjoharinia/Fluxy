@@ -99,7 +99,14 @@ mixin StatelessObserverComponent on StatelessElement {
 
   /// The Rx values read on the last build; values no longer read are
   /// unsubscribed after each build.
-  final ObserverSubscriptions subscriptions = ObserverSubscriptions();
+  /// Matched by position like a `Computed`'s sources: a rebuild that reads
+  /// the same values in the same order costs no lookup and no allocation.
+  late final TrackedSources subscriptions = TrackedSources()
+    ..listen(getUpdate);
+
+  /// Reused by every build.
+  late final NotifyData _notifyData = NotifyData(
+      disposers: disposers!, subscriptions: subscriptions, updater: getUpdate);
 
   bool _updateScheduled = false;
 
@@ -120,12 +127,7 @@ mixin StatelessObserverComponent on StatelessElement {
 
   @override
   Widget build() {
-    return Notifier.instance.append(
-        NotifyData(
-            disposers: disposers!,
-            subscriptions: subscriptions,
-            updater: getUpdate),
-        super.build);
+    return Notifier.instance.append(_notifyData, super.build);
   }
 
   @override

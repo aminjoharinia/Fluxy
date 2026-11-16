@@ -266,10 +266,10 @@ void main() {
       final c = Computed(() => src.value * 2);
       final remove = c.addListener(() {});
       expect(c.value, 0);
-      expect(src.listenersLength, 1);
+      expect(src.subscribersLength, 1);
 
       remove();
-      expect(src.listenersLength, 0);
+      expect(src.subscribersLength, 0);
 
       src.value = 3;
       expect(c.value, 6);
