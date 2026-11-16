@@ -1,6 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
+
+import '../../get_rx/src/rx_workers/rx_workers.dart';
+import '../../get_state_manager/src/rx_flutter/rx_computed.dart';
+import '../../get_state_manager/src/rx_flutter/rx_notifier.dart';
+import '../../get_state_manager/src/simple/list_notifier.dart';
+import '../../get_state_manager/src/simple/reactive_owner.dart';
 
 /// The [GetLifeCycle]
 ///
@@ -20,7 +28,7 @@ mixin GetLifeCycleMixin {
     final binding = Engine.instance;
     binding.addPostFrameCallback((_) {
       // Deleted before the frame: onReady would run on a closed controller.
-      if (!_isClosed) onReady();
+      if (!_isClosed) _owner.run(onReady);
     });
     // A post-frame callback does not ask for a frame; without one (an idle
     // app, a controller made from a timer) onReady would wait for the next
@@ -56,8 +64,53 @@ mixin GetLifeCycleMixin {
   void onStart() {
     // _checkIfAlreadyConfigured();
     if (_initialized) return;
-    onInit();
+    _owner.run(onInit);
     _initialized = true;
+  }
+
+  final ReactiveOwner _owner = ReactiveOwner();
+
+  /// Disposes [resource] right after [onClose], and returns it, so it can
+  /// wrap a field initializer:
+  ///
+  /// ```dart
+  /// late final total = own(Computed(() => items.value * price.value));
+  /// late final search = own(TextEditingController());
+  /// ```
+  ///
+  /// Effects, `Computed`s and workers created inside [onInit] / [onReady]
+  /// are owned without this. Accepted: `Effect`, `Worker`, `Workers`, an Rx
+  /// (closed), `Computed` or other notifier, `ChangeNotifier`,
+  /// `StreamSubscription`, `StreamController`, `Timer`. For anything else
+  /// use [onDispose].
+  T own<T extends Object>(T resource) {
+    _owner.onDispose(_disposerFor(resource));
+    return resource;
+  }
+
+  /// Runs [cleanup] right after [onClose] (newest first, like `own`).
+  void onDispose(VoidCallback cleanup) => _owner.onDispose(cleanup);
+
+  static VoidCallback _disposerFor(Object resource) {
+    if (resource is Effect) return resource.dispose;
+    if (resource is Worker) return resource.dispose;
+    if (resource is Workers) return resource.dispose;
+    if (resource is GetListenable) {
+      return () {
+        if (!resource.isDisposed) resource.close();
+      };
+    }
+    if (resource is ListNotifierSingleMixin) {
+      return () {
+        if (!resource.isDisposed) resource.dispose();
+      };
+    }
+    if (resource is ChangeNotifier) return resource.dispose;
+    if (resource is StreamSubscription) return () => resource.cancel();
+    if (resource is StreamController) return () => resource.close();
+    if (resource is Timer) return resource.cancel;
+    throw ArgumentError.value(resource, 'resource',
+        'own() does not know how to dispose a ${resource.runtimeType}; use onDispose(() => ...)');
   }
 
   bool _isClosed = false;
@@ -71,7 +124,11 @@ mixin GetLifeCycleMixin {
   void onDelete() {
     if (_isClosed) return;
     _isClosed = true;
-    onClose();
+    try {
+      onClose();
+    } finally {
+      _owner.dispose();
+    }
   }
 
 //   void _checkIfAlreadyConfigured() {

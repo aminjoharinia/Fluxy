@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../get_rx/src/rx_types/rx_types.dart';
 import '../simple/list_notifier.dart';
+import '../simple/reactive_owner.dart';
 import 'rx_notifier.dart';
 
 /// A value derived from other Rx values, cached until one of them changes.
@@ -37,10 +38,16 @@ import 'rx_notifier.dart';
 /// - If [compute] throws, the error is kept and thrown at each read until a
 ///   source changes.
 ///
-/// Call [dispose] when it is no longer needed (for example in a controller's
-/// `onClose`).
+/// Created inside a controller's `onInit` / `onReady`, it is disposed with the
+/// controller; elsewhere, wrap it in the controller's `own(...)` or call
+/// [dispose] when it is no longer needed.
 class Computed<T> extends ListNotifierSingle implements ValueListenable<T> {
-  Computed(this._compute, {this.equals});
+  Computed(this._compute, {this.equals}) {
+    // Created inside a controller's onInit / onReady: disposed with it.
+    ReactiveOwner.register(() {
+      if (!isDisposed) dispose();
+    });
+  }
 
   final T Function() _compute;
 
@@ -216,8 +223,9 @@ typedef EffectCallback = dynamic Function();
 /// - An error on the first run is thrown here (and the effect is disposed);
 ///   later errors are reported with `FlutterError.reportError`.
 ///
-/// Dispose it when it is no longer needed (for example in a controller's
-/// `onClose`).
+/// Created inside a controller's `onInit` / `onReady`, it is disposed with the
+/// controller (see [ReactiveOwner]); elsewhere, wrap it in `own(...)` or
+/// call [Effect.dispose].
 Effect effect(EffectCallback fn) => Effect(fn);
 
 /// See [effect].
@@ -230,6 +238,8 @@ class Effect implements ScheduledReaction {
       dispose();
       rethrow;
     }
+    // Created inside a controller's onInit / onReady: disposed with it.
+    ReactiveOwner.register(dispose);
   }
 
   final EffectCallback _fn;
@@ -324,10 +334,12 @@ class RxFuture<T> extends Rx<GetStatus<T>> {
   StackTrace? get lastStackTrace => _lastStackTrace;
 
   /// Loads again. Completes when this load (or a newer one) is done; never
-  /// throws, the error is in [value].
+  /// throws, the error is in [value]. While it runs, [value] is a loading
+  /// status that keeps the last data (`value.isRefreshing`), and a failure
+  /// keeps it too (`value.data`).
   Future<void> reload() async {
     final generation = ++_generation;
-    value = GetStatus<T>.loading();
+    value = peek.toLoading();
     try {
       final data = await _load();
       if (generation != _generation || isDisposed) return;
@@ -336,7 +348,7 @@ class RxFuture<T> extends Rx<GetStatus<T>> {
     } catch (e, st) {
       if (generation != _generation || isDisposed) return;
       _lastStackTrace = st;
-      value = GetStatus<T>.error(e);
+      value = peek.toError(e, st);
     }
   }
 
@@ -346,11 +358,10 @@ class RxFuture<T> extends Rx<GetStatus<T>> {
     required R Function(T data) success,
     required R Function(Object error) error,
   }) {
-    final status = value;
-    if (status is SuccessStatus<T>) return success(status.data);
-    if (status is ErrorStatus) {
-      return error((status as ErrorStatus).error ?? 'error');
-    }
-    return loading();
+    return switch (value) {
+      SuccessStatus(:final data) => success(data),
+      ErrorStatus(error: final e) => error(e),
+      LoadingStatus() || EmptyStatus() => loading(),
+    };
   }
 }

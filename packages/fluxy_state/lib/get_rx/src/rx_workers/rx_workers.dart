@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fluxy_core/fluxy_core.dart';
 import '../../../get_state_manager/src/rx_flutter/rx_notifier.dart';
+import '../../../get_state_manager/src/simple/reactive_owner.dart';
 import '../rx_types/rx_types.dart';
 import 'utils/debouncer.dart';
 
@@ -13,6 +14,34 @@ bool _conditional(dynamic condition) {
 }
 
 typedef WorkerCallback<T> = Function(T callback);
+
+/// Calls [onValue] with each new value of [listener] and returns the cancel
+/// function.
+///
+/// Workers listen to the Rx directly: the callback runs synchronously, right
+/// when the value changes (after the batch, inside `Get.batch`), with no
+/// stream, no `StreamController` and no microtask in between. Only when
+/// [onError] or [onDone] is given (events only the stream has) does it use
+/// the Rx's stream, as before.
+Future<void> Function() _subscribe<T>(
+  RxInterface<T> listener,
+  void Function(T value) onValue, {
+  Function? onError,
+  void Function()? onDone,
+  bool? cancelOnError,
+}) {
+  if (onError == null && onDone == null && listener is GetListenable<T>) {
+    final remove = listener.addListener(() => onValue(listener.peek));
+    return () async => remove();
+  }
+  final sub = listener.listen(
+    onValue,
+    onError: onError,
+    onDone: onDone,
+    cancelOnError: cancelOnError,
+  );
+  return sub.cancel;
+}
 
 class Workers {
   Workers(this.workers);
@@ -65,7 +94,8 @@ Worker ever<T>(
   void Function()? onDone,
   bool? cancelOnError,
 }) {
-  StreamSubscription sub = listener.listen(
+  final cancel = _subscribe<T>(
+    listener,
     (event) {
       if (_conditional(condition)) callback(event);
     },
@@ -73,7 +103,7 @@ Worker ever<T>(
     onDone: onDone,
     cancelOnError: cancelOnError,
   );
-  return Worker(sub.cancel, '[ever]');
+  return Worker(cancel, '[ever]');
 }
 
 /// Similar to [ever], but takes a list of [listeners], the condition
@@ -88,22 +118,22 @@ Worker everAll(
   void Function()? onDone,
   bool? cancelOnError,
 }) {
-  final evers = <StreamSubscription>[];
+  final evers = <Future<void> Function()>[];
   for (var i in listeners) {
-    final sub = i.listen(
+    evers.add(_subscribe<dynamic>(
+      i,
       (event) {
         if (_conditional(condition)) callback(event);
       },
       onError: onError,
       onDone: onDone,
       cancelOnError: cancelOnError,
-    );
-    evers.add(sub);
+    ));
   }
 
   Future<void> cancel() async {
     for (var i in evers) {
-      i.cancel();
+      i();
     }
   }
 
@@ -140,20 +170,20 @@ Worker once<T>(
   bool? cancelOnError,
 }) {
   late Worker ref;
-  StreamSubscription? sub;
-  sub = listener.listen(
+  late final Future<void> Function() cancel;
+  cancel = _subscribe<T>(
+    listener,
     (event) {
-      if (!_conditional(condition)) return;
+      if (ref._disposed || !_conditional(condition)) return;
       ref._disposed = true;
-      ref._log('called');
-      sub?.cancel();
+      cancel();
       callback(event);
     },
     onError: onError,
     onDone: onDone,
     cancelOnError: cancelOnError,
   );
-  ref = Worker(sub.cancel, '[once]');
+  ref = Worker(cancel, '[once]');
   return ref;
 }
 
@@ -184,7 +214,8 @@ Worker interval<T>(
   bool? cancelOnError,
 }) {
   Timer? pending;
-  StreamSubscription sub = listener.listen(
+  final cancel = _subscribe<T>(
+    listener,
     (event) {
       if (pending != null || !_conditional(condition)) return;
       pending = Timer(time, () {
@@ -201,7 +232,7 @@ Worker interval<T>(
   return Worker(() {
     pending?.cancel();
     pending = null;
-    return sub.cancel();
+    return cancel();
   }, '[interval]');
 }
 
@@ -234,7 +265,8 @@ Worker debounce<T>(
 }) {
   final newDebouncer =
       Debouncer(delay: time ?? const Duration(milliseconds: 800));
-  StreamSubscription sub = listener.listen(
+  final cancel = _subscribe<T>(
+    listener,
     (event) {
       newDebouncer(() {
         callback(event);
@@ -247,12 +279,16 @@ Worker debounce<T>(
   // Disposing also drops a callback still waiting for its delay.
   return Worker(() {
     newDebouncer.cancel();
-    return sub.cancel();
+    return cancel();
   }, '[debounce]');
 }
 
 class Worker {
-  Worker(this.worker, this.type);
+  /// Created inside a controller's `onInit` / `onReady`, a worker is
+  /// disposed with the controller (see [ReactiveOwner]).
+  Worker(this.worker, this.type) {
+    ReactiveOwner.register(dispose);
+  }
 
   /// subscription.cancel() callback
   final Future<void> Function() worker;
@@ -270,10 +306,7 @@ class Worker {
   }
 
   void dispose() {
-    if (_disposed) {
-      _log('already disposed');
-      return;
-    }
+    if (_disposed) return;
     _disposed = true;
     worker();
     _log('disposed');

@@ -81,13 +81,18 @@ mixin StateMixin<T> on ListNotifier {
     change(GetStatus<T>.success(data));
   }
 
-  void setError(Object error) {
-    change(GetStatus<T>.error(error));
+  /// An error that keeps the data shown so far (see [GetStatus.toError]).
+  void setError(Object error, [StackTrace? stackTrace]) {
+    change(_currentStatus.toError(error, stackTrace));
   }
 
+  /// Loading that keeps the data shown so far (see
+  /// [GetStatus.isRefreshing]).
   void setLoading() {
-    change(GetStatus<T>.loading());
+    change(_currentStatus.toLoading());
   }
+
+  GetStatus<T> get _currentStatus => _status ??= GetStatus<T>.loading();
 
   void setEmpty() {
     change(GetStatus<T>.empty());
@@ -104,7 +109,7 @@ mixin StateMixin<T> on ListNotifier {
       {T? initialData, String? errorMessage, bool useEmpty = true}) {
     final generation = ++_futurizeGeneration;
     _value ??= initialData;
-    status = GetStatus<T>.loading();
+    status = _currentStatus.toLoading();
     Future<T>.sync(body).then((newValue) {
       if (generation != _futurizeGeneration || isDisposed) return;
       if ((newValue == null || newValue._isEmpty()) && useEmpty) {
@@ -112,9 +117,9 @@ mixin StateMixin<T> on ListNotifier {
       } else {
         status = GetStatus<T>.success(newValue);
       }
-    }, onError: (Object err) {
+    }, onError: (Object err, StackTrace stackTrace) {
       if (generation != _futurizeGeneration || isDisposed) return;
-      status = GetStatus<T>.error(errorMessage ?? err);
+      status = _currentStatus.toError(errorMessage ?? err, stackTrace);
     });
   }
 }
@@ -280,79 +285,153 @@ abstract class GetNotifier<T> extends Value<T> with GetLifeCycleMixin {
 }
 
 extension StateExt<T> on StateMixin<T> {
+  /// Builds from [status]. While reloading with data from before (see
+  /// [GetStatus.isRefreshing]) it keeps showing [widget] unless
+  /// [skipLoadingOnRefresh] is false.
   Widget obx(
     NotifierBuilder<T> widget, {
     Widget Function(String? error)? onError,
     Widget? onLoading,
     Widget? onEmpty,
-    WidgetBuilder? onCustom,
+    bool skipLoadingOnRefresh = true,
   }) {
     return Observer(builder: (context) {
-      if (status.isLoading) {
-        return onLoading ?? const Center(child: CircularProgressIndicator());
-      } else if (status.isError) {
-        return onError != null
+      return switch (status) {
+        SuccessStatus() => widget(value),
+        LoadingStatus(hasData: true) when skipLoadingOnRefresh =>
+          widget(value),
+        LoadingStatus() =>
+          onLoading ?? const Center(child: CircularProgressIndicator()),
+        ErrorStatus() => onError != null
             ? onError(status.errorMessage)
-            : Center(child: Text('A error occurred: ${status.errorMessage}'));
-      } else if (status.isEmpty) {
-        return onEmpty ??
-            const SizedBox.shrink(); // Also can be widget(null); but is risky
-      } else if (status.isSuccess) {
-        return widget(value);
-      } else if (status.isCustom) {
-        return onCustom?.call(context) ??
-            const SizedBox.shrink(); // Also can be widget(null); but is risky
-      }
-      return widget(value);
+            : Center(child: Text('A error occurred: ${status.errorMessage}')),
+        // Also can be widget(null); but is risky
+        EmptyStatus() => onEmpty ?? const SizedBox.shrink(),
+      };
     });
   }
 }
 
 typedef NotifierBuilder<T> = Widget Function(T state);
 
-abstract class GetStatus<T> with Equality {
+/// The state of async data: [LoadingStatus], [SuccessStatus], [ErrorStatus]
+/// or [EmptyStatus].
+///
+/// It is `sealed`, so a `switch` on it must handle every case (the analyzer
+/// reports a missing one):
+///
+/// ```dart
+/// final widget = switch (controller.status) {
+///   SuccessStatus(:final data) => RoomList(data),
+///   LoadingStatus() => const Spinner(),
+///   ErrorStatus(:final error) => Text('$error'),
+///   EmptyStatus() => const Text('No rooms'),
+/// };
+/// ```
+///
+/// Like Riverpod's `AsyncValue`, a loading or error status can carry the
+/// data of the last success ([hasData], [data], [isRefreshing]), so a reload
+/// or a failed refresh can keep showing the old content. [toLoading] and
+/// [toError] build them from the current status.
+sealed class GetStatus<T> with Equality {
   const GetStatus();
 
   factory GetStatus.loading() => LoadingStatus<T>();
 
-  factory GetStatus.error(Object message) => ErrorStatus<T, Object>(message);
+  factory GetStatus.error(Object error, [StackTrace? stackTrace]) =>
+      ErrorStatus<T>(error, stackTrace: stackTrace);
 
   factory GetStatus.empty() => EmptyStatus<T>();
 
   factory GetStatus.success(T data) => SuccessStatus<T>(data);
 
-  factory GetStatus.custom() => CustomStatus<T>();
-}
+  /// Whether data is available: this success's data, or the data a loading
+  /// / error status carried over from the last success.
+  bool get hasData;
 
-class CustomStatus<T> extends GetStatus<T> {
-  @override
-  List get props => [];
+  /// The data of this success, or the data carried over; null if none.
+  T? get data;
+
+  /// Loading while showing data from before (a refresh).
+  bool get isRefreshing => this is LoadingStatus<T> && hasData;
+
+  /// A loading status that keeps this status's data.
+  LoadingStatus<T> toLoading() =>
+      hasData ? LoadingStatus<T>.withData(data as T) : LoadingStatus<T>();
+
+  /// An error status that keeps this status's data.
+  ErrorStatus<T> toError(Object error, [StackTrace? stackTrace]) => hasData
+      ? ErrorStatus<T>.withData(error, data as T, stackTrace: stackTrace)
+      : ErrorStatus<T>(error, stackTrace: stackTrace);
 }
 
 class LoadingStatus<T> extends GetStatus<T> {
+  const LoadingStatus()
+      : hasData = false,
+        _data = null;
+
+  /// Loading again while keeping the data from before.
+  const LoadingStatus.withData(T data)
+      : hasData = true,
+        _data = data;
+
   @override
-  List get props => [];
+  final bool hasData;
+  final T? _data;
+
+  @override
+  T? get data => _data;
+
+  @override
+  List get props => [hasData, _data];
 }
 
 class SuccessStatus<T> extends GetStatus<T> {
+  @override
   final T data;
 
   const SuccessStatus(this.data);
 
   @override
+  bool get hasData => true;
+
+  @override
   List get props => [data];
 }
 
-class ErrorStatus<T, S> extends GetStatus<T> {
-  final S? error;
+class ErrorStatus<T> extends GetStatus<T> {
+  const ErrorStatus(this.error, {this.stackTrace})
+      : hasData = false,
+        _data = null;
 
-  const ErrorStatus([this.error]);
+  /// Failed while keeping the data from before.
+  const ErrorStatus.withData(this.error, T data, {this.stackTrace})
+      : hasData = true,
+        _data = data;
+
+  final Object error;
+  final StackTrace? stackTrace;
 
   @override
-  List get props => [error];
+  final bool hasData;
+  final T? _data;
+
+  @override
+  T? get data => _data;
+
+  @override
+  List get props => [error, hasData, _data];
 }
 
 class EmptyStatus<T> extends GetStatus<T> {
+  const EmptyStatus();
+
+  @override
+  bool get hasData => false;
+
+  @override
+  T? get data => null;
+
   @override
   List get props => [];
 }
@@ -366,35 +445,15 @@ extension StatusDataExt<T> on GetStatus<T> {
 
   bool get isEmpty => this is EmptyStatus;
 
-  bool get isCustom => !isLoading && !isSuccess && !isError && !isEmpty;
+  /// The error of an [ErrorStatus], else null.
+  Object? get error => switch (this) {
+        ErrorStatus(:final error) => error,
+        _ => null,
+      };
 
-  dynamic get error {
-    if (this is ErrorStatus) {
-      return (this as ErrorStatus).error;
-    }
-    return null;
-  }
-
-  String get errorMessage {
-    final isError = this is ErrorStatus;
-    if (isError) {
-      final err = this as ErrorStatus;
-      if (err.error != null) {
-        if (err.error is String) {
-          return err.error as String;
-        }
-        return err.error.toString();
-      }
-    }
-
-    return '';
-  }
-
-  T? get data {
-    if (this is SuccessStatus<T>) {
-      final success = this as SuccessStatus<T>;
-      return success.data;
-    }
-    return null;
-  }
+  /// The error as text ('' if not an error).
+  String get errorMessage => switch (this) {
+        ErrorStatus(:final error) => error is String ? error : '$error',
+        _ => '',
+      };
 }
