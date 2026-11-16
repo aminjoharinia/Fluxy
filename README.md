@@ -20,12 +20,12 @@ dependencies:
   get:                     # everything
     git:
       url: https://github.com/aminjoharinia/Fluxy.git
-      ref: v0.6.2
+      ref: v0.7.0
   # or one package:
   fluxy_state:
     git:
       url: https://github.com/aminjoharinia/Fluxy.git
-      ref: v0.6.2
+      ref: v0.7.0
       path: packages/fluxy_state
 ```
 

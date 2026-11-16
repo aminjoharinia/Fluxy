@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.6.2
+    ref: v0.7.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.6.2
+    ref: v0.7.0
     path: packages/fluxy_state
 ```
 
@@ -91,7 +91,7 @@ fluxy_state:
   - Utils / snackbars: `GetQueue` survives a job that throws an `Error` and fails jobs that are cancelled; `closeAllSnackbars` no longer shows the next queued snackbar.
   - `setSuccess` / `status = success` always notify, so a list edited in place and passed again updates the UI (the deep comparison treated it as unchanged). Calling `setSuccess` twice with equal data now notifies twice; other statuses still skip unchanged values.
   - Performance: an `Obx` schedules one rebuild microtask however many Rx values change; `ListNotifier` copies its listener list only when listeners change during a notify (it used to copy on every notify); `GetPage.path` is compiled on first use and `matchRoute` copies each page once, so a navigation no longer recompiles route regexes.
-- Unreleased:
+- v0.7.0:
   - `Computed` is glitch-free (push-pull). A source change only tells it that it may be out of date; it recomputes on read (right away while listened to), after bringing any `Computed` source up to date. With `b`, `c` derived from `a` and `d = b + c`, a change of `a` recomputes `d` once and never shows it a new `b` with an old `c`.
   - Every Rx / notifier has a `reactiveVersion`; a `Computed` recomputes only when a source's version moved (a global version skips the check when nothing changed at all). A `Computed` with no listeners keeps its source record without subscriptions, so a read after unrelated changes does not recompute.
   - `Computed` reads inside `Get.batch` see the held changes; its listeners are notified once after the batch. Errors are kept and rethrown at each read until a source changes.
