@@ -21,7 +21,7 @@ Everything:
 get:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.7.2
+    ref: v0.7.3
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.7.2
+    ref: v0.7.3
     path: packages/fluxy_state
 ```
 
@@ -117,7 +117,7 @@ fluxy_state:
   - Fix: `dispose()` on a `GetxController`, `Value` or other `ListNotifier` now removes its listeners and sets `isDisposed` (the group mixin's dispose skipped the listener part). `addListener` on a disposed notifier is ignored in release builds (asserts in debug).
   - Benchmark: subscribe + unsubscribe on a shared value, mount + unmount of widgets sharing one value, memory per value and per listener; app sizes (tiny / normal / heavy / super) and the size picker in the benchmark UI.
   - Measured against v0.7.1 (release build, runs alternated): subscribe + unsubscribe 9.5× faster (1.0 ms; GetX 5 9.4 ms), create + dispose 1.8× (fastest of the six), a value with no listener 214 → 180 bytes, batch update 1.1×; other scenarios unchanged. Fluxy is fastest in 5 of the 12 scenarios. Still behind: shared subscribe / unmount (BLoC and Signals ~80 µs / ~1.1 ms with linked subscriptions), wide derived and deep chain (GetX 4, Signals).
-- Unreleased:
+- v0.7.3:
   - O(1) unsubscribe: each listener is an entry that knows its index; removing one leaves a hole, compacted once holes are the majority (order kept). Before, `removeAt` shifted every later listener (with a GC write barrier per slot on a long-lived list): 1,000 widgets reading one value spent 2.0 of their 2.2 ms unmount there.
   - `Obx` marks itself dirty right away outside the build phase (a tap, a timer, a stream, an animation tick); only a change made while widgets build still goes through a microtask. A change now shows after one frame instead of a microtask plus a frame.
   - Tracked reads go straight to the running observer's `TrackedSources` (a static field), with the in-order case inlined into the read; a `Computed` read that is already up to date is three field checks, inlined (the try/catch moved to a slow path). `isDisposed` is a field check (no lazily initialized static).
