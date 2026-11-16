@@ -69,8 +69,23 @@ mixin ListNotifierSingleMixin on Listenable {
     Notifier.instance.add(disposer);
   }
 
+  int _reactiveVersion = 0;
+
+  /// Goes up each time this notifier notifies (or would, inside a batch).
+  /// Derived values (`Computed`) and effects compare it with the version
+  /// they saw when they last read this notifier, to know whether it changed.
+  int get reactiveVersion => _reactiveVersion;
+
+  /// Whether a notification of this notifier is a change of app state (an
+  /// Rx write). Derived values return false: their changes follow from a
+  /// source change that was already counted.
+  @protected
+  bool get bumpsGlobalVersion => true;
+
   void _notifyUpdate() {
+    _reactiveVersion++;
     final notifier = Notifier.instance;
+    if (bumpsGlobalVersion) notifier._globalVersion++;
     if (notifier._batchDepth > 0) {
       // Inside [Notifier.batch]: notify once, when the outermost batch ends.
       notifier._pending.add(this);
@@ -87,12 +102,17 @@ mixin ListNotifierSingleMixin on Listenable {
     // notify started, as before.
     final previous = _notifying;
     _notifying = list;
+    final notifier = Notifier.instance;
+    notifier._depth++;
     try {
       for (var i = 0; i < list.length; i++) {
         list[i]();
       }
     } finally {
       _notifying = previous;
+      // Effects scheduled by this notify run once it (and any notify it
+      // caused) is over, so each runs once and sees the final values.
+      if (--notifier._depth == 0) notifier._runReactionsIfIdle();
     }
   }
 
@@ -198,12 +218,68 @@ class Notifier {
   int _batchDepth = 0;
   final _pending = LinkedHashSet<ListNotifierSingleMixin>.identity();
 
+  /// How many notifies are running (nested: a listener that writes an Rx).
+  int _depth = 0;
+
+  int _globalVersion = 0;
+
+  /// Goes up on every Rx change. A derived value that last checked its
+  /// sources at the current global version is known to be up to date
+  /// without looking at them.
+  int get globalVersion => _globalVersion;
+
+  final _reactions = LinkedHashSet<ScheduledReaction>.identity();
+  bool _runningReactions = false;
+
+  /// How many rounds of effects re-triggering effects are allowed before
+  /// it is treated as a loop.
+  static const maxReactionRounds = 100;
+
   /// True while code runs inside an observer build ([Obx], [GetX]), so reads
   /// of an Rx subscribe that observer.
   bool get isTracking => _notifyData != null;
 
   /// True inside [batch].
   bool get isBatching => _batchDepth > 0;
+
+  /// Runs [reaction] once the current notify / batch is over, or now when
+  /// nothing is notifying. Scheduling it again before it ran is a no-op, so
+  /// a reaction runs once however many of its sources changed.
+  void schedule(ScheduledReaction reaction) {
+    _reactions.add(reaction);
+    _runReactionsIfIdle();
+  }
+
+  void _runReactionsIfIdle() {
+    if (_depth == 0 && _batchDepth == 0 && _reactions.isNotEmpty) {
+      _runReactions();
+    }
+  }
+
+  void _runReactions() {
+    // Reactions scheduled while these run (an effect that writes) are run
+    // by this loop in the next round, not nested.
+    if (_runningReactions) return;
+    _runningReactions = true;
+    try {
+      var rounds = 0;
+      while (_reactions.isNotEmpty) {
+        if (++rounds > maxReactionRounds) {
+          _reactions.clear();
+          throw StateError(
+              'Effects kept triggering each other for $maxReactionRounds '
+              'rounds. An effect probably writes a value it reads.');
+        }
+        final list = _reactions.toList(growable: false);
+        _reactions.clear();
+        for (final reaction in list) {
+          reaction.runScheduled();
+        }
+      }
+    } finally {
+      _runningReactions = false;
+    }
+  }
 
   void add(VoidCallback listener) {
     _notifyData?.disposers.add(listener);
@@ -272,19 +348,27 @@ class Notifier {
   void _flush() {
     Object? firstError;
     StackTrace? firstStack;
-    while (_pending.isNotEmpty) {
-      final list = _pending.toList(growable: false);
-      _pending.clear();
-      for (final notifier in list) {
-        if (notifier.isDisposed) continue;
-        try {
-          notifier._notifyUpdateNow();
-        } catch (e, st) {
-          firstError ??= e;
-          firstStack ??= st;
+    // Counted as one notify, so effects run once after every held change
+    // went out (not once per changed Rx).
+    _depth++;
+    try {
+      while (_pending.isNotEmpty) {
+        final list = _pending.toList(growable: false);
+        _pending.clear();
+        for (final notifier in list) {
+          if (notifier.isDisposed) continue;
+          try {
+            notifier._notifyUpdateNow();
+          } catch (e, st) {
+            firstError ??= e;
+            firstStack ??= st;
+          }
         }
       }
+    } finally {
+      _depth--;
     }
+    _runReactionsIfIdle();
     if (firstError != null) {
       Error.throwWithStackTrace(firstError, firstStack!);
     }
@@ -305,8 +389,8 @@ class NotifyData {
   final List<VoidCallback> disposers;
 
   /// When set, the observer's Rx subscriptions are kept in sync with what
-  /// each build reads; see [ObserverSubscriptions].
-  final ObserverSubscriptions? subscriptions;
+  /// each build reads; see [ObserverSubscriptions] and [TrackedSources].
+  final ReadTracker? subscriptions;
   final bool throwException;
 
   bool get _isEmpty =>
@@ -321,19 +405,22 @@ class NotifyData {
 /// changes. A notifier read on consecutive builds keeps its one subscription.
 ///
 /// Keyed by identity, because `Rx` overrides `==` to compare values.
-class ObserverSubscriptions {
+class ObserverSubscriptions extends ReadTracker {
   final _active = LinkedHashMap<ListNotifierSingleMixin, Disposer>.identity();
   final _seen = HashSet<ListNotifierSingleMixin>.identity();
 
   int get length => _active.length;
+  @override
   bool get isEmpty => _active.isEmpty;
 
   /// Whether [notifier] is currently subscribed.
   bool contains(ListNotifierSingleMixin notifier) =>
       _active.containsKey(notifier);
 
+  @override
   void _begin() => _seen.clear();
 
+  @override
   void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater) {
     if (!_seen.add(notifier)) return;
     if (!_active.containsKey(notifier)) {
@@ -341,6 +428,7 @@ class ObserverSubscriptions {
     }
   }
 
+  @override
   void _end() {
     if (_seen.length == _active.length) return;
     _active.removeWhere((notifier, disposer) {
@@ -370,5 +458,169 @@ class ObxError {
       (example: GetX => HeavyWidget => variableObservable).
       If you need to update a parent widget and a child widget, wrap each one in an Obx/GetX.
       """;
+  }
+}
+
+/// Records what an observer reads while it runs. See [ObserverSubscriptions]
+/// (widgets) and [TrackedSources] (`Computed`, `Effect`).
+abstract class ReadTracker {
+  bool get isEmpty;
+  void _begin();
+  void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater);
+  void _end();
+}
+
+/// Something [Notifier.schedule] runs once the current notify is over
+/// (an `Effect`).
+abstract class ScheduledReaction {
+  void runScheduled();
+}
+
+class _Source {
+  _Source(this.notifier);
+  final ListNotifierSingleMixin notifier;
+
+  /// [ListNotifierSingleMixin.reactiveVersion] when it was last read.
+  int version = 0;
+
+  /// The run that last read it.
+  int run = 0;
+  Disposer? disposer;
+}
+
+/// The sources a derived value (`Computed`) or an `Effect` read on its last
+/// run, in read order, with the version each had when it was read.
+///
+/// - [changed] tells, without running anything, whether any source moved on
+///   since. A source that is itself a `Computed` brings itself up to date
+///   first, so the answer is never based on a stale intermediate value.
+/// - While [listen]ing, every source is subscribed; [unlisten] drops the
+///   subscriptions but keeps the record, so a `Computed` nobody listens to
+///   can still tell whether it needs to recompute.
+class TrackedSources extends ReadTracker {
+  List<_Source> _list = <_Source>[];
+  final _byNotifier = HashMap<ListNotifierSingleMixin, _Source>.identity();
+  List<_Source>? _next;
+  int _run = 0;
+  GetStateUpdate? _listener;
+
+  int get length => _list.length;
+  @override
+  bool get isEmpty => _list.isEmpty;
+  bool get isListening => _listener != null;
+
+  /// Whether [notifier] was read on the last run.
+  bool contains(ListNotifierSingleMixin notifier) =>
+      _byNotifier.containsKey(notifier);
+
+  /// Whether a source read on the last run changed since.
+  bool get changed {
+    final list = _list;
+    for (var i = 0; i < list.length; i++) {
+      final source = list[i];
+      if (source.notifier.reactiveVersion != source.version) return true;
+    }
+    return false;
+  }
+
+  /// Subscribes [listener] to every source, now and on later runs.
+  void listen(GetStateUpdate listener) {
+    if (_listener != null) return;
+    _listener = listener;
+    for (final source in _list) {
+      if (!source.notifier.isDisposed) {
+        source.disposer = source.notifier.addListener(listener);
+      }
+    }
+  }
+
+  /// Drops the subscriptions, keeps the record of what was read.
+  void unlisten() {
+    _listener = null;
+    for (final source in _list) {
+      source.disposer?.call();
+      source.disposer = null;
+    }
+  }
+
+  /// Runs [fn] and records what it reads. If [fn] throws, the sources read
+  /// before the throw are added to the previous ones (so a change of any of
+  /// them runs it again) and the error is rethrown.
+  T track<T>(T Function() fn) {
+    final notifier = Notifier.instance;
+    final previous = notifier._notifyData;
+    notifier._notifyData = NotifyData(
+      updater: _ignore,
+      disposers: <Disposer>[],
+      subscriptions: this,
+      throwException: false,
+    );
+    _begin();
+    try {
+      final result = fn();
+      _end();
+      return result;
+    } catch (_) {
+      _endAfterError();
+      rethrow;
+    } finally {
+      notifier._notifyData = previous;
+    }
+  }
+
+  static void _ignore() {}
+
+  @override
+  void _begin() {
+    _run++;
+    _next = <_Source>[];
+  }
+
+  @override
+  void _read(ListNotifierSingleMixin notifier, GetStateUpdate updater) {
+    final next = _next;
+    if (next == null) return;
+    var source = _byNotifier[notifier];
+    if (source == null) {
+      source = _byNotifier[notifier] = _Source(notifier);
+      final listener = _listener;
+      if (listener != null && !notifier.isDisposed) {
+        source.disposer = notifier.addListener(listener);
+      }
+    } else if (source.run == _run) {
+      return;
+    }
+    source.run = _run;
+    next.add(source);
+    // Read last: for a Computed source this brings it up to date.
+    source.version = notifier.reactiveVersion;
+  }
+
+  @override
+  void _end() {
+    final next = _next!;
+    _next = null;
+    for (final source in _list) {
+      if (source.run != _run) {
+        source.disposer?.call();
+        _byNotifier.remove(source.notifier);
+      }
+    }
+    _list = next;
+  }
+
+  void _endAfterError() {
+    final next = _next!;
+    _next = null;
+    for (final source in _list) {
+      if (source.run != _run) next.add(source);
+    }
+    _list = next;
+  }
+
+  void dispose() {
+    unlisten();
+    _list = <_Source>[];
+    _byNotifier.clear();
   }
 }
