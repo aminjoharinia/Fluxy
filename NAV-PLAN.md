@@ -1,6 +1,6 @@
 # fluxy_nav re-engineering plan
 
-Status: in progress (2026-11-17); decisions below taken. Phases 0-1 done. Results per phase are under "Results" at the end.
+Status: in progress (2026-11-17); decisions below taken. Phases 0-2 done. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -89,3 +89,11 @@ Each phase ends green: package tests, the examples, and the app copy with `pubsp
 - The delegate matches through the table; `Fluxy.to` / `off` / `offAll` no longer register a temporary page (B4). `FluxyPage.createRoute` only matches again for pages with middlewares, so pages outside the table build directly.
 - Removed: `new_path_route.dart` (unused second matcher), `ParseRouteTree`, `FluxyPage.path` / `PathDecoded` (regex patterns). Mixed segments like `file.:ext` are no longer patterns (they match literally).
 - Tests: `route_table_test.dart` (14), parse tests moved to the table; B1 and B4 un-skipped. 150 fluxy_nav tests (+5 skipped), all checks green, app 97 tests pass.
+
+### Phase 2 (2026-11-17): NavStack + serial queue
+
+- `lib/src/routing/nav_stack.dart`: `NavEntry` (match, page with its key / `PageSettings` / completer, arguments; `complete` once, a value of the wrong type completes with null; `token` shared by copies under another key) and immutable `NavStack` with pure functions: `push`, `pop` (the last entry stays), `replaceTop`, `popUntil` (keeps one), `removeUntil` (may empty), `remove`, `replace`, `lastAt`, and `add` with the duplicate rules (`reorderRoutes` keeps the old key so the navigator keeps the page, `recreate` takes a new key, `popUntilOriginalRoute`, `doNothing`; `preventDuplicates: false` gets a key of its own). A duplicate is an entry with the same location (path + query).
+- `lib/src/routing/nav_queue.dart`: one queue for every navigation. Idle: the task runs right away, so a navigation with no asynchronous middleware changes the stack before the call returns (it used to wait a microtask). Busy: tasks wait in call order (B2). A failing task doesn't block it.
+- The delegate keeps a `NavStack` instead of `_activePages` and both stack APIs. One `_commit` puts a new stack in place and completes every entry that left (the popped one with its result, the rest with null). `offAll` / `offAllNamed` / `goToUnknownPage(clear)` drop navigations still waiting for a middleware (they complete with null). The navigator uses `onDidRemovePage` (gesture and `Navigator.pop` remove the entry; the route completes it with the popped value). Notifications sent while a frame is being built (a navigation from `build`) wait for the end of that frame.
+- Changed: `offAll(predicate:)` keeps the page the predicate accepts and pushes above it (it used to replace that page); `recreate` really builds the page again; `activePages` / `getVisualPages` removed (use `stack`); `PageSettings.params` is unmodifiable and set when matching.
+- Tests: `nav_stack_test.dart` (19: stack functions, duplicate modes, entries, queue order and errors, offAllNamed dropping a waiting navigation, sync application, navigating from `build`); B2 un-skipped. 169 fluxy_nav tests (+4 skipped), all checks green, app 97 tests pass.

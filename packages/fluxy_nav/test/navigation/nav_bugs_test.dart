@@ -72,7 +72,7 @@ void main() {
     await t.pumpAndSettle();
     expect(stackNames(), ['/', '/a', '/b']);
     expect(find.text('b'), findsOneWidget);
-  }, skip: true);
+  });
 
   testWidgets('B3: currentRoute is the address inside nested pages',
       (t) async {

@@ -12,9 +12,15 @@ import 'package:flutter/widgets.dart';
 /// when it is nested under another navigator (a scope's controller can serve
 /// only one navigator at a time).
 class FluxyNavigator extends Navigator {
+  /// Give [onDidRemovePage] to keep the pages in sync when the navigator
+  /// pops one itself (back gesture, `Navigator.pop`). [onPopPage] is the
+  /// deprecated Flutter callback; with neither, a popped page is only
+  /// removed from the screen.
   FluxyNavigator({
     super.key,
-    bool Function(Route<dynamic>, dynamic)? onPopPage,
+    // ignore: deprecated_member_use
+    super.onPopPage,
+    DidRemovePageCallback? onDidRemovePage,
     required super.pages,
     List<NavigatorObserver>? observers,
     super.reportsRouteUpdateToEngine,
@@ -22,15 +28,9 @@ class FluxyNavigator extends Navigator {
     super.initialRoute,
     super.restorationScopeId,
   }) : super(
-          // ignore: deprecated_member_use
-          onPopPage: onPopPage ??
-              (route, result) {
-                final didPop = route.didPop(result);
-                if (!didPop) {
-                  return false;
-                }
-                return true;
-              },
+          onDidRemovePage: onPopPage != null
+              ? null
+              : onDidRemovePage ?? (_) {},
           observers: [
             ...?observers,
           ],

@@ -52,14 +52,17 @@ class PageSettings extends RouteSettings {
   PageSettings(
     this.uri, [
     Object? arguments,
-  ]) : super(arguments: arguments);
+    Map<String, String>? params,
+  ])  : params = Map.unmodifiable(params ?? uri.queryParameters),
+        super(arguments: arguments);
 
   @override
   String get name => '$uri';
 
   final Uri uri;
 
-  final params = <String, String>{};
+  /// Path and query parameters of the matched address (path wins).
+  final Map<String, String> params;
 
   String get path => uri.path;
 
@@ -79,6 +82,7 @@ class PageSettings extends RouteSettings {
     return PageSettings(
       uri ?? this.uri,
       arguments ?? this.arguments,
+      uri == null ? params : null,
     );
   }
 

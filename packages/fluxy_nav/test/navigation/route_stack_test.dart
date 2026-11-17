@@ -11,8 +11,8 @@ class Detail extends StatelessWidget {
   Widget build(BuildContext context) => Text('detail $id');
 }
 
-List<String?> stack() => Fluxy.rootController.rootDelegate.activePages
-    .map((e) => e.route?.name)
+List<String?> stack() => Fluxy.rootController.rootDelegate.stack.entries
+    .map((e) => e.name)
     .toList();
 
 Widget app({PreventDuplicateHandlingMode? aMode}) => FluxyApp(

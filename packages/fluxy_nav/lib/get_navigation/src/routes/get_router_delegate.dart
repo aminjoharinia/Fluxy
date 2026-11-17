@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fluxy_utils/fluxy_utils.dart';
 
@@ -8,6 +9,14 @@ import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
+import '../../../src/routing/nav_queue.dart';
+
+/// The router delegate: keeps the navigation history as a [NavStack] and
+/// shows it in a [Navigator].
+///
+/// Every navigation goes through one queue, so the stack changes in call
+/// order even when a middleware is asynchronous. A navigation that needs no
+/// asynchronous work changes the stack before the call returns.
 class FluxyDelegate extends RouterDelegate<RouteDecoder>
     with
         ChangeNotifier,
@@ -34,8 +43,36 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     );
   }
 
-  final List<RouteDecoder> _activePages = <RouteDecoder>[];
+  FluxyDelegate({
+    FluxyPage? notFoundRoute,
+    this.navigatorObservers,
+    this.transitionDelegate,
+    this.backButtonPopMode = PopMode.history,
+    this.preventDuplicateHandlingMode =
+        PreventDuplicateHandlingMode.reorderRoutes,
+    this.pickPagesForRootNavigator,
+    this.restorationScopeId,
+    bool showHashOnUrl = true,
+    GlobalKey<NavigatorState>? navigatorKey,
+    required List<FluxyPage> pages,
+  }) : navigatorKey = navigatorKey ?? GlobalKey<NavigatorState>(),
+       notFoundRoute = notFoundRoute ??= FluxyPage(
+         name: '/404',
+         page: () =>
+             const Scaffold(body: Center(child: Text('Route not found'))),
+       ) {
+    // Hash URLs (`/#/Home`) are Flutter's default, so nothing is changed
+    // unless path URLs are asked for. That only works before runApp; see
+    // setUrlStrategy().
+    if (!showHashOnUrl && FluxyPlatform.isWeb) setUrlStrategy();
+    addPages([...pages, notFoundRoute]);
+    Fluxy.log('FluxyDelegate is created !');
+  }
+
   final PopMode backButtonPopMode;
+
+  /// Not used for pages: each page has its own
+  /// [FluxyPage.preventDuplicateHandlingMode].
   final PreventDuplicateHandlingMode preventDuplicateHandlingMode;
 
   final FluxyPage notFoundRoute;
@@ -53,7 +90,13 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
   final Iterable<FluxyPage> Function(RouteDecoder currentNavStack)?
   pickPagesForRootNavigator;
 
-  List<RouteDecoder> get activePages => _activePages;
+  @override
+  GlobalKey<NavigatorState> navigatorKey;
+
+  final String? restorationScopeId;
+
+  // ---------------------------------------------------------------------
+  // Route table
 
   final _pages = <FluxyPage>[];
   RouteTable _table = RouteTable(const []);
@@ -83,43 +126,167 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
 
   RouteDecoder matchRoute(String name, {PageSettings? arguments}) {
     final match = _table.match(name);
-    arguments?.params
-      ?..clear()
-      ..addAll(match.parameters);
-    return RouteDecoder(List.of(match.branch), arguments);
+    return RouteDecoder(
+      List.of(match.branch),
+      PageSettings(match.uri, arguments?.arguments, match.parameters),
+    );
   }
 
-  // GlobalKey<NavigatorState> get navigatorKey => Fluxy.key;
+  // ---------------------------------------------------------------------
+  // Stack
 
-  @override
-  GlobalKey<NavigatorState> navigatorKey;
+  NavStack _stack = NavStack();
+  final _queue = NavQueue();
+  int _epoch = 0;
 
-  final String? restorationScopeId;
+  /// The navigation history, bottom first.
+  NavStack get stack => _stack;
 
-  FluxyDelegate({
-    FluxyPage? notFoundRoute,
-    this.navigatorObservers,
-    this.transitionDelegate,
-    this.backButtonPopMode = PopMode.history,
-    this.preventDuplicateHandlingMode =
-        PreventDuplicateHandlingMode.reorderRoutes,
-    this.pickPagesForRootNavigator,
-    this.restorationScopeId,
-    bool showHashOnUrl = true,
-    GlobalKey<NavigatorState>? navigatorKey,
-    required List<FluxyPage> pages,
-  }) : navigatorKey = navigatorKey ?? GlobalKey<NavigatorState>(),
-       notFoundRoute = notFoundRoute ??= FluxyPage(
-         name: '/404',
-         page: () =>
-             const Scaffold(body: Center(child: Text('Route not found'))),
-       ) {
-    // Hash URLs (`/#/Home`) are Flutter's default, so nothing is changed
-    // unless path URLs are asked for. That only works before runApp; see
-    // setUrlStrategy().
-    if (!showHashOnUrl && FluxyPlatform.isWeb) setUrlStrategy();
-    addPages([...pages, notFoundRoute]);
-    Fluxy.log('FluxyDelegate is created !');
+  T arguments<T>() => _stack.top?.arguments as T;
+
+  Map<String, String> get parameters => _stack.top?.match.parameters ?? {};
+
+  PageSettings? get pageSettings => _stack.top?.settings;
+
+  bool get canBack => _stack.canPop;
+
+  /// Puts [next] in place, completes the entries that left it and tells
+  /// the router.
+  ///
+  /// [popped] (the old top) completes with [popResult]; the other entries
+  /// that left, and [created] entries that never made it onto the stack,
+  /// complete with null. [deferred] is left alone: its route is completing
+  /// it with the value it was popped with.
+  void _commit(
+    NavStack next, {
+    NavEntry? popped,
+    Object? popResult,
+    NavEntry? created,
+    NavEntry? deferred,
+    bool notify = true,
+  }) {
+    final previous = _stack;
+    _stack = next;
+    final kept = {for (final e in next.entries) e.token};
+    for (final e in previous.entries) {
+      if (kept.contains(e.token) || identical(e.token, deferred?.token)) {
+        continue;
+      }
+      e.complete(identical(e.token, popped?.token) ? popResult : null);
+    }
+    if (created != null && !kept.contains(created.token)) created.complete();
+    if (notify) _notify();
+  }
+
+  bool _notifyScheduled = false;
+
+  /// Tells the router, or, while a frame is being built (a navigation
+  /// called from a build method), right after that frame.
+  void _notify() {
+    if (SchedulerBinding.instance.schedulerPhase !=
+        SchedulerPhase.persistentCallbacks) {
+      notifyListeners();
+      return;
+    }
+    if (_notifyScheduled) return;
+    _notifyScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _notifyScheduled = false;
+      notifyListeners();
+    });
+  }
+
+  /// Runs [change] in the queue, synchronously when it's idle.
+  FutureOr<void> _change(void Function() change) => _queue.run<void>(change);
+
+  /// Resolves [target], then applies [apply] to the stack, in the queue.
+  ///
+  /// With [resets] (offAll, offAllNamed), navigations still waiting for a
+  /// middleware are dropped (their futures complete with null).
+  FutureOr<NavEntry?> _navigate(
+    FutureOr<NavEntry?> Function() target,
+    NavStack Function(NavStack stack, NavEntry entry) apply, {
+    bool resets = false,
+    bool notify = true,
+    bool popsTop = false,
+    Object? popResult,
+  }) {
+    if (resets) _epoch++;
+    final epoch = _epoch;
+    NavEntry? finish(NavEntry? entry) {
+      if (entry == null) return null;
+      if (epoch != _epoch) {
+        entry.complete();
+        return null;
+      }
+      final top = _stack.top;
+      _commit(
+        apply(_stack, entry),
+        created: entry,
+        popped: popsTop ? top : null,
+        popResult: popResult,
+        notify: notify,
+      );
+      return entry;
+    }
+
+    return _queue.run<NavEntry?>(() {
+      if (epoch != _epoch) return null;
+      final resolved = target();
+      if (resolved is Future<NavEntry?>) return resolved.then(finish);
+      return finish(resolved);
+    });
+  }
+
+  /// The future of the entry [navigation] ends up adding.
+  Future<T?> _result<T>(FutureOr<NavEntry?> navigation) {
+    Future<T?> of(NavEntry? e) =>
+        e == null ? Future<T?>.value() : e.result.then((r) => r as T?);
+    if (navigation is Future<NavEntry?>) return navigation.then(of);
+    return of(navigation);
+  }
+
+  // ---------------------------------------------------------------------
+  // Resolving addresses
+
+  /// Matches [location] and runs its middlewares. Null when a middleware
+  /// stopped the navigation. An unknown address gives the [notFoundRoute]
+  /// entry.
+  FutureOr<NavEntry?> _resolve<T>(String location, {Object? arguments}) {
+    final match = _table.match(location);
+    if (match.isUnknown) return _unknownEntry<T>();
+    final entry = NavEntry.create<T>(match: match, arguments: arguments);
+    if (match.page!.middlewares.isEmpty) return entry;
+    return _runMiddlewares<T>(entry);
+  }
+
+  NavEntry _unknownEntry<T>() {
+    final match = _table.match(notFoundRoute.name);
+    return NavEntry.create<T>(
+      match: match.isUnknown
+          ? RouteMatch.direct(notFoundRoute, Uri.parse(notFoundRoute.name))
+          : match,
+    );
+  }
+
+  NavEntry _directEntry<T>(FluxyPage<T> page, Object? arguments) {
+    return NavEntry.create<T>(
+      match: RouteMatch.direct(page, Uri.parse(page.name)),
+      page: page,
+      arguments: arguments,
+    );
+  }
+
+  Future<NavEntry?> _runMiddlewares<T>(NavEntry entry) async {
+    final decoder = RouteDecoder(entry.branch, entry.settings);
+    final res = await runMiddleware(decoder);
+    if (res == null) return null;
+    if (identical(res, decoder) || res == decoder) return entry;
+    final location = res.pageSettings?.name ?? res.route?.name;
+    if (location == null) return null;
+    final match = _table.match(location);
+    if (match.isUnknown) return _unknownEntry<T>();
+    return NavEntry.create<T>(match: match, arguments: res.args);
   }
 
   Future<RouteDecoder?> runMiddleware(RouteDecoder config) async {
@@ -132,11 +299,9 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
       var redirectRes = await item.redirectDelegate(iterator);
 
       if (redirectRes == null) {
-        config.route?.completer?.complete();
         return null;
       }
       if (config != redirectRes) {
-        config.route?.completer?.complete();
         Fluxy.log('Redirect to ${redirectRes.pageSettings?.name}');
       }
 
@@ -155,192 +320,36 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     return iterator;
   }
 
-  Future<void> _unsafeHistoryAdd(RouteDecoder config) async {
-    final res = await runMiddleware(config);
-    if (res == null) return;
-    _activePages.add(res);
-  }
+  // ---------------------------------------------------------------------
+  // Building
 
-  // Future<T?> _unsafeHistoryRemove<T>(RouteDecoder config, T result) async {
-  //   var index = _activePages.indexOf(config);
-  //   if (index >= 0) return _unsafeHistoryRemoveAt(index, result);
-  //   return null;
-  // }
-
-  Future<T?> _unsafeHistoryRemoveAt<T>(int index, T result) async {
-    if (index == _activePages.length - 1 && _activePages.length > 1) {
-      //removing WILL update the current route
-      final toCheck = _activePages[_activePages.length - 2];
-      final resMiddleware = await runMiddleware(toCheck);
-      if (resMiddleware == null) return null;
-      _activePages[_activePages.length - 2] = resMiddleware;
-    }
-
-    final completer = _activePages.removeAt(index).route?.completer;
-    if (completer?.isCompleted == false) completer!.complete(result);
-
-    return completer?.future as T?;
-  }
-
-  T arguments<T>() {
-    return currentConfiguration?.pageSettings?.arguments as T;
-  }
-
-  Map<String, String> get parameters {
-    return currentConfiguration?.pageSettings?.params ?? {};
-  }
-
-  PageSettings? get pageSettings {
-    return currentConfiguration?.pageSettings;
-  }
-
-  Future<void> _pushHistory(RouteDecoder config) async {
-    if (config.route!.preventDuplicates) {
-      final originalEntryIndex = _activePages.indexWhere(
-        (element) => element.pageSettings?.name == config.pageSettings?.name,
-      );
-      if (originalEntryIndex >= 0) {
-        switch (preventDuplicateHandlingMode) {
-          case PreventDuplicateHandlingMode.popUntilOriginalRoute:
-            popModeUntil(config.pageSettings!.name, popMode: PopMode.page);
-            break;
-          case PreventDuplicateHandlingMode.reorderRoutes:
-            await _unsafeHistoryRemoveAt(originalEntryIndex, null);
-            await _unsafeHistoryAdd(config);
-            break;
-          case PreventDuplicateHandlingMode.doNothing:
-          default:
-            break;
-        }
-        return;
-      }
-    }
-    await _unsafeHistoryAdd(config);
-  }
-
-  Future<T?> _popHistory<T>(T result) async {
-    if (!_canPopHistory()) return null;
-    return await _doPopHistory(result);
-  }
-
-  Future<T?> _doPopHistory<T>(T result) async {
-    return _unsafeHistoryRemoveAt<T>(_activePages.length - 1, result);
-  }
-
-  Future<T?> _popPage<T>(T result) async {
-    if (!_canPopPage()) return null;
-    return await _doPopPage(result);
-  }
-
-  // returns the popped page
-  Future<T?> _doPopPage<T>(T result) async {
-    final currentBranch = currentConfiguration?.currentTreeBranch;
-    if (currentBranch != null && currentBranch.length > 1) {
-      //remove last part only
-      final remaining = currentBranch.take(currentBranch.length - 1);
-      final prevHistoryEntry = _activePages.length > 1
-          ? _activePages[_activePages.length - 2]
-          : null;
-
-      //check if current route is the same as the previous route
-      if (prevHistoryEntry != null) {
-        //if so, pop the entire _activePages entry
-        final newLocation = remaining.last.name;
-        final prevLocation = prevHistoryEntry.pageSettings?.name;
-        if (newLocation == prevLocation) {
-          //pop the entire _activePages entry
-          return await _popHistory(result);
-        }
-      }
-
-      //create a new route with the remaining tree branch
-      final res = await _popHistory<T>(result);
-      await _pushHistory(
-        RouteDecoder(
-          remaining.toList(),
-          null,
-          //TOOD: persist state??
-        ),
-      );
-      return res;
-    } else {
-      //remove entire entry
-      return await _popHistory(result);
-    }
-  }
-
-  Future<T?> _pop<T>(PopMode mode, T result) async {
-    switch (mode) {
-      case PopMode.history:
-        return await _popHistory<T>(result);
-      case PopMode.page:
-        return await _popPage<T>(result);
-    }
-  }
-
-  Future<T?> popHistory<T>(T result) async {
-    return await _popHistory<T>(result);
-  }
-
-  bool _canPopHistory() {
-    return _activePages.length > 1;
-  }
-
-  Future<bool> canPopHistory() {
-    return SynchronousFuture(_canPopHistory());
-  }
-
-  bool _canPopPage() {
-    final currentTreeBranch = currentConfiguration?.currentTreeBranch;
-    if (currentTreeBranch == null) return false;
-    return currentTreeBranch.length > 1 ? true : _canPopHistory();
-  }
-
-  Future<bool> canPopPage() {
-    return SynchronousFuture(_canPopPage());
-  }
-
-  bool _canPop(PopMode mode) {
-    switch (mode) {
-      case PopMode.history:
-        return _canPopHistory();
-      case PopMode.page:
-        return _canPopPage();
-    }
-  }
-
-  /// gets the visual pages from the current _activePages entry
+  /// The pages the root navigator shows.
   ///
-  /// visual pages must have [FluxyPage.participatesInRootNavigator] set to true
-  Iterable<FluxyPage> getVisualPages(RouteDecoder? currentHistory) {
-    final res = currentHistory!.currentTreeBranch.where(
-      (r) => r.participatesInRootNavigator != null,
-    );
-    if (res.isEmpty) {
-      //default behavior, all routes participate in root navigator
-      return _activePages.map((e) => e.route!);
-    } else {
-      //user specified at least one participatesInRootNavigator
-      return res.where(
-        (element) => element.participatesInRootNavigator == true,
-      );
+  /// Normally the page of every entry. When the current branch says which
+  /// pages take part in the root navigator
+  /// ([FluxyPage.participatesInRootNavigator]), only those.
+  Iterable<FluxyPage> _rootPages() {
+    final top = _stack.top;
+    if (top == null) return const [];
+    if (pickPagesForRootNavigator != null) {
+      return pickPagesForRootNavigator!(currentConfiguration!);
     }
+    final branch = top.branch;
+    final marked = branch.where((p) => p.participatesInRootNavigator != null);
+    if (marked.isEmpty) return _stack.entries.map((e) => e.page);
+    return marked.where((p) => p.participatesInRootNavigator == true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentHistory = currentConfiguration;
-    final pages = currentHistory == null
-        ? <FluxyPage>[]
-        : pickPagesForRootNavigator?.call(currentHistory).toList() ??
-              getVisualPages(currentHistory).toList();
+    final pages = _rootPages().toList();
     if (pages.isEmpty) {
       return ColoredBox(color: Theme.of(context).scaffoldBackgroundColor);
     }
     return FluxyHeroScope(
       child: FluxyNavigator(
         key: navigatorKey,
-        onPopPage: _onPopVisualRoute,
+        onDidRemovePage: _onDidRemovePage,
         pages: pages,
         observers: [?routingObserver, ...?navigatorObservers],
         transitionDelegate:
@@ -349,35 +358,187 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     );
   }
 
+  /// The navigator popped a page itself (back gesture, `Navigator.pop`).
+  void _onDidRemovePage(Page<Object?> page) {
+    _change(() {
+      NavEntry? entry;
+      for (final e in _stack.entries.reversed) {
+        if (e.key == page.key) {
+          entry = e;
+          break;
+        }
+      }
+      if (entry == null) return;
+      if (_stack.length == 1) {
+        // The last page stays; the navigator gets it back.
+        _notify();
+        return;
+      }
+      _commit(_stack.remove(entry), deferred: entry);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Router
+
+  @override
+  RouteDecoder? get currentConfiguration {
+    final top = _stack.top;
+    if (top == null) return null;
+    return RouteDecoder(top.branch, top.settings);
+  }
+
+  @override
+  Future<void> setNewRoutePath(RouteDecoder configuration) {
+    final location = configuration.pageSettings?.name ?? '/';
+    final arguments = configuration.args;
+    final result = _navigate(
+      () => configuration.route == null
+          ? _unknownEntry<dynamic>()
+          : _resolve<dynamic>(location, arguments: arguments),
+      (stack, entry) => stack.add(
+        entry,
+        mode: entry.page.preventDuplicateHandlingMode,
+      ),
+    );
+    if (result is Future<NavEntry?>) return result;
+    return SynchronousFuture<void>(null);
+  }
+
+  Future<bool> handlePopupRoutes({Object? result}) async {
+    Route? currentRoute;
+    navigatorKey.currentState!.popUntil((route) {
+      currentRoute = route;
+      return true;
+    });
+    if (currentRoute is PopupRoute) {
+      return await navigatorKey.currentState!.maybePop(result);
+    }
+    return false;
+  }
+
+  @override
+  Future<bool> popRoute({Object? result, PopMode? popMode}) async {
+    //Returning false will cause the entire app to be popped.
+    final wasPopup = await handlePopupRoutes(result: result);
+    if (wasPopup) return true;
+
+    final mode = popMode ?? backButtonPopMode;
+    if (_canPop(mode)) {
+      await _pop(mode, result);
+      return true;
+    }
+
+    return super.popRoute();
+  }
+
+  // ---------------------------------------------------------------------
+  // Popping
+
+  bool _canPopPage() {
+    final top = _stack.top;
+    if (top == null) return false;
+    return top.branch.length > 1 || _stack.canPop;
+  }
+
+  bool _canPop(PopMode mode) => switch (mode) {
+    PopMode.history => _stack.canPop,
+    PopMode.page => _canPopPage(),
+  };
+
+  Future<bool> canPopHistory() => SynchronousFuture(_stack.canPop);
+
+  Future<bool> canPopPage() => SynchronousFuture(_canPopPage());
+
+  FutureOr<void> _pop(PopMode mode, Object? result) => switch (mode) {
+    PopMode.history => _popHistory(result),
+    PopMode.page => _popPage(result),
+  };
+
+  FutureOr<void> _popHistory(Object? result) => _change(() {
+    if (!_stack.canPop) return;
+    _commit(_stack.pop(), popped: _stack.top, popResult: result);
+  });
+
+  /// Pops one level of the current branch: `/home/products/1` becomes
+  /// `/home/products`. When the entry below is that page, the entry is
+  /// popped; otherwise it's replaced.
+  FutureOr<void> _popPage(Object? result) => _change(() {
+    final top = _stack.top;
+    if (top == null) return;
+    final branch = top.branch;
+    if (branch.length < 2) {
+      if (_stack.canPop) {
+        _commit(_stack.pop(), popped: top, popResult: result);
+      }
+      return;
+    }
+    final parent = branch[branch.length - 2].name;
+    if (_stack.below?.name == parent) {
+      _commit(_stack.pop(), popped: top, popResult: result);
+      return;
+    }
+    final entry = NavEntry.create<dynamic>(match: _table.match(parent));
+    _commit(_stack.replaceTop(entry), popped: top, popResult: result);
+  });
+
+  Future<T?> popHistory<T>(T result) async {
+    await _popHistory(result);
+    return null;
+  }
+
+  @override
+  void back<T>([T? result]) {
+    _popHistory(result);
+  }
+
+  @override
+  void backUntil(bool Function(FluxyPage) predicate) {
+    _change(() => _commit(_stack.popUntil((e) => predicate(e.page))));
+  }
+
+  /// Removes routes according to [PopMode]
+  /// until it reaches the specific [fullRoute],
+  /// DOES NOT remove the [fullRoute]
+  @override
+  Future<void> popModeUntil(
+    String fullRoute, {
+    PopMode popMode = PopMode.history,
+  }) async {
+    while (_canPop(popMode)) {
+      final top = _stack.top!;
+      if (top.location == fullRoute || top.name == fullRoute) break;
+      await _pop(popMode, null);
+    }
+  }
+
+  @override
+  void removeRoute<T>(String name) {
+    _change(() {
+      if (_stack.length < 2) return;
+      NavEntry? entry;
+      for (final e in _stack.entries.reversed) {
+        if (e.location == name || e.name == name) {
+          entry = e;
+          break;
+        }
+      }
+      if (entry != null) _commit(_stack.remove(entry));
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Navigation
+
   @override
   Future<void> goToUnknownPage([bool clearPages = false]) async {
-    if (clearPages) _activePages.clear();
-
-    final pageSettings = _buildPageSettings(notFoundRoute.name);
-    final routeDecoder = _getRouteDecoder(pageSettings);
-
-    _push(routeDecoder!);
-  }
-
-  @protected
-  void _popWithResult<T>([T? result]) {
-    _complete(_activePages.removeLast(), result);
-  }
-
-  /// Completes the future of a page that leaves the stack, so code awaiting
-  /// `Fluxy.toNamed(...)` for it doesn't wait forever.
-  void _complete(RouteDecoder removed, [Object? result]) {
-    final completer = removed.route?.completer;
-    if (completer?.isCompleted == false) completer!.complete(result);
-  }
-
-  /// A decoder for a page that isn't in the route table (`Fluxy.to`,
-  /// `off`, `offAll`). The table isn't changed.
-  RouteDecoder _decoderForPage<T>(PageSettings args, FluxyPage<T> page) {
-    args.params
-      ..clear()
-      ..addAll(args.query);
-    return _configureRouterDecoder<T>(RouteDecoder([page], args), args);
+    await _navigate(
+      _unknownEntry<dynamic>,
+      (stack, entry) => clearPages
+          ? NavStack([entry])
+          : stack.add(entry, mode: entry.page.preventDuplicateHandlingMode),
+      resets: clearPages,
+    );
   }
 
   @override
@@ -387,18 +548,50 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     dynamic id,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
-  }) async {
-    final args = _buildPageSettings(page, arguments);
-    final route = _getRouteDecoder<T>(args);
-    if (route != null) {
-      if (!preventDuplicates) {
-        route.route = route.route!.copyWith(preventDuplicates: false);
-      }
-      return _push<T>(route);
-    } else {
-      goToUnknownPage();
-    }
-    return null;
+  }) {
+    return _result<T>(
+      _navigate(
+        () => _resolve<T>(page, arguments: arguments),
+        (stack, entry) => stack.add(
+          entry,
+          preventDuplicates: preventDuplicates,
+          mode: entry.page.preventDuplicateHandlingMode,
+        ),
+      ),
+    );
+  }
+
+  FluxyPage<T> _pageFor<T>(
+    Widget Function() page, {
+    required String routeName,
+    bool? opaque,
+    Transition? transition,
+    Curve? curve,
+    Duration? duration,
+    bool fullscreenDialog = false,
+    List<BindingsInterface> bindings = const [],
+    bool preventDuplicates = true,
+    bool? popGesture,
+    bool showCupertinoParallax = true,
+    double Function(BuildContext context)? gestureWidth,
+    PreventDuplicateHandlingMode preventDuplicateHandlingMode =
+        PreventDuplicateHandlingMode.reorderRoutes,
+  }) {
+    return FluxyPage<T>(
+      name: routeName,
+      opaque: opaque ?? true,
+      page: page,
+      gestureWidth: gestureWidth,
+      showCupertinoParallax: showCupertinoParallax,
+      popGesture: popGesture ?? Fluxy.defaultPopGesture,
+      transition: transition ?? Fluxy.defaultTransition,
+      curve: curve ?? Fluxy.defaultTransitionCurve,
+      fullscreenDialog: fullscreenDialog,
+      bindings: bindings,
+      transitionDuration: duration ?? Fluxy.defaultTransitionDuration,
+      preventDuplicates: preventDuplicates,
+      preventDuplicateHandlingMode: preventDuplicateHandlingMode,
+    );
   }
 
   @override
@@ -420,32 +613,33 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     bool rebuildStack = true,
     PreventDuplicateHandlingMode preventDuplicateHandlingMode =
         PreventDuplicateHandlingMode.reorderRoutes,
-  }) async {
-    routeName ??= _cleanRouteName("/${page.runtimeType}");
-    // if (preventDuplicateHandlingMode ==
-    //PreventDuplicateHandlingMode.Recreate) {
-    //   routeName = routeName + page.hashCode.toString();
-    // }
-
-    final getPage = FluxyPage<T>(
-      name: routeName,
-      opaque: opaque ?? true,
-      page: page,
-      gestureWidth: gestureWidth,
-      showCupertinoParallax: showCupertinoParallax,
-      popGesture: popGesture ?? Fluxy.defaultPopGesture,
-      transition: transition ?? Fluxy.defaultTransition,
-      curve: curve ?? Fluxy.defaultTransitionCurve,
+  }) {
+    final getPage = _pageFor<T>(
+      page,
+      routeName: routeName ?? _cleanRouteName("/${page.runtimeType}"),
+      opaque: opaque,
+      transition: transition,
+      curve: curve,
+      duration: duration,
       fullscreenDialog: fullscreenDialog,
       bindings: bindings,
-      transitionDuration: duration ?? Fluxy.defaultTransitionDuration,
       preventDuplicates: preventDuplicates,
+      popGesture: popGesture,
+      showCupertinoParallax: showCupertinoParallax,
+      gestureWidth: gestureWidth,
       preventDuplicateHandlingMode: preventDuplicateHandlingMode,
     );
-
-    final args = _buildPageSettings(routeName, arguments);
-    final route = _decoderForPage<T>(args, getPage);
-    return _push<T>(route, rebuildStack: rebuildStack);
+    return _result<T>(
+      _navigate(
+        () => _directEntry<T>(getPage, arguments),
+        (stack, entry) => stack.add(
+          entry,
+          preventDuplicates: preventDuplicates,
+          mode: preventDuplicateHandlingMode,
+        ),
+        notify: rebuildStack,
+      ),
+    );
   }
 
   @override
@@ -464,26 +658,30 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     bool? popGesture,
     bool showCupertinoParallax = true,
     double Function(BuildContext context)? gestureWidth,
-  }) async {
-    routeName ??= _cleanRouteName("/${page.runtimeType}");
-    final route = FluxyPage<T>(
-      name: routeName,
-      opaque: opaque ?? true,
-      page: page,
-      gestureWidth: gestureWidth,
-      showCupertinoParallax: showCupertinoParallax,
-      popGesture: popGesture ?? Fluxy.defaultPopGesture,
-      transition: transition ?? Fluxy.defaultTransition,
-      curve: curve ?? Fluxy.defaultTransitionCurve,
+  }) {
+    final getPage = _pageFor<T>(
+      page,
+      routeName: routeName ?? _cleanRouteName("/${page.runtimeType}"),
+      opaque: opaque,
+      transition: transition,
+      curve: curve,
+      duration: duration,
       fullscreenDialog: fullscreenDialog,
       bindings: bindings,
-      transitionDuration: duration ?? Fluxy.defaultTransitionDuration,
+      popGesture: popGesture,
+      showCupertinoParallax: showCupertinoParallax,
+      gestureWidth: gestureWidth,
     );
-
-    final args = _buildPageSettings(routeName, arguments);
-    return _replace(args, route);
+    return _result<T>(
+      _navigate(
+        () => _directEntry<T>(getPage, arguments),
+        (stack, entry) => stack.replaceTop(entry),
+      ),
+    );
   }
 
+  /// Removes the entries above the topmost one [predicate] accepts (all of
+  /// them when none does), then adds the page.
   @override
   Future<T?>? offAll<T>(
     Widget Function() page, {
@@ -500,50 +698,45 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     Duration? duration,
     bool showCupertinoParallax = true,
     double Function(BuildContext context)? gestureWidth,
-  }) async {
-    routeName ??= _cleanRouteName("/${page.runtimeType}");
-    final route = FluxyPage<T>(
-      name: routeName,
+  }) {
+    final getPage = _pageFor<T>(
+      page,
+      routeName: routeName ?? _cleanRouteName("/${page.runtimeType}"),
       opaque: opaque,
-      page: page,
-      gestureWidth: gestureWidth,
-      showCupertinoParallax: showCupertinoParallax,
-      popGesture: popGesture ?? Fluxy.defaultPopGesture,
-      transition: transition ?? Fluxy.defaultTransition,
-      curve: curve ?? Fluxy.defaultTransitionCurve,
+      transition: transition,
+      curve: curve,
+      duration: duration,
       fullscreenDialog: fullscreenDialog,
       bindings: bindings,
-      transitionDuration: duration ?? Fluxy.defaultTransitionDuration,
+      popGesture: popGesture,
+      showCupertinoParallax: showCupertinoParallax,
+      gestureWidth: gestureWidth,
     );
-
-    final args = _buildPageSettings(routeName, arguments);
-
-    final newPredicate = predicate ?? (route) => false;
-
-    while (_activePages.length > 1 && !newPredicate(_activePages.last.route!)) {
-      _popWithResult();
-    }
-
-    return _replace(args, route);
+    return _result<T>(
+      _navigate(
+        () => _directEntry<T>(getPage, arguments),
+        (stack, entry) => predicate == null
+            ? NavStack([entry])
+            : stack.removeUntil((e) => predicate(e.page)).push(entry),
+        resets: true,
+      ),
+    );
   }
 
   @override
   Future<T?>? offAllNamed<T>(
     String newRouteName, {
-    // bool Function(FluxyPage route)? predicate,
     dynamic arguments,
     String? id,
     Map<String, String>? parameters,
-  }) async {
-    final args = _buildPageSettings(newRouteName, arguments);
-    final route = _getRouteDecoder<T>(args);
-    if (route == null) return null;
-
-    while (_activePages.length > 1) {
-      _popWithResult();
-    }
-
-    return _replaceNamed(route);
+  }) {
+    return _result<T>(
+      _navigate(
+        () => _resolve<T>(newRouteName, arguments: arguments),
+        (stack, entry) => NavStack([entry]),
+        resets: true,
+      ),
+    );
   }
 
   @override
@@ -553,18 +746,15 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     dynamic arguments,
     String? id,
     Map<String, String>? parameters,
-  }) async {
-    final args = _buildPageSettings(page, arguments);
-    final route = _getRouteDecoder<T>(args);
-    if (route == null) return null;
-
-    final newPredicate = predicate ?? (route) => false;
-
-    while (_activePages.length > 1 && !newPredicate(_activePages.last.route!)) {
-      _popWithResult();
-    }
-
-    return _push(route);
+  }) {
+    return _result<T>(
+      _navigate(
+        () => _resolve<T>(page, arguments: arguments),
+        (stack, entry) => stack
+            .popUntil((e) => predicate?.call(e.page) ?? false)
+            .add(entry, mode: entry.page.preventDuplicateHandlingMode),
+      ),
+    );
   }
 
   @override
@@ -573,12 +763,13 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     dynamic arguments,
     String? id,
     Map<String, String>? parameters,
-  }) async {
-    final args = _buildPageSettings(page, arguments);
-    final route = _getRouteDecoder<T>(args);
-    if (route == null) return null;
-    _popWithResult();
-    return _push<T>(route);
+  }) {
+    return _result<T>(
+      _navigate(
+        () => _resolve<T>(page, arguments: arguments),
+        (stack, entry) => stack.replaceTop(entry),
+      ),
+    );
   }
 
   @override
@@ -586,18 +777,15 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     String page,
     bool Function(FluxyPage) predicate, [
     Object? data,
-  ]) async {
-    final arguments = _buildPageSettings(page, data);
-
-    final route = _getRouteDecoder<T>(arguments);
-
-    if (route == null) return null;
-
-    while (_activePages.isNotEmpty && !predicate(_activePages.last.route!)) {
-      _popWithResult();
-    }
-
-    return _push<T>(route);
+  ]) {
+    return _result<T>(
+      _navigate(
+        () => _resolve<T>(page, arguments: data),
+        (stack, entry) => stack
+            .removeUntil((e) => predicate(e.page))
+            .add(entry, mode: entry.page.preventDuplicateHandlingMode),
+      ),
+    );
   }
 
   @override
@@ -605,39 +793,19 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     Widget Function() page,
     bool Function(FluxyPage) predicate, [
     Object? arguments,
-  ]) async {
-    while (_activePages.isNotEmpty && !predicate(_activePages.last.route!)) {
-      _popWithResult();
-    }
-
-    return to<T>(page, arguments: arguments);
-  }
-
-  @override
-  void removeRoute<T>(String name) {
-    // By name: a decoder built from the name never equals the one on the
-    // stack (different key and completer), so this used to remove nothing.
-    final index = _activePages.lastIndexWhere(
-      (e) => e.pageSettings?.name == name || e.route?.name == name,
+  ]) {
+    final getPage = _pageFor<T>(
+      page,
+      routeName: _cleanRouteName("/${page.runtimeType}"),
     );
-    if (index < 0 || _activePages.length < 2) return;
-    _complete(_activePages.removeAt(index));
-    notifyListeners();
-  }
-
-  bool get canBack {
-    return _activePages.length > 1;
-  }
-
-  void _checkIfCanBack() {
-    assert(() {
-      if (!canBack) {
-        final last = _activePages.last;
-        final name = last.route?.name;
-        throw 'The page $name cannot be popped';
-      }
-      return true;
-    }());
+    return _result<T>(
+      _navigate(
+        () => _directEntry<T>(getPage, arguments),
+        (stack, entry) => stack
+            .removeUntil((e) => predicate(e.page))
+            .add(entry, mode: getPage.preventDuplicateHandlingMode),
+      ),
+    );
   }
 
   @override
@@ -645,260 +813,28 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     String page, {
     T? result,
     Object? arguments,
-  }) async {
-    final args = _buildPageSettings(page, arguments);
-    final route = _getRouteDecoder<R>(args);
-    if (route == null) return null;
-    _popWithResult<T>(result);
-    return _push<R>(route);
-  }
-
-  /// Removes routes according to [PopMode]
-  /// until it reaches the specific [fullRoute],
-  /// DOES NOT remove the [fullRoute]
-  @override
-  Future<void> popModeUntil(
-    String fullRoute, {
-    PopMode popMode = PopMode.history,
-  }) async {
-    // remove history or page entries until you meet route
-    var iterator = currentConfiguration;
-    while (_canPop(popMode) && iterator != null) {
-      //the next line causes wasm compile error if included in the while loop
-      //https://github.com/flutter/flutter/issues/140110
-      if (iterator.pageSettings?.name == fullRoute) {
-        break;
-      }
-      await _pop(popMode, null);
-      // replace iterator
-      iterator = currentConfiguration;
-    }
-    notifyListeners();
-  }
-
-  @override
-  void backUntil(bool Function(FluxyPage) predicate) {
-    while (_activePages.length > 1 && !predicate(_activePages.last.route!)) {
-      _popWithResult();
-    }
-
-    notifyListeners();
-  }
-
-  Future<T?> _replace<T>(PageSettings arguments, FluxyPage<T> page) async {
-    final index = _activePages.length > 1 ? _activePages.length - 1 : 0;
-
-    final activePage = _decoderForPage<T>(arguments, page);
-
-    // final activePage = _configureRouterDecoder<T>(route!, arguments);
-
-    final replaced = _activePages[index];
-    _activePages[index] = activePage;
-    _complete(replaced);
-
-    notifyListeners();
-    return await activePage.route?.completer?.future as Future<T?>?;
-  }
-
-  Future<T?> _replaceNamed<T>(RouteDecoder activePage) async {
-    final index = _activePages.length > 1 ? _activePages.length - 1 : 0;
-    // final activePage = _configureRouterDecoder<T>(page, arguments);
-    final replaced = _activePages[index];
-    _activePages[index] = activePage;
-    _complete(replaced);
-
-    notifyListeners();
-    final result = await activePage.route?.completer?.future as Future<T?>?;
-    return result;
+  }) {
+    return _result<R>(
+      _navigate(
+        () => _resolve<R>(page, arguments: arguments),
+        (stack, entry) => NavStack(
+          stack.entries.take(stack.isEmpty ? 0 : stack.length - 1),
+        ).add(entry, mode: entry.page.preventDuplicateHandlingMode),
+        popsTop: true,
+        popResult: result,
+      ),
+    );
   }
 
   /// Takes a route [name] String generated by [to], [off], [offAll]
   /// (and similar context navigation methods), cleans the extra chars and
   /// accommodates the format.
-  /// TODO: check for a more "appealing" URL naming convention.
-  /// `() => MyHomeScreenView` becomes `/my-home-screen-view`.
+  /// `() => MyHomeScreenView` becomes `/MyHomeScreenView`.
   String _cleanRouteName(String name) {
     name = name.replaceAll('() => ', '');
-
-    /// uncomment for URL styling.
-    // name = name.paramCase!;
     if (!name.startsWith('/')) {
       name = '/$name';
     }
     return Uri.tryParse(name)?.toString() ?? name;
-  }
-
-  PageSettings _buildPageSettings(String page, [Object? data]) {
-    var uri = Uri.parse(page);
-    return PageSettings(uri, data);
-  }
-
-  @protected
-  RouteDecoder? _getRouteDecoder<T>(PageSettings arguments) {
-    var page = arguments.uri.path;
-    final parameters = arguments.params;
-    if (parameters.isNotEmpty) {
-      final uri = Uri(path: page, queryParameters: parameters);
-      page = uri.toString();
-    }
-
-    final decoder = matchRoute(page, arguments: arguments);
-    final route = decoder.route;
-    if (route == null) return null;
-
-    return _configureRouterDecoder<T>(decoder, arguments);
-  }
-
-  @protected
-  RouteDecoder _configureRouterDecoder<T>(
-    RouteDecoder decoder,
-    PageSettings arguments,
-  ) {
-    final parameters = arguments.params.isEmpty
-        ? arguments.query
-        : arguments.params;
-    // Path parameters win: '/item/42?id=7' keeps id = 42.
-    arguments.query.forEach((k, v) => arguments.params.putIfAbsent(k, () => v));
-    if (decoder.parameters.isEmpty) {
-      decoder.parameters.addAll(parameters);
-    }
-
-    decoder.route = decoder.route?.copyWith(
-      completer: _activePages.isEmpty ? null : Completer<T?>(),
-      arguments: arguments,
-      parameters: parameters,
-      key: ValueKey(arguments.name),
-    );
-
-    return decoder;
-  }
-
-  Future<T?> _push<T>(RouteDecoder decoder, {bool rebuildStack = true}) async {
-    var res = await runMiddleware(decoder);
-    if (res == null) return null;
-    // final res = mid ?? decoder;
-    // if (res == null) res = decoder;
-
-    final preventDuplicateHandlingMode =
-        res.route?.preventDuplicateHandlingMode ??
-        PreventDuplicateHandlingMode.reorderRoutes;
-
-    final onStackPage = _activePages.firstWhereOrNull(
-      (element) => element.route?.key == res.route?.key,
-    );
-
-    /// There are no duplicate routes in the stack
-    if (onStackPage == null) {
-      _activePages.add(res);
-    } else if (res.route?.preventDuplicates == false) {
-      // Pushed anyway: the Navigator needs a key of its own for it.
-      res.route = res.route!.copyWith(key: UniqueKey());
-      _activePages.add(res);
-    } else {
-      /// There are duplicate routes, reorder
-      switch (preventDuplicateHandlingMode) {
-        case PreventDuplicateHandlingMode.doNothing:
-          // Nothing is pushed, so nothing will complete the new future.
-          _complete(res);
-          break;
-        case PreventDuplicateHandlingMode.reorderRoutes:
-          _activePages.remove(onStackPage);
-          _activePages.add(res);
-          _complete(onStackPage);
-          break;
-        case PreventDuplicateHandlingMode.popUntilOriginalRoute:
-          // Back to the page already on the stack; the new one isn't pushed.
-          while (_activePages.last != onStackPage) {
-            _popWithResult();
-          }
-          _complete(res);
-          break;
-        case PreventDuplicateHandlingMode.recreate:
-          _activePages.remove(onStackPage);
-          _activePages.add(res);
-          _complete(onStackPage);
-      }
-    }
-    if (rebuildStack) {
-      notifyListeners();
-    }
-
-    return decoder.route?.completer?.future as Future<T?>?;
-  }
-
-  @override
-  Future<void> setNewRoutePath(RouteDecoder configuration) async {
-    final page = configuration.route;
-    if (page == null) {
-      goToUnknownPage();
-      return;
-    } else {
-      _push(configuration);
-    }
-  }
-
-  @override
-  RouteDecoder? get currentConfiguration {
-    if (_activePages.isEmpty) return null;
-    final route = _activePages.last;
-    return route;
-  }
-
-  Future<bool> handlePopupRoutes({Object? result}) async {
-    Route? currentRoute;
-    navigatorKey.currentState!.popUntil((route) {
-      currentRoute = route;
-      return true;
-    });
-    if (currentRoute is PopupRoute) {
-      return await navigatorKey.currentState!.maybePop(result);
-    }
-    return false;
-  }
-
-  @override
-  Future<bool> popRoute({Object? result, PopMode? popMode}) async {
-    //Returning false will cause the entire app to be popped.
-    final wasPopup = await handlePopupRoutes(result: result);
-    if (wasPopup) return true;
-
-    if (_canPop(popMode ?? backButtonPopMode)) {
-      await _pop(popMode ?? backButtonPopMode, result);
-      notifyListeners();
-      return true;
-    }
-
-    return super.popRoute();
-  }
-
-  @override
-  void back<T>([T? result]) {
-    _checkIfCanBack();
-    // The check above only runs in debug builds. Popping the last page
-    // would leave an empty navigator (a blank screen).
-    if (!canBack) return;
-    _popWithResult<T>(result);
-    notifyListeners();
-  }
-
-  bool _onPopVisualRoute(Route<dynamic> route, dynamic result) {
-    final didPop = route.didPop(result);
-    if (!didPop) {
-      return false;
-    }
-    _popWithResult(result);
-    // final settings = route.settings;
-    // if (settings is FluxyPage) {
-    //   final config = _activePages.cast<RouteDecoder?>().firstWhere(
-    //         (element) => element?.route == settings,
-    //         orElse: () => null,
-    //       );
-    //   if (config != null) {
-    //     _removeHistoryEntry(config, result);
-    //   }
-    // }
-    notifyListeners();
-    //return !route.navigator!.userGestureInProgress;
-    return true;
   }
 }

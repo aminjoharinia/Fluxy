@@ -10,16 +10,10 @@ class RouteDecoder {
   final PageSettings? pageSettings;
 
   factory RouteDecoder.fromRoute(String location) {
-    var uri = Uri.parse(location);
-    final args = PageSettings(uri);
-    final decoder = (Fluxy.rootController.rootDelegate).matchRoute(
-      location,
-      arguments: args,
-    );
+    final decoder = Fluxy.rootController.rootDelegate.matchRoute(location);
     decoder.route = decoder.route?.copyWith(
-      completer: null,
-      arguments: args,
-      parameters: args.params,
+      arguments: decoder.pageSettings,
+      parameters: decoder.parameters,
     );
     return decoder;
   }
