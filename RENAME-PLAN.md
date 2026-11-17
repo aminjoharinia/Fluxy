@@ -1,6 +1,6 @@
 # Plan: from `get` to Fluxy names
 
-Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). Phases 1, 2 and 3 committed on main, untagged: one tag once the rename is complete (decided 2026-11-17). Decisions are listed under "Decisions" at the end.
+Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). All four phases committed on main 2026-11-17, untagged: the whole rename ships as one release, without deprecated aliases (decisions 5 and 6). Left: the release commit and tag, then the app switch. Decisions are listed under "Decisions" at the end.
 
 ## Goal
 
@@ -111,19 +111,17 @@ Spec (2026-11-17):
 - Done as: the codemod with the phase 3 pairs over `packages/`, root `test/` and the examples, comments (`Get.member`, `[Get]`, the type names), docs for the current API (FLUXY.md history left as written). `GetRoot` / `GetRootState`, `GetDialogRoute` and `GetTestMode` are not exported, so they have no alias. On a copy of the app, old code compiles with deprecation infos only (381 `Get`, 20 `GetxController`, 22 nav types), and `dart fix --apply` and the codemod give identical results (424 changes in 64 files, analyze clean apart from the 2 Firebase infos, 97 tests pass).
 - The codemod skips `deprecated_names.dart` files: running it over `packages/` again had turned the phase 2 aliases into `typedef FluxyController = FluxyController`.
 
-### Phase 4: remove the old names (v1.1.0)
+### Phase 4: remove the old names — committed 2026-11-17
 
-Left before tagging: the internal nav work listed under phase 3 is optional; this phase and the benchmark are what make the rename complete.
-
-- Delete the deprecated aliases (`lib/deprecated_names.dart` in fluxy_core, fluxy_state, fluxy_utils, fluxy_ui, fluxy_nav, with the `Get` object) and the transforms in `lib/fix_data.yaml`.
-- Optionally move the internal `get_*` folders to `src/`.
-- Benchmark: `apps/fluxy` moves to `fluxy:` and the new names, and the README's reason for one app per library is updated (GetX 4 and 5 are still both `get`).
-- Final docs: README / FLUXY.md written as Fluxy, with a "coming from GetX" table generated from `tool/renames.txt`.
-- The GetX `LICENSE` notice (MIT) stays, with Fluxy's copyright added.
+- Deleted the deprecated aliases (`lib/deprecated_names.dart` in fluxy_core, fluxy_state, fluxy_utils, fluxy_ui, fluxy_nav, with the `Get` object). `lib/fix_data.yaml` stays: on a copy of the app with the old names gone, `dart fix --apply` (after the pubspec and import switch) still made all 424 renames, identical to the codemod; analyze clean apart from the 2 Firebase infos, 97 tests pass.
+- Benchmark: `apps/fluxy` depends on `fluxy:` and uses the new names (analyze clean; not re-run). `apps/getx4` / `apps/getx5` unchanged.
+- Docs: README "Coming from GetX" table (from `tool/renames.txt`), FLUXY.md, `tool/` docs.
+- Internal `get_*` folders not moved to `src/`: no API effect, and it would cost history readability.
+- The GetX `LICENSE` notice (MIT) stays.
 
 ## Risks
 
-- **Deprecation noise.** Between a release and the app's codemod run, the app's analyzer lists every old name. Run the codemod in the same change as the version bump.
+- **No aliases.** The release breaks every old name at once; the app must run the codemod in the same change as its version bump (checked on a copy: 424 + 87 changes, analyze clean, 97 tests).
 - **History.** Renames touch many lines. Keep each phase's rename in its own commit (no other changes), so `git log -S` and blame stay usable; never `dart format` whole upstream files.
 - **Upstream.** After phase 2, pulling fixes from jonataslaw/getx becomes manual. Fluxy has diverged far enough that this is already mostly true.
 - **Benchmark.** Not updated until phase 4: `apps/fluxy` does not build from v0.8.0 to then. `apps/getx4` and `apps/getx5` keep depending on packages named `get`.
@@ -133,4 +131,6 @@ Left before tagging: the internal nav work listed under phase 3 is optional; thi
 1. Prefix: `Fluxy` everywhere a `Get` prefix was (not `Flux`, no plain names).
 2. Facade: one `Fluxy.` object replacing `Get.`, not split by job.
 3. No `get_compat`: the app switches package in the phase 1 release.
-4. Versions step by 0.1: v0.8.0 package, v0.9.0 types, v1.0.0 facade + nav, v1.1.0 removes the old names.
+4. Versions step by 0.1: v0.8.0 package, v0.9.0 types, v1.0.0 facade + nav, v1.1.0 removes the old names (superseded by 5 and 6).
+5. No tag per phase: one tag when the whole rename is done.
+6. The deprecated aliases are deleted before that tag, so the app moves with the codemod (or `dart fix`) in the same change as its version bump.
