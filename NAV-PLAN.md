@@ -1,6 +1,6 @@
 # fluxy_nav re-engineering plan
 
-Status: planned (2026-11-17); decisions below taken, phase 0 next. Nothing is implemented yet.
+Status: in progress (2026-11-17); decisions below taken. Phase 0 done. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -72,3 +72,12 @@ Each phase ends green: package tests, the examples, and the app copy with `pubsp
 - **D3: `FluxyMiddleware` is removed.** It's replaced by `redirect` on pages and on `FluxyApp`, plus `onEnter` / `onLeave`. There's no adapter. `priority` goes with it, and redirects run parent first, in the order they're listed.
 - **D4: `id:` stays, for independent navigators only** (for example tabs with their own history). Outlets read the main stack and need no id.
 - **D5: Router only.** Both app widgets keep running on `MaterialApp.router` / `CupertinoApp.router`. No plain-`Navigator` mode.
+
+## Results
+
+### Phase 0 (2026-11-17): characterization tests
+
+- `test/navigation/characterization_test.dart` (21 tests): `back` order (snackbar, dialog, page, last page kept; sheet before page; sheet on the first page), `closeAllDialogs` (two dialogs; none open leaves the page; dialog over a sheet), overlay results (`dialog`, `defaultDialog` confirm, `generalDialog` + `closeDialog`, `bottomSheet`), pages (`to` with a transition and its result, `to` duplicates, `offAll` with zoom + duration completing the removed futures, `offAllNamed`, unknown → `unknownRoute`, `currentRoute` / `previousRoute`, `arguments`, `initialRoute`), globals (`Fluxy.key`, `context`, `overlayContext`, the URL the delegate reports, hash URLs by default).
+- `test/navigation/app_shape_test.dart` (4 tests): the app's `main.dart` set-up as of v1.0.0 (own delegate, parser subclass with a start route, `UnknownRoute` post-frame redirect, hand-wired observer). Replaced in phase 4 by the `redirect:` version.
+- `test/navigation/nav_bugs_test.dart`: B1-B7 as tests, all confirmed failing on v1.0.0 and marked `skip` until fixed.
+- All checks green: 134 fluxy_nav tests (+7 skipped), every package, root, both examples; the app with a local override: analyzer clean, 97 tests pass.
