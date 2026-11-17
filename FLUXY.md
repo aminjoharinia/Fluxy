@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.0.0
+    ref: v1.2.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.0.0
+    ref: v1.2.0
     path: packages/fluxy_state
 ```
 
@@ -137,6 +137,8 @@ fluxy_state:
   - Nested pages: `FluxyRouterOutlet(parent: '/home', initialRoute:, levels:)` shows the pages of the current address below `parent`; a pop inside it moves the address up a level and the URL follows. `Fluxy.currentRoute` / `previousRoute` / `routing` are the address (nested pages included). `anchorRoute`, `.builder`, `.pickPages` and the generic `RouterOutlet` are gone; `id:` / `Fluxy.nestedKey` stay for independent navigators.
   - `Fluxy.isDialogOpen` / `isBottomSheetOpen` come from a counter kept by the dialog and sheet routes, so an app-provided delegate needs no observer; `closeAllDialogs` and friends only pop popups. The navigator uses `onDidRemovePage`.
   - Removed: `RouteDecoder` (the router configuration is the top entry's `Uri`), `ParseRouteTree`, `FluxyPage.path` / `middlewares` / `unknownRoute`, `FluxyDelegate.activePages` (use `stack`) / `matchRoute` (use `routeTable.match`) / `routingObserver`, `PagesListExt`. `offAll(predicate:)` keeps the page the predicate accepts. `FluxyTestMode` is exported.
+  - Measured against v1.0.0 (release build, runs alternated, [benchmark/nav](benchmark/nav/README.md)): matching an address 15× faster (1.25 µs over 152 pages), a deep link (`offAllNamed`) 2×, push + pop 1.13×, pushing onto a 100-deep stack 1.03×, a dialog the same; the frame dominates the last three.
+  - Moving an app: replace `FluxyMiddleware` with `redirect:` (an async `redirectDelegate` becomes an async redirect returning the address, null to go on, `NavRequest.stop` instead of returning null), `anchorRoute:` with `parent:`, and drop parser subclasses or `UnknownRoute` pages that redirect, hand-wired `FluxyObserver`s, and imports of `package:fluxy_nav/get_navigation/...`.
   - Files: `lib/src/{routing,router,overlays,app,transitions,facade}`; the facade is one extension per concern (`FluxyNavigationExt`, `ExtensionDialog`, `ExtensionBottomSheet`, `ExtensionSnackbar`, `OverlayExt`, `FluxyAppExt`, `FluxyWindowExt`). Import `package:fluxy_nav/fluxy_nav.dart`; the `get_navigation/` paths are gone.
 
 ## Tests
