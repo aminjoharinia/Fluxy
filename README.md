@@ -116,6 +116,6 @@ To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, the
 | `GetQueueCancelledException` | `FluxyQueueCancelledException` |
 | `GetMicrotask` | `FluxyMicrotask` |
 
-What changed from GetX, release by release: [FLUXY.md](FLUXY.md). The upstream GetX guides in [`documentation/`](documentation/) still describe most of the API, but not the changes listed there (and they mention `GetConnect`, which is removed).
+What changed from GetX, release by release: [FLUXY.md](FLUXY.md). Working apps: [`example/`](example/) (bindings, `StateController` with `obx`, translations, snackbars) and [`example_nav2/`](example_nav2/) (nested routes, middleware). GetX's guides and changelog are gone from this repo (they used GetX's names and `GetConnect`); they stay in the tag `v0.0.0-upstream-a294d2f`.
 
 How Fluxy compares with GetX 4, upstream GetX 5, Riverpod, BLoC and Signals in release builds: [benchmark/results/RESULTS.md](benchmark/results/RESULTS.md) (method in [benchmark/README.md](benchmark/README.md)).

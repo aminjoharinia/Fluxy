@@ -1,13 +1,11 @@
-import 'dart:io';
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy/fluxy.dart';
-import 'package:fluxy/get_navigation/src/routes/test_kit.dart';
-import 'package:get_demo/pages/home/domain/adapters/repository_adapter.dart';
-import 'package:get_demo/pages/home/domain/entity/country_model.dart';
-import 'package:get_demo/pages/home/presentation/controllers/details_controller.dart';
-import 'package:get_demo/pages/home/presentation/controllers/home_controller.dart';
+import 'package:fluxy_nav/get_navigation/src/routes/test_kit.dart';
+import 'package:fluxy_example/pages/home/domain/adapters/repository_adapter.dart';
+import 'package:fluxy_example/pages/home/domain/entity/country_model.dart';
+import 'package:fluxy_example/pages/home/presentation/controllers/details_controller.dart';
+import 'package:fluxy_example/pages/home/presentation/controllers/home_controller.dart';
 
 // Mock data
 const country1 = CountriesItem(
@@ -80,7 +78,6 @@ class TestDetailsBinding extends Binding {
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setUpAll(() {
-    HttpOverrides.global = null;
     FluxyTestMode.active = true;
   });
 

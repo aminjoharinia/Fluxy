@@ -1,5 +1,5 @@
 import 'package:fluxy/fluxy.dart';
-import 'package:get_demo/pages/home/bindings/details_binding.dart';
+import 'package:fluxy_example/pages/home/bindings/details_binding.dart';
 
 import '../pages/home/bindings/home_binding.dart';
 import '../pages/home/presentation/views/details_view.dart';

@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:fluxy/fluxy.dart';
-import 'package:get_demo/pages/home/domain/entity/country_model.dart';
+import 'package:fluxy_example/pages/home/domain/entity/country_model.dart';
 
 import '../controllers/details_controller.dart';
 

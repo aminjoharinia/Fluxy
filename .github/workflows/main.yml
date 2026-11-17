@@ -35,3 +35,14 @@ jobs:
           flutter pub get
           flutter analyze lib test
           if [ -d test ]; then flutter test; fi
+
+      # The example apps build against the local packages; they rot unseen
+      # when nothing analyzes them.
+      - name: Examples (analyze + test)
+        run: |
+          set -e
+          for e in example example_nav2; do
+            echo "::group::$e"
+            (cd "$e" && flutter pub get && flutter analyze && flutter test)
+            echo "::endgroup::"
+          done

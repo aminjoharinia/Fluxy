@@ -1,16 +1,16 @@
-# example
+# Fluxy example
 
-A new Flutter project.
+A small app showing the everyday Fluxy pieces together:
 
-## Getting Started
+- `FluxyApp` with named routes, nested pages and a `Binding` per page (`lib/routes`, `lib/pages/home/bindings`)
+- a `StateController` loaded with `futurize` and shown with `controller.obx(...)` (loading / success / error)
+- `Fluxy.toNamed` with arguments, `Fluxy.snackbar`, `.tr` translations and `Fluxy.updateLocale` (en_US / pt_BR)
 
-This project is a starting point for a Flutter application.
+The data is offline sample data (`lib/pages/home/data/home_api_provider.dart`); Fluxy has no HTTP client.
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter run      # pick a device
+flutter test     # controller tests with mock repositories
+```
 
-- [Lab: Write your first Flutter app](https://flutter.dev/documentation/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/documentation/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+`example_nav2/` next to this folder shows nested navigation with `FluxyRouterOutlet`, middleware and a drawer.
