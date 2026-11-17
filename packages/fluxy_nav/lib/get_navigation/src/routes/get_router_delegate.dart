@@ -55,28 +55,38 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
 
   List<RouteDecoder> get activePages => _activePages;
 
-  final _routeTree = ParseRouteTree(routes: []);
+  final _pages = <FluxyPage>[];
+  RouteTable _table = RouteTable(const []);
 
-  List<FluxyPage> get registeredRoutes => _routeTree.routes;
+  /// The registered pages, children flattened to their full paths.
+  RouteTable get routeTable => _table;
 
+  List<FluxyPage> get registeredRoutes => _table.routes;
+
+  /// Registers more pages. The table is rebuilt; navigation never changes it.
   void addPages(List<FluxyPage> getPages) {
-    _routeTree.addRoutes(getPages);
+    _pages.addAll(getPages);
+    _table = RouteTable(_pages);
   }
 
   void clearRouteTree() {
-    _routeTree.routes.clear();
+    _pages.clear();
+    _table = RouteTable(const []);
   }
 
-  void addPage(FluxyPage getPage) {
-    _routeTree.addRoute(getPage);
-  }
+  void addPage(FluxyPage getPage) => addPages([getPage]);
 
   void removePage(FluxyPage getPage) {
-    _routeTree.removeRoute(getPage);
+    _pages.remove(getPage);
+    _table = RouteTable(_pages);
   }
 
   RouteDecoder matchRoute(String name, {PageSettings? arguments}) {
-    return _routeTree.matchRoute(name, arguments: arguments);
+    final match = _table.match(name);
+    arguments?.params
+      ?..clear()
+      ..addAll(match.parameters);
+    return RouteDecoder(List.of(match.branch), arguments);
   }
 
   // GlobalKey<NavigatorState> get navigatorKey => Fluxy.key;
@@ -108,8 +118,7 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     // unless path URLs are asked for. That only works before runApp; see
     // setUrlStrategy().
     if (!showHashOnUrl && FluxyPlatform.isWeb) setUrlStrategy();
-    addPages(pages);
-    addPage(notFoundRoute);
+    addPages([...pages, notFoundRoute]);
     Fluxy.log('FluxyDelegate is created !');
   }
 
@@ -362,20 +371,13 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     if (completer?.isCompleted == false) completer!.complete(result);
   }
 
-  /// Matches [page] by name (for parameters and parent pages) but builds
-  /// [page] itself. An older page with the same name can still be in the
-  /// route tree (two `Fluxy.to(() => Detail(..))`), and the first match wins.
+  /// A decoder for a page that isn't in the route table (`Fluxy.to`,
+  /// `off`, `offAll`). The table isn't changed.
   RouteDecoder _decoderForPage<T>(PageSettings args, FluxyPage<T> page) {
-    final decoder = _getRouteDecoder<T>(args)!;
-    final matched = decoder.route!;
-    decoder.route = page.copyWith(
-      name: matched.name,
-      key: matched.key,
-      parameters: matched.parameters,
-      arguments: matched.arguments,
-      completer: matched.completer as Completer<T?>?,
-    );
-    return decoder;
+    args.params
+      ..clear()
+      ..addAll(args.query);
+    return _configureRouterDecoder<T>(RouteDecoder([page], args), args);
   }
 
   @override
@@ -441,12 +443,9 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
       preventDuplicateHandlingMode: preventDuplicateHandlingMode,
     );
 
-    _routeTree.addRoute(getPage);
     final args = _buildPageSettings(routeName, arguments);
     final route = _decoderForPage<T>(args, getPage);
-    final result = await _push<T>(route, rebuildStack: rebuildStack);
-    _routeTree.removeRoute(getPage);
-    return result;
+    return _push<T>(route, rebuildStack: rebuildStack);
   }
 
   @override
@@ -688,7 +687,6 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
 
   Future<T?> _replace<T>(PageSettings arguments, FluxyPage<T> page) async {
     final index = _activePages.length > 1 ? _activePages.length - 1 : 0;
-    _routeTree.addRoute(page);
 
     final activePage = _decoderForPage<T>(arguments, page);
 
@@ -699,10 +697,7 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     _complete(replaced);
 
     notifyListeners();
-    final result = await activePage.route?.completer?.future as Future<T?>?;
-    _routeTree.removeRoute(page);
-
-    return result;
+    return await activePage.route?.completer?.future as Future<T?>?;
   }
 
   Future<T?> _replaceNamed<T>(RouteDecoder activePage) async {
@@ -747,7 +742,7 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
       page = uri.toString();
     }
 
-    final decoder = _routeTree.matchRoute(page, arguments: arguments);
+    final decoder = matchRoute(page, arguments: arguments);
     final route = decoder.route;
     if (route == null) return null;
 

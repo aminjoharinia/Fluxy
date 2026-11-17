@@ -60,16 +60,18 @@ void main() {
       ],
     );
 
-    final tree = ParseRouteTree(routes: <FluxyPage>[]);
+    final tree = RouteTable([pageTree]);
 
-    tree.addRoute(pageTree);
-
-    // tree.addRoute(pageTree);
     const searchRoute = '/city/work/office/pen';
-    final match = tree.matchRoute(searchRoute);
-    expect(match, isNotNull);
-    expect(match.route!.name, searchRoute);
-    final testRouteParam = match.route!.parameters!;
+    final match = tree.match(searchRoute);
+    expect(match.page!.name, searchRoute);
+    expect(match.patterns, [
+      '/city',
+      '/city/work',
+      '/city/work/office',
+      '/city/work/office/pen',
+    ]);
+    final testRouteParam = match.page!.parameters!;
     for (final tParam in testParams.entries) {
       expect(testRouteParam[tParam.key], tParam.value);
     }
@@ -115,16 +117,12 @@ void main() {
           transition: Transition.rightToLeft),
     ];
 
-    final tree = ParseRouteTree(routes: pageTree);
-
-    // for (var p in pageTree) {
-    //   tree.addRoute(p);
-    // }
+    final tree = RouteTable(pageTree);
 
     const searchRoute = '/city/work/office/pen';
-    final match = tree.matchRoute(searchRoute);
-    expect(match, isNotNull);
-    expect(match.route!.name, searchRoute);
+    final match = tree.match(searchRoute);
+    expect(match.page!.name, searchRoute);
+    expect(match.page!.transition, Transition.native);
   });
 
   testWidgets(
@@ -210,22 +208,21 @@ void main() {
   test('copyWith with a new name matches the new pattern', () {
     final page = FluxyPage(name: '/user/:id', page: () => Container());
     final copy = page.copyWith(name: '/shop/:item');
-    expect(copy.path.keys, ['item']);
-    expect(copy.path.regex.hasMatch('/shop/42'), isTrue);
-    expect(copy.path.regex.hasMatch('/user/42'), isFalse);
-    expect(page.copyWith(title: 't').path.keys, ['id']);
+    final table = RouteTable([copy]);
+    expect(table.match('/shop/42').parameters, {'item': '42'});
+    expect(table.match('/user/42').isUnknown, isTrue);
   });
 
   test('matched pages carry the path key and the parameters', () {
-    final tree = ParseRouteTree(routes: []);
-    tree.addRoutes([
+    final table = RouteTable([
       FluxyPage(name: '/', page: () => Container()),
       FluxyPage(name: '/user/:id', page: () => Container()),
     ]);
-    final decoded = tree.matchRoute('/user/7?tab=a');
-    final last = decoded.currentTreeBranch.last;
+    final decoded = table.match('/user/7?tab=a');
+    final last = decoded.branch.last;
     expect(last.key, const ValueKey('/user/7'));
     expect(last.name, '/user/7');
     expect(last.parameters, {'id': '7', 'tab': 'a'});
+    expect(decoded.branch.first.name, '/');
   });
 }

@@ -52,7 +52,7 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('settings'), findsOneWidget);
     expect(Fluxy.parameters['id'], isNull);
-  }, skip: true);
+  });
 
   testWidgets('B2: navigations apply in call order', (t) async {
     final gate = Completer<void>();
@@ -107,7 +107,7 @@ void main() {
     Fluxy.to(() => const Detail());
     await t.pumpAndSettle();
     expect(delegate.registeredRoutes.length, before);
-  }, skip: true);
+  });
 
   testWidgets('B5: a pop inside an outlet updates the stack and the URL',
       (t) async {

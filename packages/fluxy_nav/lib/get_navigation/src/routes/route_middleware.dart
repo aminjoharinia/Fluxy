@@ -172,8 +172,12 @@ class PageRedirect {
   // redirect all pages that needes redirecting
   FluxyPageRoute<T> getPageToRoute<T>(
       FluxyPage rou, FluxyPage? unk, BuildContext context) {
-    while (needRecheck(context)) {}
-    final r = (isUnknown ? unk : rou)!;
+    // Only pages with middlewares are matched again: a page opened with
+    // Fluxy.to() isn't in the route table.
+    if (rou.middlewares.isNotEmpty) {
+      while (needRecheck(context)) {}
+    }
+    final r = isUnknown && unk != null ? unk : rou;
 
     return FluxyPageRoute<T>(
       page: r.page,

@@ -1,6 +1,6 @@
 # fluxy_nav re-engineering plan
 
-Status: in progress (2026-11-17); decisions below taken. Phase 0 done. Results per phase are under "Results" at the end.
+Status: in progress (2026-11-17); decisions below taken. Phases 0-1 done. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -81,3 +81,11 @@ Each phase ends green: package tests, the examples, and the app copy with `pubsp
 - `test/navigation/app_shape_test.dart` (4 tests): the app's `main.dart` set-up as of v1.0.0 (own delegate, parser subclass with a start route, `UnknownRoute` post-frame redirect, hand-wired observer). Replaced in phase 4 by the `redirect:` version.
 - `test/navigation/nav_bugs_test.dart`: B1-B7 as tests, all confirmed failing on v1.0.0 and marked `skip` until fixed.
 - All checks green: 134 fluxy_nav tests (+7 skipped), every package, root, both examples; the app with a local override: analyzer clean, 97 tests pass.
+
+### Phase 1 (2026-11-17): RouteTable + RouteMatch
+
+- `lib/src/routing/route_table.dart`: a segment trie built once from the pages (children flattened to full paths, parents' bindings / binds / middlewares resolved at build time). Priority static > `:param` > `*wildcard`, with backtracking, regardless of registration order (B1). `:name?` registers both forms. Parameter names come from the matched page's own pattern. Same pattern twice: the first wins. Unmodifiable `routes`; `addPage(s)` / `removePage` rebuild the table, navigation never touches it.
+- `lib/src/routing/route_match.dart`: immutable result (uri as path + query, branch with concrete names and `ValueKey(path)` keys, patterns, path / merged parameters, path wins). `RouteMatch.direct` for pages outside the table.
+- The delegate matches through the table; `Fluxy.to` / `off` / `offAll` no longer register a temporary page (B4). `FluxyPage.createRoute` only matches again for pages with middlewares, so pages outside the table build directly.
+- Removed: `new_path_route.dart` (unused second matcher), `ParseRouteTree`, `FluxyPage.path` / `PathDecoded` (regex patterns). Mixed segments like `file.:ext` are no longer patterns (they match literally).
+- Tests: `route_table_test.dart` (14), parse tests moved to the table; B1 and B4 un-skipped. 150 fluxy_nav tests (+5 skipped), all checks green, app 97 tests pass.

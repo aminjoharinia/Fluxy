@@ -17,3 +17,5 @@ export 'route_report.dart';
 export 'router_outlet.dart';
 export 'transitions_type.dart';
 export 'url_strategy/url_strategy.dart';
+export '../../../src/routing/route_match.dart';
+export '../../../src/routing/route_table.dart';
