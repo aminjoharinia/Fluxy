@@ -26,7 +26,7 @@ class FluxyInformationParser extends RouteInformationParser<RouteDecoder> {
     required this.initialRoute,
     this.redirectRootToInitialRoute = false,
   }) {
-    Fluxy.log('GetInformationParser is created !');
+    Fluxy.log('FluxyInformationParser is created !');
   }
   @override
   SynchronousFuture<RouteDecoder> parseRouteInformation(
@@ -46,7 +46,7 @@ class FluxyInformationParser extends RouteInformationParser<RouteDecoder> {
       location = initialRoute;
     }
 
-    Fluxy.log('GetInformationParser: route location: $location');
+    Fluxy.log('FluxyInformationParser: route location: $location');
 
     return SynchronousFuture(RouteDecoder.fromRoute(location));
   }

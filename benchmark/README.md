@@ -5,7 +5,7 @@ Fluxy against GetX 4 (pub.dev stable), upstream GetX 5 at `a294d2f` (the commit 
 ## How it works
 
 - `bench_kit/` is the shared harness. It defines the scenarios ([`CoreSuite`](bench_kit/lib/src/harness.dart) and [`WidgetSuite`](bench_kit/lib/src/widgets.dart)), times them the same way for every library, checks every result, and writes JSON.
-- `apps/<library>/` is one small macOS app per library, each implementing the scenarios with that library's own API. They are separate apps because Fluxy, GetX 4 and GetX 5 are all named `get`.
+- `apps/<library>/` is one small macOS app per library, each implementing the scenarios with that library's own API. They are separate apps because GetX 4 and GetX 5 are both named `get` (Fluxy was too, until it became `fluxy`).
 - Every app is built with `flutter build macos --release`, so the timings come from ahead-of-time compiled code, not the debug VM.
 - A scenario warms up for 5 runs, then is sampled for about 2.5 seconds (at least 15 runs); the median is reported. `run.sh` runs each app 3 times and `summarize.py` keeps the lowest median of the runs.
 - Each run checks its own result: a missed notification, a stale derived value or a wrong number of rebuilt widgets fails the scenario instead of producing a fast wrong number.

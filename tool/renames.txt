@@ -8,16 +8,14 @@
 #                    both sides rewrites every URI with that prefix)
 #
 # Names are applied in one pass: a pair's new name is never renamed again by
-# another pair. Names are decided per phase in RENAME-PLAN.md; a phase's pairs
-# are added here with its release.
+# another pair. The old names are gone from Fluxy (no deprecated aliases), so
+# an app moves with this map or with `dart fix --apply` (lib/fix_data.yaml).
 
-# Phase 1 (v0.8.0): package name
+# Phase 1: package name
 package:get/get.dart package:fluxy/fluxy.dart
 package:get/ package:fluxy/
 
-# Phase 2 (v0.9.0): state, UI and utils types. Old names stay as deprecated
-# typedefs until v1.1.0 (extensions have no aliases: only explicit extension
-# calls such as GetStringUtils(s).isEmail need the new name).
+# Phase 2: state, UI and utils types.
 GetxController FluxyController
 GetxService FluxyService
 GetxServiceMixin FluxyServiceMixin
@@ -53,8 +51,7 @@ GetQueue FluxyQueue
 GetQueueCancelledException FluxyQueueCancelledException
 GetMicrotask FluxyMicrotask
 
-# Phase 3 (v1.0.0): the Fluxy object and navigation types. Get stays as a
-# deprecated alias of Fluxy, the types as deprecated typedefs, until v1.1.0.
+# Phase 3: the Fluxy object and navigation types.
 Get Fluxy
 GetInterface FluxyInterface
 GetMaterialApp FluxyApp

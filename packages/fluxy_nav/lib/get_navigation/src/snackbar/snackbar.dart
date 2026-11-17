@@ -344,7 +344,7 @@ class FluxySnackBarState extends State<FluxySnackBar>
             ((widget.message != null && widget.message!.isNotEmpty) ||
                 widget.messageText != null),
         '''
-You need to either use message[String], or messageText[Widget] or define a userInputForm[Form] in GetSnackbar''');
+You need to either use message[String], or messageText[Widget] or define a userInputForm[Form] in FluxySnackBar''');
 
     _isTitlePresent = (widget.title != null || widget.titleText != null);
     _messageTopMargin = _isTitlePresent ? 6.0 : widget.padding.top;

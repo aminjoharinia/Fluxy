@@ -11,7 +11,7 @@ Fluxy is a fork of [GetX](https://github.com/jonataslaw/getx) (from commit `a294
 | [`fluxy_nav`](packages/fluxy_nav) | router, `Fluxy.to/back`, dialogs, sheets, snackbars | core, state, i18n, utils |
 | [`fluxy_ui`](packages/fluxy_ui) | responsive views, `hp`/`wp`, animations | core, state, utils |
 
-The root package `fluxy` re-exports all of them: `import 'package:fluxy/fluxy.dart'` (named `get` until v0.8.0).
+The root package `fluxy` re-exports all of them: `import 'package:fluxy/fluxy.dart'` (named `get`, with GetX's type names, up to v0.7.3; see the README's "Coming from GetX").
 
 ## Using it
 

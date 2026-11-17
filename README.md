@@ -11,7 +11,7 @@ Fluxy is a private fork of [GetX](https://github.com/jonataslaw/getx) (MIT), spl
 | `fluxy_nav` | `FluxyApp` / `FluxyCupertinoApp`, router, `Fluxy.to` / `back`, dialogs, sheets, snackbars |
 | `fluxy_ui` | responsive views, `hp` / `wp`, animation extensions |
 
-The root package `fluxy` re-exports everything: `import 'package:fluxy/fluxy.dart'`. It was named `get` until v0.8.0; `dart run tool/migrate.dart <app>` rewrites the imports (see `tool/README.md`).
+The root package `fluxy` re-exports everything: `import 'package:fluxy/fluxy.dart'`. Up to v0.7.3 it was named `get` and used GetX's names; see [Coming from GetX](#coming-from-getx).
 
 ## Install
 
@@ -50,6 +50,71 @@ Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 - **State:** an `Obx` subscribes to exactly the Rx values its last build read. `Computed` derives values without glitches, `effect` reacts to them, and effects, `Computed`s and workers made in a controller's `onInit` are disposed with it. Write new values instead of editing in place (`mapWith`, `listWith`, `setIn`, `patch`); `rx.peek` reads without subscribing.
 - **Navigation:** `FluxyApp.router(getPages: ..., initialRoute: ..., unknownRoute: ...)`. Unknown addresses reach `unknownRoute`; web uses hash URLs unless you call `setUrlStrategy()` before `runApp`.
 - **Translations:** `.tr` inside an `Obx` updates on a language change; `Fluxy.updateLocale(locale)` rebuilds the rest.
+
+## Coming from GetX
+
+Fluxy keeps GetX's API under its own names (no deprecated aliases): every `Get` prefix became `Fluxy`. Member names did not change (`Fluxy.to`, `Fluxy.back`, `Fluxy.put`, `getPages:` …), nor did the short idioms: `.obs`, `Rx…`, `Obx`, `ObxValue`, `StateMixin`, `.tr`, `Bindings`, the `FluxyStatus` cases (`LoadingStatus`, `SuccessStatus`, `ErrorStatus`, `EmptyStatus`).
+
+To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, then run the codemod from a Fluxy checkout (`dart run tool/migrate.dart <app>`, see [tool/README.md](tool/README.md)). Or rewrite the imports (`package:get/` → `package:fluxy/`) and run `dart fix --apply`: the root package ships the type renames in `lib/fix_data.yaml`.
+
+| GetX | Fluxy |
+|---|---|
+| `package:get/get.dart` (package `get`) | `package:fluxy/fluxy.dart` (package `fluxy`) |
+| `Get` (`Get.to`, `Get.find`, …) | `Fluxy` (`Fluxy.to`, `Fluxy.find`, …) |
+| `GetInterface` | `FluxyInterface` |
+| `GetMaterialApp` | `FluxyApp` |
+| `GetCupertinoApp` | `FluxyCupertinoApp` |
+| `GetPage` | `FluxyPage` |
+| `GetPageBuilder` | `FluxyPageBuilder` |
+| `GetRouteAwarePageBuilder` | `FluxyRouteAwarePageBuilder` |
+| `GetMiddleware` | `FluxyMiddleware` |
+| `GetDelegate` | `FluxyDelegate` |
+| `GetInformationParser` | `FluxyInformationParser` |
+| `GetNavigator` | `FluxyNavigator` |
+| `GetObserver` | `FluxyObserver` |
+| `GetRouterOutlet` | `FluxyRouterOutlet` |
+| `GetPageRoute` | `FluxyPageRoute` |
+| `GetModalBottomSheetRoute` | `FluxyModalBottomSheetRoute` |
+| `GetPageRouteTransitionMixin` | `FluxyPageRouteTransitionMixin` |
+| `GetSnackBar` | `FluxySnackBar` |
+| `GetSnackBarState` | `FluxySnackBarState` |
+| `GetHeroScope` | `FluxyHeroScope` |
+| `GetBackGestureController` | `FluxyBackGestureController` |
+| `GetBackGestureDetector` | `FluxyBackGestureDetector` |
+| `GetBackGestureDetectorState` | `FluxyBackGestureDetectorState` |
+| `GetNavigationExt` | `FluxyNavigationExt` |
+| `GetResetExt` | `FluxyResetExt` |
+| `GetxController` | `FluxyController` |
+| `GetxService` | `FluxyService` |
+| `GetxServiceMixin` | `FluxyServiceMixin` |
+| `GetLifeCycleMixin` | `FluxyLifeCycleMixin` |
+| `GetView` | `FluxyView` |
+| `GetWidget` | `FluxyWidget` |
+| `GetBuilder` | `FluxyBuilder` |
+| `GetControllerBuilder` | `FluxyControllerBuilder` |
+| `GetX` | `FluxyX` |
+| `GetXState` | `FluxyXState` |
+| `GetXControllerBuilder` | `FluxyXControllerBuilder` |
+| `GetStatus` | `FluxyStatus` |
+| `GetListenable` | `FluxyListenable` |
+| `GetNotifier` | `FluxyNotifier` |
+| `GetTickerProviderStateMixin` | `FluxyTickerProviderStateMixin` |
+| `GetSingleTickerProviderStateMixin` | `FluxySingleTickerProviderStateMixin` |
+| `GetReactiveExt` | `FluxyReactiveExt` |
+| `GetResponsiveView` | `FluxyResponsiveView` |
+| `GetResponsiveWidget` | `FluxyResponsiveWidget` |
+| `GetResponsiveMixin` | `FluxyResponsiveMixin` |
+| `GetAnimatedBuilder` | `FluxyAnimatedBuilder` |
+| `GetAnimatedBuilderState` | `FluxyAnimatedBuilderState` |
+| `GetPlatform` | `FluxyPlatform` |
+| `GetUtils` | `FluxyUtils` |
+| `GetStringUtils` | `FluxyStringUtils` |
+| `GetNumUtils` | `FluxyNumUtils` |
+| `GetDurationUtils` | `FluxyDurationUtils` |
+| `GetDynamicUtils` | `FluxyDynamicUtils` |
+| `GetQueue` | `FluxyQueue` |
+| `GetQueueCancelledException` | `FluxyQueueCancelledException` |
+| `GetMicrotask` | `FluxyMicrotask` |
 
 What changed from GetX, release by release: [FLUXY.md](FLUXY.md). The upstream GetX guides in [`documentation/`](documentation/) still describe most of the API, but not the changes listed there (and they mention `GetConnect`, which is removed).
 

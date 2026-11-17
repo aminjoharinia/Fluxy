@@ -45,4 +45,4 @@ cd tool && dart pub get && dart test
 
 Checked in phase 0 (Flutter 3.50 / Dart 3.14): a `lib/fix_data.yaml` with `rename` transforms for a deprecated typedef alias (`typedef GetxController = FluxController`) does work with `dart fix`, if the element's `uris` list the library the app imports (`package:get/get.dart`), not only the package that declares it. The analyzer reads `fix_data.yaml` from every package in the app's dependency graph. The codemod stays the main tool: it also handles URIs and the facade member moves.
 
-The root package ships `lib/fix_data.yaml` with the phase 2 type renames, so `dart fix --apply` in an app gives the same result as the codemod for those (checked on a copy of the app: identical files).
+The root package ships `lib/fix_data.yaml` with the type renames and `Get` → `Fluxy`, so after the pubspec and import switch `dart fix --apply` gives the same result as the codemod (checked on a copy of the app, with and without the old names still declared: identical files).

@@ -110,7 +110,7 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     if (!showHashOnUrl && FluxyPlatform.isWeb) setUrlStrategy();
     addPages(pages);
     addPage(notFoundRoute);
-    Fluxy.log('GetDelegate is created !');
+    Fluxy.log('FluxyDelegate is created !');
   }
 
   Future<RouteDecoder?> runMiddleware(RouteDecoder config) async {

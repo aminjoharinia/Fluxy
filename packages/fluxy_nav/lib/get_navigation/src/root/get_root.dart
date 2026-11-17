@@ -314,9 +314,9 @@ class FluxyRoot extends StatefulWidget {
     assert(() {
       if (root == null) {
         throw FlutterError(
-          'GetRoot operation requested with a context that does not include a GetRoot.\n'
+          'FluxyRoot operation requested with a context that does not include a FluxyRoot.\n'
           'The context used must be that of a '
-          'widget that is a descendant of a GetRoot widget.',
+          'widget that is a descendant of a FluxyRoot widget.',
         );
       }
       return true;
@@ -330,7 +330,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
   static FluxyRootState? get maybeController => _controller;
   static FluxyRootState get controller {
     if (_controller == null) {
-      throw Exception('GetRoot is not part of the tree');
+      throw Exception('FluxyRoot is not part of the tree');
     } else {
       return _controller!;
     }

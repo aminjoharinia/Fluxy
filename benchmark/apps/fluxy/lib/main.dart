@@ -1,11 +1,11 @@
-// Fluxy (this repo): Rx + Computed + Get.batch, Obx.
+// Fluxy (this repo): Rx + Computed + Fluxy.batch, Obx.
 import 'package:bench_kit/bench_kit.dart';
 import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
+import 'package:fluxy/fluxy.dart';
 
 void main() => runBenchmarks(
       library: 'Fluxy',
-      notes: 'Rx.addListener, glitch-free Computed, Get.batch, Obx',
+      notes: 'Rx.addListener, glitch-free Computed, Fluxy.batch, Obx',
       core: _Core(),
       widgets: _Widgets(),
     );
@@ -243,7 +243,7 @@ class _Core extends CoreSuite {
         final c0 = calls;
         for (var r = 1; r <= rounds; r++) {
           final v = base + r;
-          Get.batch(() {
+          Fluxy.batch(() {
             for (final c in cells) {
               c.value = v;
             }

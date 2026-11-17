@@ -6,7 +6,7 @@ void removeHash() {
     setUrlStrategy(PathUrlStrategy());
   } on AssertionError catch (_) {
     debugPrint('[Fluxy] Path URLs must be set before runApp; '
-        'keeping hash URLs. Call setUrlStrategy() / create the GetDelegate '
+        'keeping hash URLs. Call setUrlStrategy() / create the FluxyDelegate '
         '(showHashOnUrl: false) before runApp.');
   }
 }

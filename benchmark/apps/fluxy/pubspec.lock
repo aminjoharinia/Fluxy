@@ -55,55 +55,55 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  fluxy:
+    dependency: "direct main"
+    description:
+      path: "../../.."
+      relative: true
+    source: path
+    version: "0.7.3"
   fluxy_core:
     dependency: transitive
     description:
       path: "../../../packages/fluxy_core"
       relative: true
     source: path
-    version: "0.7.2"
+    version: "0.7.3"
   fluxy_i18n:
     dependency: transitive
     description:
       path: "../../../packages/fluxy_i18n"
       relative: true
     source: path
-    version: "0.7.2"
+    version: "0.7.3"
   fluxy_nav:
     dependency: transitive
     description:
       path: "../../../packages/fluxy_nav"
       relative: true
     source: path
-    version: "0.7.2"
+    version: "0.7.3"
   fluxy_state:
     dependency: transitive
     description:
       path: "../../../packages/fluxy_state"
       relative: true
     source: path
-    version: "0.7.2"
+    version: "0.7.3"
   fluxy_ui:
     dependency: transitive
     description:
       path: "../../../packages/fluxy_ui"
       relative: true
     source: path
-    version: "0.7.2"
+    version: "0.7.3"
   fluxy_utils:
     dependency: transitive
     description:
       path: "../../../packages/fluxy_utils"
       relative: true
     source: path
-    version: "0.7.2"
-  get:
-    dependency: "direct main"
-    description:
-      path: "../../.."
-      relative: true
-    source: path
-    version: "0.7.2"
+    version: "0.7.3"
   intl:
     dependency: transitive
     description:

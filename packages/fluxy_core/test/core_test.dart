@@ -159,11 +159,6 @@ void main() {
     });
   });
 
-  test('the deprecated Get is the same object as Fluxy', () {
-    // ignore: deprecated_member_use_from_same_package
-    expect(identical(Get, Fluxy), isTrue);
-  });
-
   test('Engine.instance is the widgets binding', () {
     expect(Engine.instance, same(WidgetsBinding.instance));
   });
