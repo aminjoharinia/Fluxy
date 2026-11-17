@@ -48,7 +48,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(Fluxy.rootController.rootDelegate.currentConfiguration?.route?.name,
+    expect(Fluxy.rootController.rootDelegate.currentConfiguration?.path,
         '/404');
   });
 

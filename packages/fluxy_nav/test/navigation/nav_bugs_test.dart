@@ -17,27 +17,6 @@ class Detail extends StatelessWidget {
   Widget build(BuildContext context) => text('detail');
 }
 
-class SlowMiddleware extends FluxyMiddleware {
-  SlowMiddleware(this.gate);
-  final Completer<void> gate;
-  @override
-  Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
-    await gate.future;
-    return route;
-  }
-}
-
-class OrderMiddleware extends FluxyMiddleware {
-  OrderMiddleware(this.log, this.tag, {super.priority});
-  final List<String> log;
-  final String tag;
-  @override
-  Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
-    log.add(tag);
-    return route;
-  }
-}
-
 void main() {
   tearDown(Fluxy.reset);
 
@@ -67,7 +46,10 @@ void main() {
           FluxyPage(
             name: '/a',
             page: () => text('a'),
-            middlewares: [SlowMiddleware(gate)],
+            redirect: (_) async {
+              await gate.future;
+              return null;
+            },
           ),
           FluxyPage(name: '/b', page: () => text('b')),
         ],
@@ -179,26 +161,39 @@ void main() {
     expect(find.text('c'), findsOneWidget);
   });
 
-  testWidgets('B7: middleware priority is honoured on the router', (t) async {
+  testWidgets('B7: redirects run app first, then outer pages first, in order', (
+    t,
+  ) async {
     final log = <String>[];
+    FluxyRedirect r(String tag) => (_) {
+      log.add(tag);
+      return null;
+    };
     await t.pumpWidget(
       FluxyApp.router(
+        redirect: r('app'),
         getPages: [
           FluxyPage(name: '/', page: () => text('root')),
           FluxyPage(
             name: '/a',
             page: () => text('a'),
-            middlewares: [
-              OrderMiddleware(log, 'late', priority: 5),
-              OrderMiddleware(log, 'early', priority: -1),
+            redirect: r('parent'),
+            children: [
+              FluxyPage(
+                name: '/b',
+                page: () => text('b'),
+                redirect: r('child'),
+              ),
             ],
           ),
         ],
       ),
     );
     await t.pumpAndSettle();
-    Fluxy.toNamed('/a');
+    log.clear();
+    Fluxy.toNamed('/a/b');
     await t.pumpAndSettle();
-    expect(log, ['early', 'late']);
-  }, skip: true);
+    expect(log, ['app', 'parent', 'child']);
+    expect(find.text('b'), findsOneWidget);
+  });
 }

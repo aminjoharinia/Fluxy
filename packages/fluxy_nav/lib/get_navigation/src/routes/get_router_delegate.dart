@@ -15,12 +15,14 @@ import '../../../src/routing/nav_queue.dart';
 /// shows it in a [Navigator].
 ///
 /// Every navigation goes through one queue, so the stack changes in call
-/// order even when a middleware is asynchronous. A navigation that needs no
+/// order even when a redirect is asynchronous. A navigation that needs no
 /// asynchronous work changes the stack before the call returns.
-class FluxyDelegate extends RouterDelegate<RouteDecoder>
+///
+/// The router configuration is the address (`Uri`) of the top entry.
+class FluxyDelegate extends RouterDelegate<Uri>
     with
         ChangeNotifier,
-        PopNavigatorRouterDelegateMixin<RouteDecoder>,
+        PopNavigatorRouterDelegateMixin<Uri>,
         IGetNavigation {
   factory FluxyDelegate.createDelegate({
     FluxyPage<dynamic>? notFoundRoute,
@@ -31,8 +33,10 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     PreventDuplicateHandlingMode preventDuplicateHandlingMode =
         PreventDuplicateHandlingMode.reorderRoutes,
     GlobalKey<NavigatorState>? navigatorKey,
+    FluxyRedirect? redirect,
   }) {
     return FluxyDelegate(
+      redirect: redirect,
       notFoundRoute: notFoundRoute,
       navigatorObservers: navigatorObservers,
       transitionDelegate: transitionDelegate,
@@ -54,6 +58,7 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     this.restorationScopeId,
     bool showHashOnUrl = true,
     GlobalKey<NavigatorState>? navigatorKey,
+    this.redirect,
     required List<FluxyPage> pages,
   }) : navigatorKey = navigatorKey ?? GlobalKey<NavigatorState>(),
        notFoundRoute = notFoundRoute ??= FluxyPage(
@@ -70,6 +75,14 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
   }
 
   final PopMode backButtonPopMode;
+
+  /// Runs before every navigation to an address, the first one (the
+  /// address the app opens at) included, ahead of the pages' own
+  /// [FluxyPage.redirect]. Not run for `Fluxy.to(() => Page())` pages.
+  ///
+  /// `FluxyApp(redirect: ...)` sets it, also on a delegate the app passed
+  /// in, unless that one has its own.
+  FluxyRedirect? redirect;
 
   /// Not used for pages: each page has its own
   /// [FluxyPage.preventDuplicateHandlingMode].
@@ -124,13 +137,6 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     _table = RouteTable(_pages);
   }
 
-  RouteDecoder matchRoute(String name, {PageSettings? arguments}) {
-    final match = _table.match(name);
-    return RouteDecoder(
-      List.of(match.branch),
-      PageSettings(match.uri, arguments?.arguments, match.parameters),
-    );
-  }
 
   // ---------------------------------------------------------------------
   // Stack
@@ -208,7 +214,27 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
       e.complete(identical(e.token, popped?.token) ? popResult : null);
     }
     if (created != null && !kept.contains(created.token)) created.complete();
+    for (final e in previous.entries) {
+      if (!kept.contains(e.token)) _call(e.page.onLeave, e);
+    }
+    for (final e in next.entries) {
+      if (!before.contains(e.token)) _call(e.page.onEnter, e);
+    }
     if (notify) _notify();
+  }
+
+  void _call(FluxyPageCallback? callback, NavEntry entry) {
+    if (callback == null) return;
+    try {
+      callback(entry.match);
+    } catch (e, s) {
+      FlutterError.reportError(FlutterErrorDetails(
+        exception: e,
+        stack: s,
+        library: 'fluxy_nav',
+        context: ErrorDescription('while calling onEnter / onLeave of ${entry.location}'),
+      ));
+    }
   }
 
   bool _notifyScheduled = false;
@@ -235,7 +261,7 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
   /// Resolves [target], then applies [apply] to the stack, in the queue.
   ///
   /// With [resets] (offAll, offAllNamed), navigations still waiting for a
-  /// middleware are dropped (their futures complete with null).
+  /// redirect are dropped (their futures complete with null).
   FutureOr<NavEntry?> _navigate(
     FutureOr<NavEntry?> Function() target,
     NavStack Function(NavStack stack, NavEntry entry) apply, {
@@ -282,15 +308,90 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
   // ---------------------------------------------------------------------
   // Resolving addresses
 
-  /// Matches [location] and runs its middlewares. Null when a middleware
-  /// stopped the navigation. An unknown address gives the [notFoundRoute]
-  /// entry.
-  FutureOr<NavEntry?> _resolve<T>(String location, {Object? arguments}) {
+  /// Matches [location] and runs the redirects: the app's [redirect],
+  /// then the matched page's and its parents' ([RouteMatch.redirects]).
+  /// Null when a redirect stopped the navigation. An unknown address no
+  /// redirect sends elsewhere gives the [notFoundRoute] entry.
+  FutureOr<NavEntry?> _resolve<T>(
+    String location, {
+    Object? arguments,
+    int hops = 0,
+  }) {
     final match = _table.match(location);
-    if (match.isUnknown) return _unknownEntry<T>();
-    final entry = NavEntry.create<T>(match: match, arguments: arguments);
-    if (match.page!.middlewares.isEmpty) return entry;
-    return _runMiddlewares<T>(entry);
+    final request = NavRequest(
+      match,
+      arguments: arguments,
+      from: _stack.top?.location,
+    );
+    final redirects = [?redirect, ...match.redirects];
+    return _runRedirects<T>(request, redirects, 0, hops);
+  }
+
+  FutureOr<NavEntry?> _runRedirects<T>(
+    NavRequest request,
+    List<FluxyRedirect> redirects,
+    int index,
+    int hops,
+  ) {
+    for (var i = index; i < redirects.length; i++) {
+      final FutureOr<String?> to;
+      try {
+        to = redirects[i](request);
+      } catch (e, s) {
+        _redirectFailed(request, e, s);
+        return null;
+      }
+      if (to is Future<String?>) {
+        final next = i + 1;
+        return to.then(
+          (target) => target == null
+              ? _runRedirects<T>(request, redirects, next, hops)
+              : _redirectTo<T>(request, target, hops),
+          onError: (Object e, StackTrace s) {
+            _redirectFailed(request, e, s);
+            return null;
+          },
+        );
+      }
+      if (to != null) return _redirectTo<T>(request, to, hops);
+    }
+    if (request.isUnknown) return _unknownEntry<T>();
+    return NavEntry.create<T>(match: request.match, arguments: request.arguments);
+  }
+
+  FutureOr<NavEntry?> _redirectTo<T>(
+    NavRequest request,
+    String target,
+    int hops,
+  ) {
+    if (target == NavRequest.stop) return null;
+    if (target == request.location) {
+      // Redirected to itself: go there.
+      if (request.isUnknown) return _unknownEntry<T>();
+      return NavEntry.create<T>(
+        match: request.match,
+        arguments: request.arguments,
+      );
+    }
+    if (hops >= 16) {
+      _redirectFailed(
+        request,
+        StateError('More than 16 redirects, last to $target'),
+        StackTrace.current,
+      );
+      return null;
+    }
+    Fluxy.log('Redirect ${request.location} to $target');
+    return _resolve<T>(target, arguments: request.arguments, hops: hops + 1);
+  }
+
+  void _redirectFailed(NavRequest request, Object error, StackTrace stack) {
+    FlutterError.reportError(FlutterErrorDetails(
+      exception: error,
+      stack: stack,
+      library: 'fluxy_nav',
+      context: ErrorDescription('while redirecting ${request.location}'),
+    ));
   }
 
   NavEntry _unknownEntry<T>() {
@@ -308,49 +409,6 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
       page: page,
       arguments: arguments,
     );
-  }
-
-  Future<NavEntry?> _runMiddlewares<T>(NavEntry entry) async {
-    final decoder = RouteDecoder(entry.branch, entry.settings);
-    final res = await runMiddleware(decoder);
-    if (res == null) return null;
-    if (identical(res, decoder) || res == decoder) return entry;
-    final location = res.pageSettings?.name ?? res.route?.name;
-    if (location == null) return null;
-    final match = _table.match(location);
-    if (match.isUnknown) return _unknownEntry<T>();
-    return NavEntry.create<T>(match: match, arguments: res.args);
-  }
-
-  Future<RouteDecoder?> runMiddleware(RouteDecoder config) async {
-    final middlewares = config.currentTreeBranch.last.middlewares;
-    if (middlewares.isEmpty) {
-      return config;
-    }
-    var iterator = config;
-    for (var item in middlewares) {
-      var redirectRes = await item.redirectDelegate(iterator);
-
-      if (redirectRes == null) {
-        return null;
-      }
-      if (config != redirectRes) {
-        Fluxy.log('Redirect to ${redirectRes.pageSettings?.name}');
-      }
-
-      iterator = redirectRes;
-      // Stop the iteration over the middleware if we changed page
-      // and that redirectRes is not the same as the current config.
-      if (config != redirectRes) {
-        break;
-      }
-    }
-    // If the target is not the same as the source, we need
-    // to run the middlewares for the new route.
-    if (iterator != config) {
-      return await runMiddleware(iterator);
-    }
-    return iterator;
   }
 
   // ---------------------------------------------------------------------
@@ -473,21 +531,16 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
   // ---------------------------------------------------------------------
   // Router
 
+  /// The address of the top entry.
   @override
-  RouteDecoder? get currentConfiguration {
-    final top = _stack.top;
-    if (top == null) return null;
-    return RouteDecoder(top.branch, top.settings);
-  }
+  Uri? get currentConfiguration => _stack.top?.match.uri;
 
+  /// Opens [configuration] (the first address, or one the platform asks
+  /// for: a typed URL, browser back / forward), through the redirects.
   @override
-  Future<void> setNewRoutePath(RouteDecoder configuration) {
-    final location = configuration.pageSettings?.name ?? '/';
-    final arguments = configuration.args;
+  Future<void> setNewRoutePath(Uri configuration) {
     final result = _navigate(
-      () => configuration.route == null
-          ? _unknownEntry<dynamic>()
-          : _resolve<dynamic>(location, arguments: arguments),
+      () => _resolve<dynamic>(configuration.toString()),
       (stack, entry) => stack.add(
         entry,
         mode: entry.page.preventDuplicateHandlingMode,

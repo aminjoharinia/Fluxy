@@ -73,6 +73,12 @@ class FluxyApp extends StatelessWidget {
   final bool? defaultGlobalState;
   final List<FluxyPage>? getPages;
   final FluxyPage? unknownRoute;
+
+  /// Runs before every navigation to an address, including the first one
+  /// the app opens at; see [FluxyRedirect]. For example, to send `/` and
+  /// unknown addresses to a start page that depends on sign-in:
+  /// `redirect: (r) => r.isUnknown || r.path == '/' ? startRoute() : null`.
+  final FluxyRedirect? redirect;
   final RouteInformationProvider? routeInformationProvider;
   final RouteInformationParser<Object>? routeInformationParser;
   final RouterDelegate<Object>? routerDelegate;
@@ -135,6 +141,7 @@ class FluxyApp extends StatelessWidget {
     this.smartManagement = SmartManagement.full,
     this.binds = const [],
     this.unknownRoute,
+    this.redirect,
     this.highContrastTheme,
     this.highContrastDarkTheme,
     this.actions,
@@ -200,6 +207,7 @@ class FluxyApp extends StatelessWidget {
     this.getPages,
     this.navigatorObservers,
     this.unknownRoute,
+    this.redirect,
   }) : navigatorKey = null,
        onGenerateRoute = null,
        home = null,
@@ -239,6 +247,7 @@ class FluxyApp extends StatelessWidget {
         translations: translations,
         translationsKeys: translationsKeys,
         unknownRoute: unknownRoute,
+        redirect: redirect,
         theme: theme,
         darkTheme: darkTheme,
         themeMode: themeMode,

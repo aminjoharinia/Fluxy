@@ -23,6 +23,7 @@ class ConfigData {
   final bool? defaultGlobalState;
   final List<FluxyPage>? getPages;
   final FluxyPage? unknownRoute;
+  final FluxyRedirect? redirect;
   final RouteInformationProvider? routeInformationProvider;
   final RouteInformationParser<Object>? routeInformationParser;
   final RouterDelegate<Object>? routerDelegate;
@@ -71,6 +72,7 @@ class ConfigData {
     required this.defaultGlobalState,
     required this.getPages,
     required this.unknownRoute,
+    this.redirect,
     required this.routeInformationProvider,
     required this.routeInformationParser,
     required this.routerDelegate,
@@ -114,6 +116,7 @@ class ConfigData {
     bool? defaultGlobalState,
     List<FluxyPage>? getPages,
     FluxyPage? unknownRoute,
+    FluxyRedirect? redirect,
     RouteInformationProvider? routeInformationProvider,
     RouteInformationParser<Object>? routeInformationParser,
     RouterDelegate<Object>? routerDelegate,
@@ -156,6 +159,7 @@ class ConfigData {
       defaultGlobalState: defaultGlobalState ?? this.defaultGlobalState,
       getPages: getPages ?? this.getPages,
       unknownRoute: unknownRoute ?? this.unknownRoute,
+      redirect: redirect ?? this.redirect,
       routeInformationProvider:
           routeInformationProvider ?? this.routeInformationProvider,
       routeInformationParser:
@@ -210,6 +214,7 @@ class ConfigData {
         other.defaultGlobalState == defaultGlobalState &&
         listEquals(other.getPages, getPages) &&
         other.unknownRoute == unknownRoute &&
+        other.redirect == redirect &&
         other.routeInformationProvider == routeInformationProvider &&
         other.routeInformationParser == routeInformationParser &&
         other.routerDelegate == routerDelegate &&
@@ -255,6 +260,7 @@ class ConfigData {
         defaultGlobalState.hashCode ^
         getPages.hashCode ^
         unknownRoute.hashCode ^
+        redirect.hashCode ^
         routeInformationProvider.hashCode ^
         routeInformationParser.hashCode ^
         routerDelegate.hashCode ^
@@ -390,10 +396,16 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
               ),
             ],
         notFoundRoute: config.unknownRoute,
+        redirect: config.redirect,
         navigatorKey: config.navigatorKey,
         navigatorObservers: config.navigatorObservers,
       );
       config = config.copyWith(routerDelegate: newDelegate);
+    }
+
+    final delegate = config.routerDelegate;
+    if (delegate is FluxyDelegate && delegate.redirect == null) {
+      delegate.redirect = config.redirect;
     }
 
     // routingCallback hears about page changes and overlays opening or
@@ -410,7 +422,8 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
             config.getPages?.first.name ??
             cleanRouteName("/${config.home.runtimeType}"),
         // An initialRoute the app asked for wins, even when '/' is a page.
-        redirectRootToInitialRoute: config.initialRoute != null,
+        redirectRootToInitialRoute: config.initialRoute != null ||
+            !rootDelegate.routeTable.contains('/'),
       );
 
       config =
@@ -544,7 +557,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
       () => FluxyDelegate(
         showHashOnUrl: true,
         //debugLabel: 'Getx nested key: ${key.toString()}',
-        pages: RouteDecoder.fromRoute(key).currentChildren ?? [],
+        pages: rootDelegate.routeTable.match(key).page?.children ?? [],
       ),
     );
     return keys[key];

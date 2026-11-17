@@ -16,14 +16,15 @@ void main() {
 
   group('route matching', () {
     test('only a route for the whole path matches', () {
-      final d = FluxyDelegate(pages: _pages(), notFoundRoute: _unknown);
-      expect(d.matchRoute('/Home').route?.name, '/Home');
-      expect(d.matchRoute('/Home/').route?.name, '/Home');
-      expect(d.matchRoute('/Home?tab=2').route?.name, '/Home');
-      expect(d.matchRoute('/').route?.name, '/');
-      expect(d.matchRoute('/nope').route, isNull,
+      final d =
+          FluxyDelegate(pages: _pages(), notFoundRoute: _unknown).routeTable;
+      expect(d.match('/Home').page?.name, '/Home');
+      expect(d.match('/Home/').page?.name, '/Home');
+      expect(d.match('/Home?tab=2').page?.name, '/Home');
+      expect(d.match('/').page?.name, '/');
+      expect(d.match('/nope').page, isNull,
           reason: 'used to match its parent "/"');
-      expect(d.matchRoute('/Home/x').route, isNull,
+      expect(d.match('/Home/x').page, isNull,
           reason: 'used to match its parent "/Home"');
     });
 
@@ -32,9 +33,9 @@ void main() {
         FluxyPage(name: '/', page: () => const SizedBox()),
         FluxyPage(name: '/item/:id', page: () => const SizedBox()),
       ]);
-      final m = d.matchRoute('/item/42');
-      expect(m.route?.name, '/item/42');
-      expect(m.route?.parameters?['id'], '42');
+      final m = d.routeTable.match('/item/42');
+      expect(m.page?.name, '/item/42');
+      expect(m.page?.parameters?['id'], '42');
     });
 
     testWidgets('an unknown address opens the unknown route', (tester) async {

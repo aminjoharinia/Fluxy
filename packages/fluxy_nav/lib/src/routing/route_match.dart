@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../get_navigation/src/routes/get_route.dart';
+import 'nav_request.dart';
 
 /// The result of matching an address against a [RouteTable].
 ///
@@ -12,7 +13,9 @@ class RouteMatch {
     required List<FluxyPage> branch,
     required List<String> patterns,
     required Map<String, String> pathParameters,
+    List<FluxyRedirect> redirects = const [],
   }) : branch = List.unmodifiable(branch),
+       redirects = List.unmodifiable(redirects),
        patterns = List.unmodifiable(patterns),
        pathParameters = Map.unmodifiable(pathParameters),
        parameters = Map.unmodifiable({
@@ -23,6 +26,7 @@ class RouteMatch {
   /// A match for an address no page is registered for.
   RouteMatch.unknown(this.uri)
     : branch = const [],
+      redirects = const [],
       patterns = const [],
       pathParameters = const {},
       parameters = Map.unmodifiable(uri.queryParameters);
@@ -31,6 +35,7 @@ class RouteMatch {
   /// `Fluxy.to(() => Page())` opens.
   RouteMatch.direct(FluxyPage page, this.uri)
     : branch = List.unmodifiable([page]),
+      redirects = List.unmodifiable([?page.redirect]),
       patterns = List.unmodifiable([page.name]),
       pathParameters = const {},
       parameters = Map.unmodifiable(uri.queryParameters);
@@ -45,6 +50,10 @@ class RouteMatch {
 
   /// The registered names of [branch] (`/item/:id`), same order.
   final List<String> patterns;
+
+  /// The redirects of the matched page and the pages it's declared under,
+  /// outermost first, in the order they run.
+  final List<FluxyRedirect> redirects;
 
   /// Values of `:name` and `*name` segments.
   final Map<String, String> pathParameters;

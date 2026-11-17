@@ -6,6 +6,7 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import '../../get_navigation.dart';
 
@@ -45,8 +46,16 @@ class FluxyPage<T> extends Page<T> {
   final bool inheritParentPath;
 
   final List<FluxyPage> children;
-  final List<FluxyMiddleware> middlewares;
-  final FluxyPage? unknownRoute;
+
+  /// Runs before a navigation to this page or to one of its [children]
+  /// (outer pages first); see [FluxyRedirect].
+  final FluxyRedirect? redirect;
+
+  /// Called when an entry for this page goes on the stack.
+  final FluxyPageCallback? onEnter;
+
+  /// Called when an entry for this page leaves the stack.
+  final FluxyPageCallback? onLeave;
   final bool showCupertinoParallax;
 
   final PreventDuplicateHandlingMode preventDuplicateHandlingMode;
@@ -75,8 +84,9 @@ class FluxyPage<T> extends Page<T> {
     this.customTransition,
     this.fullscreenDialog = false,
     this.children = const <FluxyPage>[],
-    this.middlewares = const [],
-    this.unknownRoute,
+    this.redirect,
+    this.onEnter,
+    this.onLeave,
     this.arguments,
     this.showCupertinoParallax = true,
     this.preventDuplicates = true,
@@ -118,8 +128,9 @@ class FluxyPage<T> extends Page<T> {
     bool? fullscreenDialog,
     RouteSettings? settings,
     List<FluxyPage<T>>? children,
-    FluxyPage? unknownRoute,
-    List<FluxyMiddleware>? middlewares,
+    FluxyRedirect? redirect,
+    FluxyPageCallback? onEnter,
+    FluxyPageCallback? onLeave,
     bool? preventDuplicates,
     PreventDuplicateHandlingMode? preventDuplicateHandlingMode,
     double Function(BuildContext context)? gestureWidth,
@@ -158,8 +169,9 @@ class FluxyPage<T> extends Page<T> {
           reverseTransitionDuration ?? this.reverseTransitionDuration,
       fullscreenDialog: fullscreenDialog ?? this.fullscreenDialog,
       children: children ?? this.children,
-      unknownRoute: unknownRoute ?? this.unknownRoute,
-      middlewares: middlewares ?? this.middlewares,
+      redirect: redirect ?? this.redirect,
+      onEnter: onEnter ?? this.onEnter,
+      onLeave: onLeave ?? this.onLeave,
       gestureWidth: gestureWidth ?? this.gestureWidth,
       arguments: arguments ?? this.arguments,
       showCupertinoParallax:
@@ -174,12 +186,29 @@ class FluxyPage<T> extends Page<T> {
 
   @override
   Route<T> createRoute(BuildContext context) {
-    // return FluxyPageRoute<T>(settings: this, page: page);
-    final page = PageRedirect(
-      route: this,
+    final page = FluxyPageRoute<T>(
+      page: this.page,
+      parameter: parameters,
+      alignment: alignment,
+      title: title,
+      maintainState: maintainState,
+      routeName: name,
       settings: this,
-      unknownRoute: unknownRoute,
-    ).getPageToRoute<T>(this, unknownRoute, context);
+      curve: curve,
+      showCupertinoParallax: showCupertinoParallax,
+      gestureWidth: gestureWidth,
+      opaque: opaque,
+      customTransition: customTransition,
+      bindings: bindings,
+      binding: binding,
+      binds: binds,
+      transitionDuration: transitionDuration ?? Fluxy.defaultTransitionDuration,
+      reverseTransitionDuration:
+          reverseTransitionDuration ?? Fluxy.defaultTransitionDuration,
+      transition: transition,
+      popGesture: popGesture,
+      fullscreenDialog: fullscreenDialog,
+    );
 
     // When the navigator pops the page itself (back gesture,
     // Navigator.pop), the page's future gets the value it was popped with.

@@ -35,4 +35,18 @@ void main() {
     expect(find.text('DashboardView is working'), findsNothing);
     await close(tester);
   });
+
+  testWidgets('a signed-out user going to Profile is sent to login',
+      (tester) async {
+    app.main();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.text('Profile'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(Fluxy.currentRoute, '/login');
+    expect(Fluxy.parameters['then'], '/home/profile');
+    await close(tester);
+  });
 }

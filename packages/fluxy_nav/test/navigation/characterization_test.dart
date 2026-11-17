@@ -22,29 +22,39 @@ class Other extends StatelessWidget {
 }
 
 List<FluxyPage> flatPages() => [
-      FluxyPage(name: '/', page: () => const Scaffold(body: Text('root'))),
-      FluxyPage(name: '/Home', page: () => const Scaffold(body: Text('home'))),
-      FluxyPage(
-        name: '/Landing',
-        page: () => const Scaffold(body: Text('landing')),
-        transition: Transition.cupertino,
-      ),
-      FluxyPage(
-        name: '/Manage',
-        page: () => const Scaffold(body: Text('manage')),
-        transition: Transition.zoom,
-      ),
-    ];
+  FluxyPage(
+    name: '/',
+    page: () => const Scaffold(body: Text('root')),
+  ),
+  FluxyPage(
+    name: '/Home',
+    page: () => const Scaffold(body: Text('home')),
+  ),
+  FluxyPage(
+    name: '/Landing',
+    page: () => const Scaffold(body: Text('landing')),
+    transition: Transition.cupertino,
+  ),
+  FluxyPage(
+    name: '/Manage',
+    page: () => const Scaffold(body: Text('manage')),
+    transition: Transition.zoom,
+  ),
+];
 
-final notFound =
-    FluxyPage(name: '/NotFound', page: () => const Scaffold(body: Text('nf')));
+final notFound = FluxyPage(
+  name: '/NotFound',
+  page: () => const Scaffold(body: Text('nf')),
+);
 
 Future<void> pumpApp(WidgetTester t, {String? initialRoute}) async {
-  await t.pumpWidget(FluxyApp.router(
-    getPages: flatPages(),
-    unknownRoute: notFound,
-    initialRoute: initialRoute,
-  ));
+  await t.pumpWidget(
+    FluxyApp.router(
+      getPages: flatPages(),
+      unknownRoute: notFound,
+      initialRoute: initialRoute,
+    ),
+  );
   await t.pumpAndSettle();
 }
 
@@ -52,8 +62,9 @@ void main() {
   tearDown(Fluxy.reset);
 
   group('Fluxy.back order', () {
-    testWidgets('snackbar, then dialog, then page; the last page stays',
-        (t) async {
+    testWidgets('snackbar, then dialog, then page; the last page stays', (
+      t,
+    ) async {
       await pumpApp(t);
       Fluxy.toNamed('/Home');
       await t.pumpAndSettle();
@@ -207,11 +218,14 @@ void main() {
   });
 
   group('pages', () {
-    testWidgets('to() with a transition; its future gets the back result',
-        (t) async {
+    testWidgets('to() with a transition; its future gets the back result', (
+      t,
+    ) async {
       await pumpApp(t);
-      final f = Fluxy.to<String>(() => const Detail(),
-          transition: Transition.cupertino);
+      final f = Fluxy.to<String>(
+        () => const Detail(),
+        transition: Transition.cupertino,
+      );
       await t.pumpAndSettle();
       expect(find.text('detail'), findsOneWidget);
       expect(Fluxy.currentRoute, '/Detail');
@@ -250,9 +264,11 @@ void main() {
       await t.pumpAndSettle();
       Fluxy.to(() => const Detail())!.then((_) => done++);
       await t.pumpAndSettle();
-      Fluxy.offAll(() => const Other(),
-          transition: Transition.zoom,
-          duration: const Duration(milliseconds: 500));
+      Fluxy.offAll(
+        () => const Other(),
+        transition: Transition.zoom,
+        duration: const Duration(milliseconds: 500),
+      );
       await t.pumpAndSettle();
       expect(find.text('other'), findsOneWidget);
       expect(stackNames(), ['/Other']);
@@ -282,8 +298,9 @@ void main() {
       expect(find.text('nf'), findsOneWidget);
     });
 
-    testWidgets('currentRoute / previousRoute follow toNamed and back',
-        (t) async {
+    testWidgets('currentRoute / previousRoute follow toNamed and back', (
+      t,
+    ) async {
       await pumpApp(t);
       expect(Fluxy.currentRoute, '/');
       Fluxy.toNamed('/Home');
@@ -323,7 +340,8 @@ void main() {
       await t.pumpAndSettle();
       final router = Router.of(Fluxy.context!);
       final info = router.routeInformationParser!.restoreRouteInformation(
-          router.routerDelegate.currentConfiguration);
+        router.routerDelegate.currentConfiguration,
+      );
       expect(info?.uri.toString(), '/Home?tab=2');
     });
 

@@ -1,9 +1,6 @@
-import 'dart:developer';
-
-import 'package:material_ui/material_ui.dart';
 import 'package:fluxy/fluxy.dart';
 
-import '../middleware/auth_middleware.dart';
+import '../redirects/auth_redirects.dart';
 import '../modules/dashboard/bindings/dashboard_binding.dart';
 import '../modules/dashboard/views/dashboard_view.dart';
 import '../modules/home/bindings/home_binding.dart';
@@ -37,10 +34,8 @@ class AppPages {
       preventDuplicates: true,
       children: [
         FluxyPage(
-          middlewares: [
-            //only enter this route when not authed
-            EnsureNotAuthedMiddleware(),
-          ],
+          // only enter this route when not authed
+          redirect: ensureNotAuthed,
           name: _Paths.login,
           page: () => const LoginView(),
           bindings: [LoginBinding()],
@@ -62,10 +57,8 @@ class AppPages {
               ],
             ),
             FluxyPage(
-              middlewares: [
-                //only enter this route when authed
-                EnsureAuthMiddleware(),
-              ],
+              // only enter this route when authed
+              redirect: ensureAuth,
               name: _Paths.profile,
               page: () => const ProfileView(),
               title: 'Profile',
@@ -87,10 +80,8 @@ class AppPages {
                   showCupertinoParallax: true,
                   page: () => const ProductDetailsView(),
                   bindings: const [],
-                  middlewares: [
-                    //only enter this route when authed
-                    EnsureAuthMiddleware(),
-                  ],
+                  // only enter this route when authed
+                  redirect: ensureAuth,
                 ),
               ],
             ),
@@ -106,37 +97,4 @@ class AppPages {
       ],
     ),
   ];
-}
-
-class MainMiddleware extends FluxyMiddleware {
-  @override
-  void onPageDispose() {
-    log('MainMiddleware onPageDispose');
-    super.onPageDispose();
-  }
-
-  @override
-  Widget onPageBuilt(Widget page) {
-    log('MainMiddleware onPageBuilt');
-    return super.onPageBuilt(page);
-  }
-
-  @override
-  FluxyPage? onPageCalled(FluxyPage? page) {
-    log('MainMiddleware onPageCalled for route: ${page?.name}');
-    return super.onPageCalled(page);
-  }
-
-  @override
-  List<R>? onBindingsStart<R>(List<R>? bindings) {
-    log('MainMiddleware onBindingsStart');
-    return super.onBindingsStart(bindings);
-  }
-
-  @override
-  FluxyPageBuilder? onPageBuildStart(FluxyPageBuilder? page) {
-    log('MainMiddleware onPageBuildStart');
-
-    return super.onPageBuildStart(page);
-  }
 }

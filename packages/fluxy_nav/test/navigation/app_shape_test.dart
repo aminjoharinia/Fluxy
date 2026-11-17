@@ -1,7 +1,6 @@
-// The BOOFI app's main.dart routing set-up as of v1.0.0: its own delegate,
-// a parser subclass sending '/' to a start route, an unknown page that
-// redirects after a frame, and a hand-wired observer for Fluxy.routing.
-import 'package:flutter/foundation.dart';
+// The BOOFI app's main.dart routing set-up from v1.2.0: one FluxyApp.router
+// with `redirect:` instead of its own delegate, a parser subclass, an
+// UnknownRoute page redirecting after a frame and a hand-wired observer.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
@@ -13,72 +12,33 @@ bool signedIn = false;
 String startRoute() => signedIn ? '/Home' : '/Landing';
 
 List<FluxyPage> appPages() => [
-      FluxyPage(name: '/', page: () => const Scaffold(body: Text('root'))),
-      FluxyPage(name: '/Home', page: () => const Scaffold(body: Text('home'))),
-      FluxyPage(
-          name: '/Landing',
-          page: () => const Scaffold(body: Text('landing'))),
-      FluxyPage(
-          name: '/Manage', page: () => const Scaffold(body: Text('manage'))),
-    ];
+  FluxyPage(
+    name: '/',
+    page: () => const Scaffold(body: Text('root')),
+  ),
+  FluxyPage(
+    name: '/Home',
+    page: () => const Scaffold(body: Text('home')),
+  ),
+  FluxyPage(
+    name: '/Landing',
+    page: () => const Scaffold(body: Text('landing')),
+  ),
+  FluxyPage(
+    name: '/Manage',
+    page: () => const Scaffold(body: Text('manage')),
+  ),
+];
 
-class UnknownRoute extends StatelessWidget {
-  const UnknownRoute({super.key});
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => Fluxy.offAllNamed(startRoute()));
-    return const Scaffold();
-  }
-}
-
-class AppRouteParser extends FluxyInformationParser {
-  AppRouteParser() : super(initialRoute: '/');
-
-  @override
-  SynchronousFuture<RouteDecoder> parseRouteInformation(
-      RouteInformation routeInformation) {
-    final location = routeInformation.uri.toString();
-    if (location.isNotEmpty && location != '/') {
-      return super.parseRouteInformation(routeInformation);
-    }
-    return super.parseRouteInformation(RouteInformation(
-        uri: Uri.parse(startRoute()), state: routeInformation.state));
-  }
-}
-
-class RootRoutingObserver extends NavigatorObserver {
-  late final FluxyObserver _observer = FluxyObserver(null, Fluxy.routing);
-  @override
-  void didPush(Route route, Route? previousRoute) =>
-      _observer.didPush(route, previousRoute);
-  @override
-  void didPop(Route route, Route? previousRoute) =>
-      _observer.didPop(route, previousRoute);
-  @override
-  void didRemove(Route route, Route? previousRoute) =>
-      _observer.didRemove(route, previousRoute);
-  @override
-  void didReplace({Route? newRoute, Route? oldRoute}) =>
-      _observer.didReplace(newRoute: newRoute, oldRoute: oldRoute);
-}
-
-Widget boofiApp() {
-  final pages = appPages();
-  final unknown =
-      FluxyPage(name: '/NotFound', page: () => const UnknownRoute());
-  return FluxyApp.router(
-    getPages: pages,
-    unknownRoute: unknown,
-    routerDelegate: FluxyDelegate(
-      showHashOnUrl: true,
-      pages: pages,
-      notFoundRoute: unknown,
-      navigatorObservers: [RootRoutingObserver()],
-    ),
-    routeInformationParser: AppRouteParser(),
-  );
-}
+Widget boofiApp({String? opened}) => FluxyApp.router(
+  getPages: appPages(),
+  redirect: (r) => r.isUnknown || r.path == '/' ? startRoute() : null,
+  routeInformationProvider: opened == null
+      ? null
+      : PlatformRouteInformationProvider(
+          initialRouteInformation: RouteInformation(uri: Uri.parse(opened)),
+        ),
+);
 
 void main() {
   tearDown(() {
@@ -90,6 +50,7 @@ void main() {
     await t.pumpWidget(boofiApp());
     await t.pumpAndSettle();
     expect(find.text('landing'), findsOneWidget);
+    expect(stackNames(), ['/Landing']);
   });
 
   testWidgets('signed in: opens on /Home', (t) async {
@@ -99,7 +60,21 @@ void main() {
     expect(find.text('home'), findsOneWidget);
   });
 
-  testWidgets('an unknown address goes to the start route', (t) async {
+  testWidgets('opened at an unknown address: the start route', (t) async {
+    signedIn = true;
+    await t.pumpWidget(boofiApp(opened: '/old-bookmark'));
+    await t.pumpAndSettle();
+    expect(find.text('home'), findsOneWidget);
+    expect(Fluxy.currentRoute, '/Home');
+  });
+
+  testWidgets('opened at a page: that page', (t) async {
+    await t.pumpWidget(boofiApp(opened: '/Manage'));
+    await t.pumpAndSettle();
+    expect(find.text('manage'), findsOneWidget);
+  });
+
+  testWidgets('an unknown address later goes to the start route', (t) async {
     signedIn = true;
     await t.pumpWidget(boofiApp());
     await t.pumpAndSettle();
@@ -109,7 +84,7 @@ void main() {
     expect(stackNames(), ['/Home']);
   });
 
-  testWidgets('dialogs and pages work with the app delegate', (t) async {
+  testWidgets('dialogs and pages, no observer', (t) async {
     await t.pumpWidget(boofiApp());
     await t.pumpAndSettle();
     Fluxy.toNamed('/Manage');
@@ -124,5 +99,14 @@ void main() {
     Fluxy.back();
     await t.pumpAndSettle();
     expect(find.text('landing'), findsOneWidget);
+  });
+
+  testWidgets('sign-in then offAll to the home page', (t) async {
+    await t.pumpWidget(boofiApp());
+    await t.pumpAndSettle();
+    signedIn = true;
+    Fluxy.offAllNamed(startRoute());
+    await t.pumpAndSettle();
+    expect(stackNames(), ['/Home']);
   });
 }

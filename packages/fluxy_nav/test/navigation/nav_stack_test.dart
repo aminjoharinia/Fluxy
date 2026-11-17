@@ -167,7 +167,9 @@ void main() {
   group('delegate queue', () {
     tearDown(Fluxy.reset);
 
-    testWidgets('offAllNamed drops navigations still waiting', (t) async {
+    testWidgets('offAllNamed drops navigations still waiting for a redirect', (
+      t,
+    ) async {
       final gate = Completer<void>();
       await t.pumpWidget(
         FluxyApp.router(
@@ -176,7 +178,10 @@ void main() {
             FluxyPage(
               name: '/slow',
               page: () => const Text('slow'),
-              middlewares: [_Slow(gate)],
+              redirect: (_) async {
+                await gate.future;
+                return null;
+              },
             ),
             FluxyPage(name: '/login', page: () => const Text('login')),
           ],
@@ -223,16 +228,6 @@ void main() {
       expect(find.text('a'), findsOneWidget);
     });
   });
-}
-
-class _Slow extends FluxyMiddleware {
-  _Slow(this.gate);
-  final Completer<void> gate;
-  @override
-  Future<RouteDecoder?> redirectDelegate(RouteDecoder route) async {
-    await gate.future;
-    return route;
-  }
 }
 
 class _GoInBuild extends StatelessWidget {

@@ -1,5 +1,5 @@
 name: example_nav2
-description: "Fluxy navigation example : nested routes with FluxyRouterOutlet , middleware ( login redirect ) , bindings , drawer ."
+description: "Fluxy navigation example : nested routes with FluxyRouterOutlet , redirects ( login ) , bindings , drawer ."
 publish_to: none
 version: 1.0.0+1
 

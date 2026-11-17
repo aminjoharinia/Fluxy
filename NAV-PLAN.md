@@ -1,6 +1,6 @@
 # fluxy_nav re-engineering plan
 
-Status: in progress (2026-11-17); decisions below taken. Phases 0-3 done. Results per phase are under "Results" at the end.
+Status: in progress (2026-11-17); decisions below taken. Phases 0-4 done. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -107,3 +107,14 @@ Each phase ends green: package tests, the examples, and the app copy with `pubsp
 - A page popped by its navigator (gesture, `Navigator.pop(context, value)`) completes its future with that value.
 - example_nav2 uses `FluxyRouterOutlet(parent: '/', levels: 1)` and `FluxyRouterOutlet(parent: Routes.home)`; its test also taps the bottom bar.
 - Tests: `outlet_test.dart` (7), routing-state tests, `Navigator.pop` result; B3, B5, B6 un-skipped. 180 fluxy_nav tests (+1 skipped: B7), all checks green, app 97 tests pass (its hand-wired observer is now redundant but harmless).
+
+### Phase 4 (2026-11-17): redirects
+
+- `FluxyRedirect = FutureOr<String?> Function(NavRequest)`: null lets the navigation through, an address sends it there (its own redirects run again, at most 16 hops; a redirect to its own address goes there), `NavRequest.stop` cancels it (stack unchanged, future null). A throwing redirect cancels and is reported through `FlutterError.reportError`, as is a loop.
+- `NavRequest`: the `RouteMatch` (`isUnknown`, `path`, `location`, `parameters`), the navigation's `arguments`, `from` (the location before it; null and `isInitial` for the first address).
+- Order: `FluxyApp(redirect:)` (also `FluxyCupertinoApp`, or `FluxyDelegate(redirect:)`), then the redirects of the matched page and the pages it's declared under, outer first (resolved in the `RouteTable`, so children inherit; B7). App redirects run for every address, the first one included (the parser hands the delegate a `Uri`), not for `Fluxy.to(() => Page())`. An unknown address that no redirect sends elsewhere opens `unknownRoute`. `FluxyRoot` gives an app-provided delegate the app's `redirect` unless it has one.
+- `FluxyPage(onEnter:, onLeave:)`: called with the entry's match when it goes on / leaves the stack (errors reported).
+- Removed: `FluxyMiddleware`, `MiddlewareRunner`, `PageRedirect`, `FluxyPage.middlewares` / `unknownRoute`, `RouteDecoder` (`parse_route.dart`), `FluxyDelegate.matchRoute` / `runMiddleware`. The router configuration is now the top entry's `Uri` (`FluxyDelegate extends RouterDelegate<Uri>`, `FluxyInformationParser extends RouteInformationParser<Uri>`); the parser maps an empty address, and `/` when `redirectRootToInitialRoute`, to `initialRoute`. `FluxyApp` sets that flag when given an `initialRoute` or when `/` is not a page.
+- example_nav2: `ensureAuth` / `ensureNotAuthed` page redirects (`lib/app/redirects`), a test for the login redirect.
+- App (`lib/main.dart`, uncommitted): its own delegate, the parser subclass, `_RootRoutingObserver`, `UnknownRoute` and `leaveUnknownStartAddress` replaced by `redirect: appRedirect` with `appRedirect = (r) => r.isUnknown || r.path == '/' ? startRoute() : null`. Analyzer clean, 97 tests pass.
+- Tests: `redirect_test.dart` (15), `app_shape_test.dart` rewritten for the `redirect:` set-up (7, including the address the app opens at); B7 rewritten for redirect order and un-skipped, no skipped tests left. 193 fluxy_nav tests, all checks green.

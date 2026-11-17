@@ -2,9 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
-import 'package:fluxy_nav/fluxy_nav.dart';
 
-class FluxyInformationParser extends RouteInformationParser<RouteDecoder> {
+/// Turns the platform's route information (the URL on the web, the
+/// initial route elsewhere) into the address the [FluxyDelegate] opens.
+class FluxyInformationParser extends RouteInformationParser<Uri> {
   factory FluxyInformationParser.createInformationParser({
     String initialRoute = '/',
     bool redirectRootToInitialRoute = false,
@@ -15,47 +16,40 @@ class FluxyInformationParser extends RouteInformationParser<RouteDecoder> {
     );
   }
 
-  /// Where the app starts when it is opened at `/` (or with no address).
+  /// Where the app starts when it is opened with no address, and at `/`
+  /// when [redirectRootToInitialRoute] is true.
   final String initialRoute;
 
-  /// When true, `/` always goes to [initialRoute]. When false (the default),
-  /// only when `/` is not a registered page.
+  /// When true, `/` goes to [initialRoute]. `FluxyApp` sets it when it was
+  /// given an `initialRoute`, or when `/` is not a page.
+  ///
+  /// For anything that depends on the app's state (signed in or not),
+  /// use `FluxyApp(redirect: ...)`, which also sees the first address.
   final bool redirectRootToInitialRoute;
 
   FluxyInformationParser({
-    required this.initialRoute,
+    this.initialRoute = '/',
     this.redirectRootToInitialRoute = false,
   }) {
     Fluxy.log('FluxyInformationParser is created !');
   }
+
   @override
-  SynchronousFuture<RouteDecoder> parseRouteInformation(
+  SynchronousFuture<Uri> parseRouteInformation(
     RouteInformation routeInformation,
   ) {
     final uri = routeInformation.uri;
     var location = uri.toString();
-    if (location == '/') {
-      // Go to initialRoute when asked to, or when '/' is not a page.
-      if (redirectRootToInitialRoute ||
-          !(Fluxy.rootController.rootDelegate)
-          .registeredRoutes
-          .any((element) => element.name == '/')) {
-        location = initialRoute;
-      }
-    } else if (location.isEmpty) {
+    if (location.isEmpty ||
+        (location == '/' && redirectRootToInitialRoute)) {
       location = initialRoute;
     }
-
     Fluxy.log('FluxyInformationParser: route location: $location');
-
-    return SynchronousFuture(RouteDecoder.fromRoute(location));
+    return SynchronousFuture(Uri.parse(location));
   }
 
   @override
-  RouteInformation restoreRouteInformation(RouteDecoder configuration) {
-    return RouteInformation(
-      uri: Uri.tryParse(configuration.pageSettings?.name ?? ''),
-      state: null,
-    );
+  RouteInformation restoreRouteInformation(Uri configuration) {
+    return RouteInformation(uri: configuration);
   }
 }

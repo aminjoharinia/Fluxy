@@ -62,9 +62,7 @@ class FluxyPageRoute<T> extends PageRoute<T>
     this.barrierLabel,
     this.maintainState = true,
     super.fullscreenDialog,
-    this.middlewares,
-  }) : bindings = (binding == null) ? bindings : [...bindings, binding],
-       _middlewareRunner = MiddlewareRunner(middlewares);
+  }) : bindings = (binding == null) ? bindings : [...bindings, binding];
 
   @override
   final Duration transitionDuration;
@@ -91,7 +89,6 @@ class FluxyPageRoute<T> extends PageRoute<T>
   final Transition? transition;
   final Curve? curve;
   final Alignment? alignment;
-  final List<FluxyMiddleware>? middlewares;
 
   @override
   final Color? barrierColor;
@@ -102,12 +99,9 @@ class FluxyPageRoute<T> extends PageRoute<T>
   @override
   final bool maintainState;
 
-  final MiddlewareRunner _middlewareRunner;
-
   @override
   void dispose() {
     super.dispose();
-    _middlewareRunner.runOnPageDispose();
     _child = null;
   }
 
@@ -116,34 +110,19 @@ class FluxyPageRoute<T> extends PageRoute<T>
   Widget _getChild() {
     if (_child != null) return _child!;
 
-    final localBinds = [...?binds];
-
-    final bindingsToBind = _middlewareRunner.runOnBindingsStart(
-      bindings.isNotEmpty ? bindings : localBinds,
-    );
-
-    final pageToBuild = _middlewareRunner.runOnPageBuildStart(page)!;
-
-    if (bindingsToBind != null && bindingsToBind.isNotEmpty) {
-      if (bindingsToBind is List<BindingsInterface>) {
-        for (final item in bindingsToBind) {
-          final dep = item.dependencies();
-          if (dep is List<Bind>) {
-            _child = Binds(
-              binds: dep,
-              child: _middlewareRunner.runOnPageBuilt(pageToBuild()),
-            );
-          }
+    final pageToBuild = page!;
+    if (bindings.isNotEmpty) {
+      for (final item in bindings) {
+        final dep = item.dependencies();
+        if (dep is List<Bind>) {
+          _child = Binds(binds: dep, child: pageToBuild());
         }
-      } else if (bindingsToBind is List<Bind>) {
-        _child = Binds(
-          binds: bindingsToBind,
-          child: _middlewareRunner.runOnPageBuilt(pageToBuild()),
-        );
       }
+    } else if (binds != null && binds!.isNotEmpty) {
+      _child = Binds(binds: binds!, child: pageToBuild());
     }
 
-    return _child ??= _middlewareRunner.runOnPageBuilt(pageToBuild());
+    return _child ??= pageToBuild();
   }
 
   @override

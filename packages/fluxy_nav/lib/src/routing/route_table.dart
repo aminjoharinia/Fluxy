@@ -3,13 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 
 import '../../get_navigation/src/routes/get_route.dart';
-import '../../get_navigation/src/routes/route_middleware.dart';
+import 'nav_request.dart';
 import 'route_match.dart';
 
 /// The registered pages, matched by path segment.
 ///
 /// Built once from the app's pages: children are flattened to their full
-/// path and get their parents' bindings and middlewares. Navigation never
+/// path and get their parents' bindings and redirects. Navigation never
 /// changes it; `Fluxy.to(() => Page())` pages aren't added to it.
 ///
 /// Segments are matched by priority, whatever the order the pages were
@@ -86,6 +86,7 @@ class RouteTable {
       branch: branch,
       patterns: patterns,
       pathParameters: params,
+      redirects: path.last.redirects,
     );
   }
 
@@ -130,7 +131,7 @@ class RouteTable {
   void _flatten(
     FluxyPage page,
     String? parentPath,
-    List<FluxyMiddleware> middlewares,
+    List<FluxyRedirect> redirects,
     List<BindingsInterface> bindings,
     List<Bind> binds,
   ) {
@@ -146,20 +147,20 @@ class RouteTable {
         : page.copyWith(
             name: name,
             key: ValueKey(name),
-            middlewares: [...middlewares, ...page.middlewares],
             bindings: [...page.bindings, ...bindings],
             binds: [...binds, ...page.binds],
           );
-    _add(resolved);
+    final chain = [...redirects, ?page.redirect];
+    _add(resolved, chain);
     for (final child in page.children) {
-      _flatten(child, name, resolved.middlewares, [
+      _flatten(child, name, chain, [
         ...ownBindings,
         ...bindings,
       ], resolved.binds);
     }
   }
 
-  void _add(FluxyPage page) {
+  void _add(FluxyPage page, List<FluxyRedirect> redirects) {
     _routes.add(page);
     final segments = _trim(page.name).split('/').where((s) => s.isNotEmpty);
     var variants = [<String>[]];
@@ -179,11 +180,15 @@ class RouteTable {
       }
     }
     for (final v in variants) {
-      _insert(v, page);
+      _insert(v, page, redirects);
     }
   }
 
-  void _insert(List<String> segments, FluxyPage page) {
+  void _insert(
+    List<String> segments,
+    FluxyPage page,
+    List<FluxyRedirect> redirects,
+  ) {
     var node = _root;
     for (final s in segments) {
       if (node.wildcard) break; // nothing can follow a wildcard
@@ -203,6 +208,7 @@ class RouteTable {
     if (node.page == null) {
       node.page = page;
       node.pattern = segments;
+      node.redirects = redirects;
     }
   }
 
@@ -221,4 +227,5 @@ class _Node {
   _Node? wildcardChild;
   FluxyPage? page;
   List<String>? pattern;
+  List<FluxyRedirect> redirects = const [];
 }
