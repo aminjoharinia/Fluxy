@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.7.3
+    ref: v1.0.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v0.7.3
+    ref: v1.0.0
     path: packages/fluxy_state
 ```
 
@@ -123,6 +123,13 @@ fluxy_state:
   - Tracked reads go straight to the running observer's `TrackedSources` (a static field), with the in-order case inlined into the read; a `Computed` read that is already up to date is three field checks, inlined (the try/catch moved to a slow path). `isDisposed` is a field check (no lazily initialized static).
   - Marking: a `Computed` returns itself from `markStale` when the mark is new and one static function passes the mark down (one direct call per level instead of two methods recursing into each other). `Computed`s with listeners are scheduled depth first, a `Computed` before the ones it reaches (it was the other way round); values are glitch-free either way.
   - Measured against v0.7.2 (release build, runs alternated): subscribe + unsubscribe on a shared value 38× faster (26 µs; BLoC / Signals 80 µs), mount + unmount of 1,000 widgets sharing a value 2.9× (1.01 ms), 100-deep chain 1.4× (2.98 ms, now ahead of GetX 4 and Signals), wide derived 1.3×, write and batch 1.2×, diamond 1.1×. Fan-out pays the listener entry (about +0.3 ns per listener call) and stays the fastest. Each listener takes about 30 bytes more (its entry). Fluxy is fastest in 8 of the 12 scenarios and ties on mount + unmount; GetX 4's hand-wired listeners (with glitches) stay ahead on wide derived, diamond and rebuild one.
+- v1.0.0: Fluxy names (breaking; no deprecated aliases). The README's "Coming from GetX" lists every rename.
+  - The root package is `fluxy` (was `get`): `import 'package:fluxy/fluxy.dart'`; `state_manager.dart`, `route_manager.dart`, `instance_manager.dart` and `utils.dart` keep their paths under `package:fluxy/`.
+  - The `Get` object is `Fluxy` (`GetInterface` → `FluxyInterface`); its members keep their names: `Fluxy.to`, `Fluxy.back`, `Fluxy.dialog`, `Fluxy.put`, `Fluxy.find`, `Fluxy.batch`, `Fluxy.locale` … The log name is `FLUXY`.
+  - Every `Get…` type is `Fluxy…`: `FluxyController`, `FluxyService`, `FluxyLifeCycleMixin`, `FluxyView`, `FluxyWidget`, `FluxyBuilder`, `FluxyX`, `FluxyStatus` (its cases keep their names), `FluxyListenable`, `FluxyNotifier`, the ticker mixins, `FluxyResponsive…`, `FluxyAnimatedBuilder`, `FluxyPlatform`, `FluxyUtils` and its extensions, `FluxyQueue`, `FluxyMicrotask`; navigation: `FluxyApp` (was `GetMaterialApp`), `FluxyCupertinoApp`, `FluxyPage`, `FluxyMiddleware`, `FluxyDelegate`, `FluxyInformationParser`, `FluxyNavigator`, `FluxyObserver`, `FluxyRouterOutlet`, `FluxySnackBar`, `FluxyHeroScope`, `Fluxy…Route`, `FluxyBackGesture…`.
+  - Unchanged: `.obs`, `Rx…`, `Obx`, `ObxValue`, `Computed`, `effect`, `RxFuture`, `RxCommand`, `StateMixin`, `Bindings`, `.tr`.
+  - Moving an app: rename the `get:` dependency to `fluxy:`, then `dart run tool/migrate.dart <app>` from a Fluxy checkout (rewrites imports and names; `tool/renames.txt` is the map). Or rewrite the imports and run `dart fix --apply` (`lib/fix_data.yaml`); both give the same result.
+  - fluxy_core and fluxy_i18n have their own tests (16 + 16).
 
 ## Tests
 

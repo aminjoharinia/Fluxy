@@ -1,6 +1,6 @@
 # Plan: from `get` to Fluxy names
 
-Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). All four phases committed on main 2026-11-17, untagged: the whole rename ships as one release, without deprecated aliases (decisions 5 and 6). Left: the release commit and tag, then the app switch. Decisions are listed under "Decisions" at the end.
+Status: decided 2026-11-17. Phase 0 done (codemod in `tool/`, `dart fix` checked). All four phases committed on main 2026-11-17, untagged: the whole rename ships as one release, without deprecated aliases (decisions 5 and 6). Released as v1.0.0 (2026-11-17). Decisions are listed under "Decisions" at the end.
 
 ## Goal
 
