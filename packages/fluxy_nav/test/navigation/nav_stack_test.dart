@@ -21,6 +21,8 @@ List<String> names(NavStack s) => s.entries.map((x) => x.location).toList();
 
 void main() {
   group('NavStack', () {
+    replaceTests();
+
     test('push / pop keeps the last entry', () {
       final s = NavStack().push(e('/')).push(e('/a'));
       expect(names(s.pop()), ['/']);
@@ -236,4 +238,14 @@ class _GoInBuild extends StatelessWidget {
     if (Fluxy.currentRoute != '/a') Fluxy.offAllNamed('/a');
     return const Text('root');
   }
+}
+
+void replaceTests() {
+  test('replaceTopWith applies the duplicate rules below the top', () {
+    final s = NavStack([e('/'), e('/a'), e('/b')]);
+    expect(names(s.replaceTopWith(e('/a'))), ['/', '/a']);
+    expect(names(s.replaceTopWith(e('/c'))), ['/', '/a', '/c']);
+    final keys = s.replaceTopWith(e('/a')).entries.map((x) => x.key);
+    expect(keys.toSet().length, keys.length);
+  });
 }

@@ -218,6 +218,8 @@ void main() {
   });
 
   group('pages', () {
+    offNamedDuplicates();
+
     testWidgets('to() with a transition; its future gets the back result', (
       t,
     ) async {
@@ -350,5 +352,20 @@ void main() {
       expect(() => FluxyDelegate(pages: flatPages()), returnsNormally);
       expect(kIsWeb, isFalse);
     });
+  });
+}
+
+void offNamedDuplicates() {
+  testWidgets('offNamed to a page already below keeps one copy', (t) async {
+    await pumpApp(t);
+    Fluxy.toNamed('/Home');
+    await t.pumpAndSettle();
+    Fluxy.toNamed('/Manage');
+    await t.pumpAndSettle();
+    Fluxy.offNamed('/Home');
+    await t.pumpAndSettle();
+    expect(t.takeException(), isNull);
+    expect(stackNames(), ['/', '/Home']);
+    expect(find.text('home'), findsOneWidget);
   });
 }

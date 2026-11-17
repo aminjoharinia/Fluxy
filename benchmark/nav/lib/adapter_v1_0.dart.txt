@@ -1,0 +1,7 @@
+// Version-specific calls (v1.0.0).
+import 'package:fluxy/fluxy.dart';
+
+bool match(String location) =>
+    Fluxy.rootController.rootDelegate.matchRoute(location).route != null;
+
+int stackLength() => Fluxy.rootController.rootDelegate.activePages.length;

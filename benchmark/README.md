@@ -1,6 +1,6 @@
 # Fluxy benchmark
 
-Fluxy against GetX 4 (pub.dev stable), upstream GetX 5 at `a294d2f` (the commit Fluxy was forked from), Riverpod, BLoC and Signals: core reactivity (writes, listeners, derived values, batching) and widget rebuilds. The latest numbers are in [results/RESULTS.md](results/RESULTS.md).
+Fluxy against GetX 4 (pub.dev stable), upstream GetX 5 at `a294d2f` (the commit Fluxy was forked from), Riverpod, BLoC and Signals: core reactivity (writes, listeners, derived values, batching) and widget rebuilds. The latest numbers are in [results/RESULTS.md](results/RESULTS.md). Navigation (matching, push / pop, deep links, dialogs, against an older Fluxy) has its own app in [nav/](nav/README.md).
 
 ## How it works
 

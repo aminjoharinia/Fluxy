@@ -1,6 +1,6 @@
 # fluxy_nav re-engineering plan
 
-Status: in progress (2026-11-17); decisions below taken. Phases 0-5 done. Results per phase are under "Results" at the end.
+Status: done (2026-11-17); decisions below taken. Phases 0-6 done; released as v1.2.0. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -126,3 +126,26 @@ Each phase ends green: package tests, the examples, and the app copy with `pubsp
 - `FluxyTestMode` is exported; `example/` no longer has a `fluxy_nav` dev dependency.
 - Docs: FLUXY.md v1.2.0 entry, root README (navigation bullet, Coming from GetX rows for middleware and outlets), `packages/fluxy_nav/README.md` (pages, redirects, nested pages, overlays, tests).
 - A test for an independent navigator through `id:` (`Router(routerDelegate: Fluxy.nestedKey('/tabs'))`, `toNamed(..., id:)`, `back(id:)`). 194 fluxy_nav tests, all checks green, app 97 tests pass.
+
+### Phase 6 (2026-11-17): benchmarks, release
+
+- `benchmark/nav/`: a release macOS app (match, push + pop, push 100 deep, deep link, dialog) and `run.sh`, which builds it for this checkout and for an older ref from a temporary worktree and runs them alternately. Against v1.0.0 (4 runs each): matching 15.2× faster (1.25 vs 18.97 µs over 152 pages), deep link 2.0×, push + pop 1.13×, push 100 deep 1.03×, dialog equal. The frame dominates the last three.
+- Found while measuring: the root pages were merged with an O(n²) loop (a flat app now skips merging; others use an insertion-ordered map), and `offNamed` / `off` / `offAll(predicate:)` / page pops could put two entries with the same key on the stack (they now follow the duplicate rules; `NavStack.replaceTopWith`). 196 fluxy_nav tests.
+- Released as v1.2.0: root and package pubspecs, FLUXY.md / README `ref:` snippets.
+
+## For the app (BOOFI)
+
+`lib/main.dart` (left uncommitted): `routerDelegate: appRouterDelegate`, `routeInformationParser: appRouteParser` and `unknownRoute: appUnknownRoute` become `redirect: appRedirect`, with
+
+```dart
+String? appRedirect(NavRequest request) => request.isUnknown || request.path == '/' ? startRoute() : null;
+```
+
+`appUnknownRoute`, `appRouterDelegate`, `appRouteParser` / `_AppRouteParser`, `_RootRoutingObserver`, `UnknownRoute`, `leaveUnknownStartAddress()` (and its call in `main()`) and the `SynchronousFuture` import are deleted. Nothing else in the app uses the removed API.
+
+## Deferred
+
+- `IGetNavigation` (the delegate's navigation interface) keeps its GetX name; `tool/renames.txt` / `lib/fix_data.yaml` still map `GetMiddleware` to the removed `FluxyMiddleware` (a GetX app moving to Fluxy now needs redirects by hand).
+- Browser back / forward goes through `setNewRoutePath`, so it reorders the stack (like before) instead of popping; the router could keep history positions in `RouteInformation.state`.
+- The system back button pops the root stack only; a dialog opened on an outlet's navigator isn't closed by it first.
+- `routingCallback` hears every stack change and overlay change; it no longer gets the observer's per-route events.

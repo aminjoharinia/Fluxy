@@ -14,7 +14,13 @@ import 'route_match.dart';
 /// behind [result].
 @immutable
 class NavEntry {
-  const NavEntry._(this.match, this.page, this.arguments, this._accepts);
+  const NavEntry._(
+    this.match,
+    this.page,
+    this.arguments,
+    this._accepts,
+    this.marksRootNavigator,
+  );
 
   /// Creates an entry whose [result] is a `Future<T?>`.
   ///
@@ -34,13 +40,23 @@ class NavEntry {
       parameters: {...?source.parameters, ...match.parameters},
       completer: Completer<T?>(),
     );
-    return NavEntry._(match, configured, arguments, (r) => r is T?);
+    return NavEntry._(
+      match,
+      configured,
+      arguments,
+      (r) => r is T?,
+      match.branch.any((p) => p.participatesInRootNavigator != null),
+    );
   }
 
   final RouteMatch match;
   final FluxyPage page;
   final Object? arguments;
   final bool Function(Object?) _accepts;
+
+  /// Whether a page of [branch] sets
+  /// [FluxyPage.participatesInRootNavigator].
+  final bool marksRootNavigator;
 
   LocalKey get key => page.key!;
 
@@ -76,8 +92,13 @@ class NavEntry {
   }
 
   /// The same entry (same result future) under another key.
-  NavEntry withKey(LocalKey key) =>
-      NavEntry._(match, page.copyWith(key: key), arguments, _accepts);
+  NavEntry withKey(LocalKey key) => NavEntry._(
+    match,
+    page.copyWith(key: key),
+    arguments,
+    _accepts,
+    marksRootNavigator,
+  );
 
   @override
   String toString() => 'NavEntry($location)';
@@ -111,7 +132,18 @@ class NavStack {
   /// Removes the top entry, unless it is the last one.
   NavStack pop() => canPop ? NavStack(entries.take(entries.length - 1)) : this;
 
-  /// Replaces the top entry (pushes when empty).
+  /// Replaces the top entry, following the duplicate rules of [add] for
+  /// the rest of the stack.
+  NavStack replaceTopWith(
+    NavEntry entry, {
+    PreventDuplicateHandlingMode mode =
+        PreventDuplicateHandlingMode.reorderRoutes,
+  }) =>
+      NavStack(entries.take(isEmpty ? 0 : entries.length - 1))
+          .add(entry, mode: mode);
+
+  /// Replaces the top entry (pushes when empty). It doesn't check for
+  /// duplicates; see [replaceTopWith].
   NavStack replaceTop(NavEntry entry) => isEmpty
       ? NavStack([entry])
       : NavStack([...entries.take(entries.length - 1), entry]);

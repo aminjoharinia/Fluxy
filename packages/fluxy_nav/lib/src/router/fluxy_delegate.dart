@@ -425,19 +425,26 @@ class FluxyDelegate extends RouterDelegate<Uri>
     if (pickPagesForRootNavigator != null) {
       return pickPagesForRootNavigator!(_stack).toList();
     }
-    final pages = <FluxyPage>[];
-    for (final entry in _stack.entries) {
-      final branch = entry.branch;
-      final marked = branch.where((p) => p.participatesInRootNavigator != null);
-      final given = marked.isEmpty
-          ? [entry.page]
-          : marked.where((p) => p.participatesInRootNavigator == true);
-      for (final page in given) {
-        pages.removeWhere((p) => p.key == page.key);
-        pages.add(page);
+    final entries = _stack.entries;
+    // Keys are unique on the stack, so a flat app needs no merging.
+    if (!entries.any((e) => e.marksRootNavigator)) {
+      return [for (final e in entries) e.page];
+    }
+    // Insertion-ordered: removing and re-adding a key moves it to the end.
+    final pages = <LocalKey, FluxyPage>{};
+    for (final entry in entries) {
+      if (!entry.marksRootNavigator) {
+        pages.remove(entry.key);
+        pages[entry.key] = entry.page;
+        continue;
+      }
+      for (final page in entry.branch) {
+        if (page.participatesInRootNavigator != true) continue;
+        pages.remove(page.key);
+        pages[page.key!] = page;
       }
     }
-    return pages;
+    return pages.values.toList();
   }
 
   /// The entry an outlet under [parent] shows: the topmost one whose
@@ -485,7 +492,10 @@ class FluxyDelegate extends RouterDelegate<Uri>
       }
       final match = _table.match(location);
       if (match.isUnknown) return;
-      final replacement = NavEntry.create<dynamic>(match: match);
+      var replacement = NavEntry.create<dynamic>(match: match);
+      if (_stack.lastAt(replacement.location) != null) {
+        replacement = replacement.withKey(UniqueKey());
+      }
       _commit(_stack.replace(entry, replacement), deferred: deferred);
     });
   }
@@ -624,7 +634,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
       return;
     }
     final entry = NavEntry.create<dynamic>(match: _table.match(parent));
-    _commit(_stack.replaceTop(entry), popped: top, popResult: result);
+    _commit(_stack.replaceTopWith(entry), popped: top, popResult: result);
   });
 
   Future<T?> popHistory<T>(T result) async {
@@ -820,7 +830,10 @@ class FluxyDelegate extends RouterDelegate<Uri>
     return _result<T>(
       _navigate(
         () => _directEntry<T>(getPage, arguments),
-        (stack, entry) => stack.replaceTop(entry),
+        (stack, entry) => stack.replaceTopWith(
+          entry,
+          mode: entry.page.preventDuplicateHandlingMode,
+        ),
       ),
     );
   }
@@ -862,7 +875,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
         () => _directEntry<T>(getPage, arguments),
         (stack, entry) => predicate == null
             ? NavStack([entry])
-            : stack.removeUntil((e) => predicate(e.page)).push(entry),
+            : stack.removeUntil((e) => predicate(e.page)).add(entry),
         resets: true,
       ),
     );
@@ -912,7 +925,10 @@ class FluxyDelegate extends RouterDelegate<Uri>
     return _result<T>(
       _navigate(
         () => _resolve<T>(page, arguments: arguments),
-        (stack, entry) => stack.replaceTop(entry),
+        (stack, entry) => stack.replaceTopWith(
+          entry,
+          mode: entry.page.preventDuplicateHandlingMode,
+        ),
       ),
     );
   }

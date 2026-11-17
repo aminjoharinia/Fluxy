@@ -1,0 +1,16 @@
+name: bench_nav
+description: Fluxy navigation benchmark (matching, push / pop, deep links, dialogs).
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  fluxy:
+    path: ../..
+
+flutter:
+  uses-material-design: true
