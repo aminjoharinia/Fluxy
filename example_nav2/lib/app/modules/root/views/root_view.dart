@@ -21,9 +21,11 @@ class RootView extends FluxyView<RootController> {
       ),
       //body: HomeView(),
 
-      body: FluxyRouterOutlet(
+      // One level: /home has an outlet of its own for its children.
+      body: const FluxyRouterOutlet(
+        parent: '/',
         initialRoute: Routes.home,
-        anchorRoute: '/',
+        levels: 1,
       ),
     );
   }

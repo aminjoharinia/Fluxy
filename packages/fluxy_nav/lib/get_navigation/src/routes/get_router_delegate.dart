@@ -79,15 +79,15 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
 
   final List<NavigatorObserver>? navigatorObservers;
 
-  /// The observer that keeps `Fluxy.routing` (and so `Fluxy.isDialogOpen`,
-  /// `Fluxy.isBottomSheetOpen`, `Fluxy.currentRoute`) up to date. `FluxyRoot` sets
-  /// it on the root delegate, including one the app passes in, unless the
-  /// app already listed a [FluxyObserver] in [navigatorObservers].
-  FluxyObserver? routingObserver;
+  /// Logs page changes and tells route-bound dependencies when their page
+  /// goes away. Always on; apps don't need to add an observer.
+  final _reports = FluxyObserver();
 
   final TransitionDelegate<dynamic>? transitionDelegate;
 
-  final Iterable<FluxyPage> Function(RouteDecoder currentNavStack)?
+  /// Picks the root navigator's pages from the stack, instead of the
+  /// default (see [FluxyPage.participatesInRootNavigator]).
+  final Iterable<FluxyPage> Function(NavStack stack)?
   pickPagesForRootNavigator;
 
   @override
@@ -150,6 +150,32 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
 
   bool get canBack => _stack.canPop;
 
+  bool _wasBack = false;
+  String _removed = '';
+
+  /// Where the app is, read from the stack and the open overlays.
+  ///
+  /// `current` is the path of the top page (inside nested pages too),
+  /// `previous` the one under it, `args` the top page's arguments.
+  Routing get routing {
+    final top = _stack.top;
+    Route<dynamic>? route;
+    navigatorKey.currentState?.popUntil((r) {
+      route = r;
+      return true;
+    });
+    return Routing(
+      current: top?.name ?? '',
+      previous: _stack.below?.name ?? '',
+      args: top?.arguments,
+      removed: _removed,
+      route: route,
+      isBack: _wasBack,
+      isDialog: FluxyOverlays.dialogs > 0,
+      isBottomSheet: FluxyOverlays.bottomSheets > 0,
+    );
+  }
+
   /// Puts [next] in place, completes the entries that left it and tells
   /// the router.
   ///
@@ -168,10 +194,17 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
     final previous = _stack;
     _stack = next;
     final kept = {for (final e in next.entries) e.token};
+    final before = {for (final e in previous.entries) e.token};
+    _wasBack =
+        previous.top != null &&
+        !kept.contains(previous.top!.token) &&
+        next.top != null &&
+        before.contains(next.top!.token);
+    _removed = '';
     for (final e in previous.entries) {
-      if (kept.contains(e.token) || identical(e.token, deferred?.token)) {
-        continue;
-      }
+      if (kept.contains(e.token)) continue;
+      if (!identical(e, previous.top)) _removed = e.name;
+      if (identical(e.token, deferred?.token)) continue;
       e.complete(identical(e.token, popped?.token) ? popResult : null);
     }
     if (created != null && !kept.contains(created.token)) created.complete();
@@ -325,24 +358,83 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
 
   /// The pages the root navigator shows.
   ///
-  /// Normally the page of every entry. When the current branch says which
-  /// pages take part in the root navigator
-  /// ([FluxyPage.participatesInRootNavigator]), only those.
-  Iterable<FluxyPage> _rootPages() {
-    final top = _stack.top;
-    if (top == null) return const [];
+  /// Each entry gives its own page, unless its branch says which pages
+  /// take part in the root navigator ([FluxyPage.participatesInRootNavigator]):
+  /// then those marked true (a shell page with an outlet, say). A page given
+  /// twice (the same shell for several entries) is shown once, where it was
+  /// given last.
+  List<FluxyPage> _rootPages() {
     if (pickPagesForRootNavigator != null) {
-      return pickPagesForRootNavigator!(currentConfiguration!);
+      return pickPagesForRootNavigator!(_stack).toList();
     }
-    final branch = top.branch;
-    final marked = branch.where((p) => p.participatesInRootNavigator != null);
-    if (marked.isEmpty) return _stack.entries.map((e) => e.page);
-    return marked.where((p) => p.participatesInRootNavigator == true);
+    final pages = <FluxyPage>[];
+    for (final entry in _stack.entries) {
+      final branch = entry.branch;
+      final marked = branch.where((p) => p.participatesInRootNavigator != null);
+      final given = marked.isEmpty
+          ? [entry.page]
+          : marked.where((p) => p.participatesInRootNavigator == true);
+      for (final page in given) {
+        pages.removeWhere((p) => p.key == page.key);
+        pages.add(page);
+      }
+    }
+    return pages;
+  }
+
+  /// The entry an outlet under [parent] shows: the topmost one whose
+  /// branch has [parent] (its concrete path or its registered pattern).
+  (NavEntry, int)? _outletEntry(String parent) {
+    for (final entry in _stack.entries.reversed) {
+      final branch = entry.branch;
+      final patterns = entry.match.patterns;
+      for (var i = 0; i < branch.length; i++) {
+        if (branch[i].name == parent ||
+            (i < patterns.length && patterns[i] == parent)) {
+          return (entry, i);
+        }
+      }
+    }
+    return null;
+  }
+
+  /// The pages a [FluxyRouterOutlet] under [parent] shows: the branch
+  /// pages below [parent], at most [levels] of them.
+  List<FluxyPage> outletPages(String parent, {int? levels}) {
+    final found = _outletEntry(parent);
+    if (found == null) return const [];
+    final (entry, index) = found;
+    final below = entry.branch.skip(index + 1);
+    return (levels == null ? below : below.take(levels)).toList();
+  }
+
+  /// An outlet's navigator under [parent] popped [page] itself: the entry
+  /// moves up one level (`/home/products/1` becomes `/home/products`).
+  void outletDidRemovePage(String parent, Page<Object?> page) {
+    _change(() {
+      final found = _outletEntry(parent);
+      if (found == null) return;
+      final (entry, _) = found;
+      final branch = entry.branch;
+      final index = branch.indexWhere((p) => p.key == page.key);
+      if (index < 1) return;
+      final location = branch[index - 1].name;
+      final isTop = identical(entry, _stack.top);
+      final deferred = identical(branch[index], entry.page) ? entry : null;
+      if (isTop && _stack.below?.name == location) {
+        _commit(_stack.pop(), deferred: deferred);
+        return;
+      }
+      final match = _table.match(location);
+      if (match.isUnknown) return;
+      final replacement = NavEntry.create<dynamic>(match: match);
+      _commit(_stack.replace(entry, replacement), deferred: deferred);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final pages = _rootPages().toList();
+    final pages = _rootPages();
     if (pages.isEmpty) {
       return ColoredBox(color: Theme.of(context).scaffoldBackgroundColor);
     }
@@ -351,7 +443,7 @@ class FluxyDelegate extends RouterDelegate<RouteDecoder>
         key: navigatorKey,
         onDidRemovePage: _onDidRemovePage,
         pages: pages,
-        observers: [?routingObserver, ...?navigatorObservers],
+        observers: [_reports, ...?navigatorObservers],
         transitionDelegate:
             transitionDelegate ?? const DefaultTransitionDelegate<dynamic>(),
       ),

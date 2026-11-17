@@ -4,168 +4,117 @@ import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
-class RouterOutlet<TDelegate extends RouterDelegate<T>, T extends Object>
-    extends StatefulWidget {
-  final TDelegate routerDelegate;
-  final Widget Function(BuildContext context) builder;
-
-  RouterOutlet.builder({
+/// Shows the pages of the current address that sit below [parent], in a
+/// nested navigator.
+///
+/// Put it in the page registered as [parent] (a shell with tabs or a side
+/// bar, say). For `/home/products/7`, an outlet with `parent: '/home'`
+/// shows `/home/products` with `/home/products/7` above it. [parent] is
+/// the parent's full path, concrete (`/user/7`) or as registered
+/// (`/user/:id`).
+///
+/// [levels] limits how many levels it shows: an outlet whose child pages
+/// have outlets of their own shows one level (`levels: 1`).
+///
+/// When no page sits below [parent] (the address is [parent] itself), it
+/// shows the page registered as [initialRoute], or else [emptyWidget].
+///
+/// A page popped inside the outlet (back gesture, `Navigator.pop`) moves
+/// the address up one level, and the URL follows.
+class FluxyRouterOutlet extends StatefulWidget {
+  const FluxyRouterOutlet({
     super.key,
-    TDelegate? delegate,
-    required this.builder,
-  }) : routerDelegate = delegate ?? Fluxy.delegate<TDelegate, T>()!;
+    required this.parent,
+    this.initialRoute,
+    this.levels,
+    this.filterPages,
+    this.emptyWidget,
+    this.navigatorKey,
+    this.restorationScopeId,
+    this.delegate,
+  });
 
-  RouterOutlet({
-    Key? key,
-    TDelegate? delegate,
-    required Iterable<FluxyPage> Function(T currentNavStack) pickPages,
-    required Widget Function(
-      BuildContext context,
-      TDelegate,
-      Iterable<FluxyPage>? page,
-    ) pageBuilder,
-  }) : this.builder(
-            builder: (context) {
-              final currentConfig = context.delegate.currentConfiguration as T?;
-              final rDelegate = context.delegate as TDelegate;
-              var picked =
-                  currentConfig == null ? null : pickPages(currentConfig);
-              if (picked?.isEmpty ?? true) {
-                picked = null;
-              }
-              return pageBuilder(context, rDelegate, picked);
-            },
-            delegate: delegate,
-            key: key);
+  final String parent;
+  final String? initialRoute;
+  final int? levels;
+
+  /// Changes the picked pages before they're shown.
+  final Iterable<FluxyPage> Function(Iterable<FluxyPage> pages)? filterPages;
+  final Widget? emptyWidget;
+
+  /// The nested navigator's key; one is made when null.
+  final GlobalKey<NavigatorState>? navigatorKey;
+  final String? restorationScopeId;
+
+  /// Defaults to the enclosing router's delegate.
+  final FluxyDelegate? delegate;
+
   @override
-  RouterOutletState<TDelegate, T> createState() =>
-      RouterOutletState<TDelegate, T>();
+  State<FluxyRouterOutlet> createState() => _FluxyRouterOutletState();
 }
 
-class RouterOutletState<TDelegate extends RouterDelegate<T>, T extends Object>
-    extends State<RouterOutlet<TDelegate, T>> {
-  RouterDelegate? delegate;
-  late ChildBackButtonDispatcher _backButtonDispatcher;
+class _FluxyRouterOutletState extends State<FluxyRouterOutlet> {
+  FluxyDelegate? _delegate;
+  GlobalKey<NavigatorState>? _ownKey;
 
-  void _listener() {
-    setState(() {});
-  }
+  GlobalKey<NavigatorState> get _key =>
+      widget.navigatorKey ?? (_ownKey ??= GlobalKey<NavigatorState>());
 
-  VoidCallback? disposer;
+  void _changed() => setState(() {});
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    disposer?.call();
-    final router = Router.of(context);
-    delegate ??= router.routerDelegate;
-    delegate?.addListener(_listener);
-    disposer = () => delegate?.removeListener(_listener);
+    _listen();
+  }
 
-    _backButtonDispatcher =
-        router.backButtonDispatcher!.createChildBackButtonDispatcher();
+  @override
+  void didUpdateWidget(FluxyRouterOutlet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _listen();
+  }
+
+  void _listen() {
+    final delegate = widget.delegate ??
+        (Router.maybeOf(context)?.routerDelegate as FluxyDelegate?) ??
+        Fluxy.rootController.rootDelegate;
+    if (identical(delegate, _delegate)) return;
+    _delegate?.removeListener(_changed);
+    _delegate = delegate..addListener(_changed);
   }
 
   @override
   void dispose() {
+    _delegate?.removeListener(_changed);
     super.dispose();
-    disposer?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    _backButtonDispatcher.takePriority();
-    return widget.builder(context);
+    final delegate = _delegate!;
+    Iterable<FluxyPage> pages =
+        delegate.outletPages(widget.parent, levels: widget.levels);
+    if (pages.isEmpty && widget.initialRoute != null) {
+      final initial = delegate.routeTable.match(widget.initialRoute!).page;
+      if (initial != null) pages = [initial];
+    }
+    if (widget.filterPages != null) pages = widget.filterPages!(pages);
+    final list = pages.toList();
+    if (list.isEmpty) return widget.emptyWidget ?? const SizedBox.shrink();
+    return InheritedNavigator(
+      navigatorKey: _key,
+      child: FluxyHeroScope(
+        nested: true,
+        child: FluxyNavigator(
+          key: _key,
+          restorationScopeId: widget.restorationScopeId,
+          pages: list,
+          onDidRemovePage: (page) =>
+              delegate.outletDidRemovePage(widget.parent, page),
+        ),
+      ),
+    );
   }
-}
-
-class FluxyRouterOutlet extends RouterOutlet<FluxyDelegate, RouteDecoder> {
-  FluxyRouterOutlet({
-    Key? key,
-    String? anchorRoute,
-    required String initialRoute,
-    Iterable<FluxyPage> Function(Iterable<FluxyPage> afterAnchor)? filterPages,
-    FluxyDelegate? delegate,
-    String? restorationScopeId,
-  }) : this.pickPages(
-          restorationScopeId: restorationScopeId,
-          pickPages: (config) {
-            Iterable<FluxyPage<dynamic>> ret;
-            if (anchorRoute == null) {
-              // jump the ancestor path
-              final length = Uri.parse(initialRoute).pathSegments.length;
-
-              return config.currentTreeBranch
-                  .skip(length)
-                  .take(length)
-                  .toList();
-            }
-            ret = config.currentTreeBranch.pickAfterRoute(anchorRoute);
-            if (filterPages != null) {
-              ret = filterPages(ret);
-            }
-            return ret;
-          },
-          key: key,
-          emptyPage: (delegate) =>
-              delegate.matchRoute(initialRoute).route ?? delegate.notFoundRoute,
-          navigatorKey: Fluxy.nestedKey(anchorRoute)?.navigatorKey,
-          delegate: delegate,
-        );
-  FluxyRouterOutlet.pickPages({
-    super.key,
-    Widget Function(FluxyDelegate delegate)? emptyWidget,
-    FluxyPage Function(FluxyDelegate delegate)? emptyPage,
-    required super.pickPages,
-    bool Function(Route<dynamic>, dynamic)? onPopPage,
-    String? restorationScopeId,
-    GlobalKey<NavigatorState>? navigatorKey,
-    FluxyDelegate? delegate,
-  }) : super(
-          pageBuilder: (context, rDelegate, pages) {
-            final pageRes = <FluxyPage?>[
-              ...?pages,
-              if (pages == null || pages.isEmpty) emptyPage?.call(rDelegate),
-            ].whereType<FluxyPage>();
-
-            if (pageRes.isNotEmpty) {
-              return InheritedNavigator(
-                navigatorKey: navigatorKey ??
-                    Fluxy.rootController.rootDelegate.navigatorKey,
-                child: FluxyHeroScope(
-                  nested: true,
-                  child: FluxyNavigator(
-                    restorationScopeId: restorationScopeId,
-                    onPopPage: onPopPage ??
-                        (route, result) {
-                          final didPop = route.didPop(result);
-                          if (!didPop) {
-                            return false;
-                          }
-                          return true;
-                        },
-                    pages: pageRes.toList(),
-                    key: navigatorKey,
-                  ),
-                ),
-              );
-            }
-            return (emptyWidget?.call(rDelegate) ?? const SizedBox.shrink());
-          },
-          delegate: delegate ?? Fluxy.rootController.rootDelegate,
-        );
-
-  FluxyRouterOutlet.builder({
-    super.key,
-    required super.builder,
-    String? route,
-    FluxyDelegate? routerDelegate,
-  }) : super.builder(
-          delegate: routerDelegate ??
-              (route != null
-                  ? Fluxy.nestedKey(route)
-                  : Fluxy.rootController.rootDelegate),
-        );
 }
 
 class InheritedNavigator extends InheritedWidget {
@@ -189,23 +138,6 @@ class InheritedNavigator extends InheritedWidget {
 extension NavKeyExt on BuildContext {
   GlobalKey<NavigatorState>? get parentNavigatorKey {
     return InheritedNavigator.of(this)?.navigatorKey;
-  }
-}
-
-extension PagesListExt on List<FluxyPage> {
-  /// Returns the route and all following routes after the given route.
-  Iterable<FluxyPage> pickFromRoute(String route) {
-    return skipWhile((value) => value.name != route);
-  }
-
-  /// Returns the routes after the given route.
-  Iterable<FluxyPage> pickAfterRoute(String route) {
-    // If the provided route is root, we take the first route after root.
-    if (route == '/') {
-      return pickFromRoute(route).skip(1).take(1);
-    }
-    // Otherwise, we skip the route and take all routes after it.
-    return pickFromRoute(route).skip(1);
   }
 }
 

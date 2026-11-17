@@ -3,7 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
-class FluxyModalBottomSheetRoute<T> extends PopupRoute<T> {
+class FluxyModalBottomSheetRoute<T> extends PopupRoute<T>
+    with CountedOverlay<T> {
+  @override
+  OverlayKind get overlayKind => OverlayKind.bottomSheet;
+
   FluxyModalBottomSheetRoute({
     this.builder,
     this.theme,

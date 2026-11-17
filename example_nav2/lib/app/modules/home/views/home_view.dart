@@ -17,46 +17,40 @@ class HomeView extends FluxyView<HomeController> {
           height: 25,
         ),
         Expanded(
-          child: FluxyRouterOutlet.builder(
-            route: Routes.home,
-            builder: (context) {
-              return Scaffold(
-                body: FluxyRouterOutlet(
-                  initialRoute: Routes.dashboard,
-                  anchorRoute: Routes.home,
-                ),
-                bottomNavigationBar: IndexedRouteBuilder(
-                    routes: const [
-                      Routes.dashboard,
-                      Routes.profile,
-                      Routes.products
+          child: Scaffold(
+            body: const FluxyRouterOutlet(
+              parent: Routes.home,
+              initialRoute: Routes.dashboard,
+            ),
+            bottomNavigationBar: IndexedRouteBuilder(
+                routes: const [
+                  Routes.dashboard,
+                  Routes.profile,
+                  Routes.products
+                ],
+                builder: (context, routes, index) {
+                  return BottomNavigationBar(
+                    currentIndex: index,
+                    onTap: (value) => Fluxy.toNamed(routes[value]),
+                    items: const [
+                      // _Paths.HOME + [Empty]
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.home),
+                        label: 'Home',
+                      ),
+                      // _Paths.HOME + Routes.PROFILE
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.account_box_rounded),
+                        label: 'Profile',
+                      ),
+                      // _Paths.HOME + _Paths.PRODUCTS
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.account_box_rounded),
+                        label: 'Products',
+                      ),
                     ],
-                    builder: (context, routes, index) {
-                      final delegate = context.delegate;
-                      return BottomNavigationBar(
-                        currentIndex: index,
-                        onTap: (value) => delegate.toNamed(routes[value]),
-                        items: const [
-                          // _Paths.HOME + [Empty]
-                          BottomNavigationBarItem(
-                            icon: Icon(Icons.home),
-                            label: 'Home',
-                          ),
-                          // _Paths.HOME + Routes.PROFILE
-                          BottomNavigationBarItem(
-                            icon: Icon(Icons.account_box_rounded),
-                            label: 'Profile',
-                          ),
-                          // _Paths.HOME + _Paths.PRODUCTS
-                          BottomNavigationBarItem(
-                            icon: Icon(Icons.account_box_rounded),
-                            label: 'Products',
-                          ),
-                        ],
-                      );
-                    }),
-              );
-            },
+                  );
+                }),
           ),
         ),
       ],

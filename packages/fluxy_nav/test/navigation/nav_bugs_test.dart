@@ -42,11 +42,15 @@ void main() {
   tearDown(Fluxy.reset);
 
   testWidgets('B1: a static route wins over an earlier /:id', (t) async {
-    await t.pumpWidget(FluxyApp.router(getPages: [
-      FluxyPage(name: '/', page: () => text('root')),
-      FluxyPage(name: '/:id', page: () => text('item')),
-      FluxyPage(name: '/settings', page: () => text('settings')),
-    ]));
+    await t.pumpWidget(
+      FluxyApp.router(
+        getPages: [
+          FluxyPage(name: '/', page: () => text('root')),
+          FluxyPage(name: '/:id', page: () => text('item')),
+          FluxyPage(name: '/settings', page: () => text('settings')),
+        ],
+      ),
+    );
     await t.pumpAndSettle();
     Fluxy.toNamed('/settings');
     await t.pumpAndSettle();
@@ -56,14 +60,19 @@ void main() {
 
   testWidgets('B2: navigations apply in call order', (t) async {
     final gate = Completer<void>();
-    await t.pumpWidget(FluxyApp.router(getPages: [
-      FluxyPage(name: '/', page: () => text('root')),
-      FluxyPage(
-          name: '/a',
-          page: () => text('a'),
-          middlewares: [SlowMiddleware(gate)]),
-      FluxyPage(name: '/b', page: () => text('b')),
-    ]));
+    await t.pumpWidget(
+      FluxyApp.router(
+        getPages: [
+          FluxyPage(name: '/', page: () => text('root')),
+          FluxyPage(
+            name: '/a',
+            page: () => text('a'),
+            middlewares: [SlowMiddleware(gate)],
+          ),
+          FluxyPage(name: '/b', page: () => text('b')),
+        ],
+      ),
+    );
     await t.pumpAndSettle();
     Fluxy.toNamed('/a');
     Fluxy.toNamed('/b');
@@ -74,33 +83,31 @@ void main() {
     expect(find.text('b'), findsOneWidget);
   });
 
-  testWidgets('B3: currentRoute is the address inside nested pages',
-      (t) async {
-    await t.pumpWidget(FluxyApp.router(
-      initialRoute: '/shell/x',
-      getPages: [
-        FluxyPage(
-          name: '/shell',
-          participatesInRootNavigator: true,
-          page: () => Scaffold(
-            body: FluxyRouterOutlet(
-                initialRoute: '/shell/x', anchorRoute: '/shell'),
+  testWidgets('B3: currentRoute is the address inside nested pages', (t) async {
+    await t.pumpWidget(
+      FluxyApp.router(
+        initialRoute: '/shell/x',
+        getPages: [
+          FluxyPage(
+            name: '/shell',
+            participatesInRootNavigator: true,
+            page: () => Scaffold(body: FluxyRouterOutlet(parent: '/shell')),
+            children: [FluxyPage(name: '/x', page: () => const Text('x'))],
           ),
-          children: [
-            FluxyPage(name: '/x', page: () => const Text('x')),
-          ],
-        ),
-      ],
-    ));
+        ],
+      ),
+    );
     await t.pumpAndSettle();
     expect(find.text('x'), findsOneWidget);
     expect(Fluxy.currentRoute, '/shell/x');
-  }, skip: true);
+  });
 
   testWidgets('B4: Fluxy.to does not change the route table', (t) async {
-    await t.pumpWidget(FluxyApp.router(getPages: [
-      FluxyPage(name: '/', page: () => text('root')),
-    ]));
+    await t.pumpWidget(
+      FluxyApp.router(
+        getPages: [FluxyPage(name: '/', page: () => text('root'))],
+      ),
+    );
     await t.pumpAndSettle();
     final delegate = Fluxy.rootController.rootDelegate;
     final before = delegate.registeredRoutes.length;
@@ -109,31 +116,34 @@ void main() {
     expect(delegate.registeredRoutes.length, before);
   });
 
-  testWidgets('B5: a pop inside an outlet updates the stack and the URL',
-      (t) async {
-    await t.pumpWidget(FluxyApp.router(
-      initialRoute: '/shell',
-      getPages: [
-        FluxyPage(
-          name: '/shell',
-          participatesInRootNavigator: true,
-          page: () => Scaffold(
-            body: FluxyRouterOutlet(
-                initialRoute: '/shell/a', anchorRoute: '/shell'),
-          ),
-          children: [
-            FluxyPage(name: '/a', page: () => const Text('a')),
-            FluxyPage(
-              name: '/b',
-              page: () => const Text('b'),
-              children: [
-                FluxyPage(name: '/c', page: () => const Text('c')),
-              ],
+  testWidgets('B5: a pop inside an outlet updates the stack and the URL', (
+    t,
+  ) async {
+    await t.pumpWidget(
+      FluxyApp.router(
+        initialRoute: '/shell',
+        getPages: [
+          FluxyPage(
+            name: '/shell',
+            participatesInRootNavigator: true,
+            page: () => Scaffold(
+              body: FluxyRouterOutlet(
+                parent: '/shell',
+                initialRoute: '/shell/a',
+              ),
             ),
-          ],
-        ),
-      ],
-    ));
+            children: [
+              FluxyPage(name: '/a', page: () => const Text('a')),
+              FluxyPage(
+                name: '/b',
+                page: () => const Text('b'),
+                children: [FluxyPage(name: '/c', page: () => const Text('c'))],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
     await t.pumpAndSettle();
     Fluxy.toNamed('/shell/b/c');
     await t.pumpAndSettle();
@@ -142,42 +152,50 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('b'), findsOneWidget);
     expect(Fluxy.currentRoute, '/shell/b');
-  }, skip: true);
+  });
 
   testWidgets('B6: an outlet two levels down shows its own pages', (t) async {
-    await t.pumpWidget(FluxyApp.router(
-      initialRoute: '/a/b/c',
-      getPages: [
-        FluxyPage(
-          name: '/a',
-          participatesInRootNavigator: true,
-          page: () =>
-              Scaffold(body: FluxyRouterOutlet(initialRoute: '/a/b')),
-          children: [
-            FluxyPage(
-              name: '/b',
-              page: () => FluxyRouterOutlet(initialRoute: '/a/b/c'),
-              children: [
-                FluxyPage(name: '/c', page: () => const Text('c')),
-              ],
-            ),
-          ],
-        ),
-      ],
-    ));
+    await t.pumpWidget(
+      FluxyApp.router(
+        initialRoute: '/a/b/c',
+        getPages: [
+          FluxyPage(
+            name: '/a',
+            participatesInRootNavigator: true,
+            page: () =>
+                Scaffold(body: FluxyRouterOutlet(parent: '/a', levels: 1)),
+            children: [
+              FluxyPage(
+                name: '/b',
+                page: () => FluxyRouterOutlet(parent: '/a/b'),
+                children: [FluxyPage(name: '/c', page: () => const Text('c'))],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
     await t.pumpAndSettle();
     expect(find.text('c'), findsOneWidget);
-  }, skip: true);
+  });
 
   testWidgets('B7: middleware priority is honoured on the router', (t) async {
     final log = <String>[];
-    await t.pumpWidget(FluxyApp.router(getPages: [
-      FluxyPage(name: '/', page: () => text('root')),
-      FluxyPage(name: '/a', page: () => text('a'), middlewares: [
-        OrderMiddleware(log, 'late', priority: 5),
-        OrderMiddleware(log, 'early', priority: -1),
-      ]),
-    ]));
+    await t.pumpWidget(
+      FluxyApp.router(
+        getPages: [
+          FluxyPage(name: '/', page: () => text('root')),
+          FluxyPage(
+            name: '/a',
+            page: () => text('a'),
+            middlewares: [
+              OrderMiddleware(log, 'late', priority: 5),
+              OrderMiddleware(log, 'early', priority: -1),
+            ],
+          ),
+        ],
+      ),
+    );
     await t.pumpAndSettle();
     Fluxy.toNamed('/a');
     await t.pumpAndSettle();

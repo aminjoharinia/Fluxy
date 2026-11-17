@@ -75,37 +75,42 @@ void main() {
     });
   });
 
-  group('routing observer', () {
-    testWidgets('an app-provided delegate still keeps Get.routing current',
-        (tester) async {
+  group('routing state', () {
+    testWidgets('an app-provided delegate keeps Get.routing current, with '
+        'no observer', (tester) async {
       final delegate = FluxyDelegate(pages: _pages());
       await tester.pumpWidget(FluxyApp.router(
         getPages: _pages(),
         routerDelegate: delegate,
       ));
       await tester.pumpAndSettle();
-      expect(delegate.routingObserver, isNotNull);
 
       Fluxy.dialog(const Text('dialog'));
       await tester.pumpAndSettle();
       expect(Fluxy.isDialogOpen, isTrue);
+      expect(Fluxy.routing.isDialog, isTrue);
       Fluxy.back();
       await tester.pumpAndSettle();
       expect(Fluxy.isDialogOpen, isFalse);
+      Fluxy.toNamed('/Home');
+      await tester.pumpAndSettle();
+      expect(Fluxy.currentRoute, '/Home');
+      expect(Fluxy.routing.previous, '/');
     });
 
-    testWidgets('no second observer when the app listed a GetObserver',
-        (tester) async {
-      final delegate = FluxyDelegate(
-        pages: _pages(),
-        navigatorObservers: [FluxyObserver()],
-      );
+    testWidgets('routingCallback hears pages and overlays', (tester) async {
+      final seen = <String>[];
       await tester.pumpWidget(FluxyApp.router(
         getPages: _pages(),
-        routerDelegate: delegate,
+        routingCallback: (r) =>
+            seen.add('${r!.current}${r.isDialog == true ? '+dialog' : ''}'),
       ));
       await tester.pumpAndSettle();
-      expect(delegate.routingObserver, isNull);
+      Fluxy.toNamed('/Home');
+      await tester.pumpAndSettle();
+      Fluxy.dialog(const Text('d'));
+      await tester.pumpAndSettle();
+      expect(seen, containsAllInOrder(['/Home', '/Home+dialog']));
     });
   });
 

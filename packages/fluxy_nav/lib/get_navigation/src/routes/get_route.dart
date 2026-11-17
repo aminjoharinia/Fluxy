@@ -181,6 +181,14 @@ class FluxyPage<T> extends Page<T> {
       unknownRoute: unknownRoute,
     ).getPageToRoute<T>(this, unknownRoute, context);
 
+    // When the navigator pops the page itself (back gesture,
+    // Navigator.pop), the page's future gets the value it was popped with.
+    final completer = this.completer;
+    if (completer != null) {
+      page.popped.then((result) {
+        if (!completer.isCompleted) completer.complete(result);
+      });
+    }
     return page;
   }
 

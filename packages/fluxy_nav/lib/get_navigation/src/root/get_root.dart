@@ -54,7 +54,6 @@ class ConfigData {
   final Curve defaultTransitionCurve;
   final Curve defaultDialogTransitionCurve;
   final Duration defaultDialogTransitionDuration;
-  final Routing routing;
   final Map<String, String?> parameters;
   final SnackBarQueue snackBarQueue = SnackBarQueue();
 
@@ -99,8 +98,7 @@ class ConfigData {
     this.defaultDialogTransitionDuration = const Duration(milliseconds: 300),
     this.parameters = const {},
     required this.defaultPopGesture,
-    Routing? routing,
-  }) : routing = routing ?? Routing();
+  });
 
   ConfigData copyWith({
     ValueChanged<Routing?>? routingCallback,
@@ -142,7 +140,6 @@ class ConfigData {
     Curve? defaultTransitionCurve,
     Curve? defaultDialogTransitionCurve,
     Duration? defaultDialogTransitionDuration,
-    Routing? routing,
     Map<String, String?>? parameters,
   }) {
     return ConfigData(
@@ -191,7 +188,6 @@ class ConfigData {
           defaultDialogTransitionCurve ?? this.defaultDialogTransitionCurve,
       defaultDialogTransitionDuration: defaultDialogTransitionDuration ??
           this.defaultDialogTransitionDuration,
-      routing: routing ?? this.routing,
       parameters: parameters ?? this.parameters,
     );
   }
@@ -241,7 +237,6 @@ class ConfigData {
         other.defaultDialogTransitionCurve == defaultDialogTransitionCurve &&
         other.defaultDialogTransitionDuration ==
             defaultDialogTransitionDuration &&
-        other.routing == routing &&
         mapEquals(other.parameters, parameters);
   }
 
@@ -286,7 +281,6 @@ class ConfigData {
         defaultTransitionCurve.hashCode ^
         defaultDialogTransitionCurve.hashCode ^
         defaultDialogTransitionDuration.hashCode ^
-        routing.hashCode ^
         parameters.hashCode;
   }
 }
@@ -356,7 +350,15 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
   //   super.didUpdateWidget(oldWidget);
   // }
 
+  void _reportRouting() {
+    final delegate = config.routerDelegate;
+    if (delegate is FluxyDelegate) config.routingCallback?.call(delegate.routing);
+  }
+
   void onClose() {
+    config.routerDelegate?.removeListener(_reportRouting);
+    FluxyOverlays.changes.removeListener(_reportRouting);
+    FluxyOverlays.reset();
     config.onDispose?.call();
     Fluxy.clearTranslations();
     config.snackBarQueue.disposeControllers();
@@ -394,15 +396,11 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
       config = config.copyWith(routerDelegate: newDelegate);
     }
 
-    // Keep Fluxy.routing current for the root navigator, whether FluxyRoot made
-    // the delegate or the app passed its own.
-    final delegate = config.routerDelegate;
-    if (delegate is FluxyDelegate &&
-        delegate.routingObserver == null &&
-        !(delegate.navigatorObservers?.any((o) => o is FluxyObserver) ??
-            false)) {
-      delegate.routingObserver =
-          FluxyObserver(config.routingCallback, config.routing);
+    // routingCallback hears about page changes and overlays opening or
+    // closing, whether FluxyRoot made the delegate or the app passed its own.
+    if (config.routingCallback != null) {
+      config.routerDelegate!.addListener(_reportRouting);
+      FluxyOverlays.changes.addListener(_reportRouting);
     }
 
     if (config.routeInformationParser == null) {

@@ -20,3 +20,4 @@ export 'url_strategy/url_strategy.dart';
 export '../../../src/routing/route_match.dart';
 export '../../../src/routing/route_table.dart';
 export '../../../src/routing/nav_stack.dart';
+export '../../../src/overlays/overlay_tracker.dart';

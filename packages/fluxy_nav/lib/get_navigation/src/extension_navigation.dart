@@ -921,15 +921,14 @@ extension FluxyNavigationExt on FluxyInterface {
   }
 
   void closeAllDialogsAndBottomSheets(String? id) {
-    // It can not be divided, because dialogs and bottomsheets can not be consecutive
-    while ((isDialogOpen! && isBottomSheetOpen!)) {
-      closeOverlay(id: id);
+    while (isDialogOpen! || isBottomSheetOpen!) {
+      if (!_popOverlay(id)) break;
     }
   }
 
   void closeAllDialogs({String? id}) {
-    while ((isDialogOpen!)) {
-      closeOverlay(id: id);
+    while (isDialogOpen!) {
+      if (!_popOverlay(id)) break;
     }
   }
 
@@ -950,12 +949,27 @@ extension FluxyNavigationExt on FluxyInterface {
 
   /// Close the current overlay returning the [result], if provided
   void closeOverlay<T>({String? id, T? result}) {
-    searchDelegate(id).navigatorKey.currentState?.pop(result);
+    _popOverlay(id, result);
+  }
+
+  /// Pops the top route of the navigator for [id] when it's a popup
+  /// (dialog, sheet, menu). Never pops a page.
+  bool _popOverlay<T>(String? id, [T? result]) {
+    final nav = searchDelegate(id).navigatorKey.currentState;
+    if (nav == null) return false;
+    Route<dynamic>? top;
+    nav.popUntil((route) {
+      top = route;
+      return true;
+    });
+    if (top is! PopupRoute) return false;
+    nav.pop(result);
+    return true;
   }
 
   void closeAllBottomSheets({String? id}) {
-    while ((isBottomSheetOpen!)) {
-      searchDelegate(id).navigatorKey.currentState?.pop();
+    while (isBottomSheetOpen!) {
+      if (!_popOverlay(id)) break;
     }
   }
 
@@ -1286,11 +1300,11 @@ extension FluxyNavigationExt on FluxyInterface {
     await SnackbarController.closeCurrentSnackbar();
   }
 
-  /// check if dialog is open
-  bool? get isDialogOpen => routing.isDialog;
+  /// Whether a dialog is open, on any navigator.
+  bool? get isDialogOpen => FluxyOverlays.dialogs > 0;
 
-  /// check if bottomsheet is open
-  bool? get isBottomSheetOpen => routing.isBottomSheet;
+  /// Whether a bottom sheet is open, on any navigator.
+  bool? get isBottomSheetOpen => FluxyOverlays.bottomSheets > 0;
 
   /// check a raw current route
   Route<dynamic>? get rawRoute => routing.route;
@@ -1406,7 +1420,10 @@ extension FluxyNavigationExt on FluxyInterface {
     return _getxController.defaultDialogTransitionDuration;
   }
 
-  Routing get routing => _getxController.routing;
+  /// Where the app is: read from the root delegate's stack (`current` is
+  /// the top page's path, nested pages included) and the open overlays.
+  Routing get routing =>
+      FluxyRootState.maybeController?.rootDelegate.routing ?? Routing();
 
   bool get _shouldUseMock => FluxyTestMode.active && !FluxyRoot.treeInitialized;
 

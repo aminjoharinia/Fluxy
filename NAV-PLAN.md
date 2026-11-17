@@ -1,6 +1,6 @@
 # fluxy_nav re-engineering plan
 
-Status: in progress (2026-11-17); decisions below taken. Phases 0-2 done. Results per phase are under "Results" at the end.
+Status: in progress (2026-11-17); decisions below taken. Phases 0-3 done. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -97,3 +97,13 @@ Each phase ends green: package tests, the examples, and the app copy with `pubsp
 - The delegate keeps a `NavStack` instead of `_activePages` and both stack APIs. One `_commit` puts a new stack in place and completes every entry that left (the popped one with its result, the rest with null). `offAll` / `offAllNamed` / `goToUnknownPage(clear)` drop navigations still waiting for a middleware (they complete with null). The navigator uses `onDidRemovePage` (gesture and `Navigator.pop` remove the entry; the route completes it with the popped value). Notifications sent while a frame is being built (a navigation from `build`) wait for the end of that frame.
 - Changed: `offAll(predicate:)` keeps the page the predicate accepts and pushes above it (it used to replace that page); `recreate` really builds the page again; `activePages` / `getVisualPages` removed (use `stack`); `PageSettings.params` is unmodifiable and set when matching.
 - Tests: `nav_stack_test.dart` (19: stack functions, duplicate modes, entries, queue order and errors, offAllNamed dropping a waiting navigation, sync application, navigating from `build`); B2 un-skipped. 169 fluxy_nav tests (+4 skipped), all checks green, app 97 tests pass.
+
+### Phase 3 (2026-11-17): delegate, outlets, routing state
+
+- Root navigator pages per entry: an entry gives its own page, or, when its branch marks pages with `participatesInRootNavigator`, the ones marked true; a page given by several entries (a shell) is shown once, where it was given last, so a `Fluxy.to` page goes over the shell and the shell keeps its route across entries. `pickPagesForRootNavigator` now takes the `NavStack`.
+- `FluxyRouterOutlet(parent:, initialRoute:, levels:, filterPages:, emptyWidget:, navigatorKey:)` reads the stack: it shows the branch pages below `parent` (concrete or registered path) of the topmost entry that has it, at most `levels` (B6). Its navigator reports pops through `onDidRemovePage`: the entry moves up one level, or pops when the entry below is that page, and the URL follows (B5). No string-keyed delegates; each outlet has its own navigator key. Removed: the generic `RouterOutlet`, `FluxyRouterOutlet.pickPages` / `.builder`, `anchorRoute`, `PagesListExt`.
+- `Fluxy.routing` is computed by the root delegate: `current` / `previous` are the paths of the top entry and the one below (nested pages included, B3), `args` the top entry's arguments, `route` the navigator's top route, `isBack` / `removed` from the last change. `isDialogOpen` / `isBottomSheetOpen` come from `FluxyOverlays`, a counter kept by `FluxyDialogRoute` and `FluxyModalBottomSheetRoute` (`CountedOverlay`: counted on install, uncounted on complete or dispose), so an app delegate needs no observer. The delegate always adds its own `FluxyObserver` for logs and route-bound dependencies; `routingObserver` and `ConfigData.routing` are gone; `routingCallback` hears stack changes and overlays.
+- `closeAllDialogs` / `closeAllBottomSheets` / `closeOverlay` only pop popup routes (never a page, even if the count is off); `closeAllDialogsAndBottomSheets` now loops while either is open (it needed both).
+- A page popped by its navigator (gesture, `Navigator.pop(context, value)`) completes its future with that value.
+- example_nav2 uses `FluxyRouterOutlet(parent: '/', levels: 1)` and `FluxyRouterOutlet(parent: Routes.home)`; its test also taps the bottom bar.
+- Tests: `outlet_test.dart` (7), routing-state tests, `Navigator.pop` result; B3, B5, B6 un-skipped. 180 fluxy_nav tests (+1 skipped: B7), all checks green, app 97 tests pass (its hand-wired observer is now redundant but harmless).

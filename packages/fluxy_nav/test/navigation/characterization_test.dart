@@ -221,6 +221,18 @@ void main() {
       expect(find.text('root'), findsOneWidget);
     });
 
+    testWidgets('Navigator.pop on a page: the stack follows and the future '
+        'gets the value', (t) async {
+      await pumpApp(t);
+      final f = Fluxy.to<int>(() => const Detail());
+      await t.pumpAndSettle();
+      Navigator.of(t.element(find.text('detail'))).pop(3);
+      await t.pumpAndSettle();
+      expect(await f, 3);
+      expect(stackNames(), ['/']);
+      expect(Fluxy.currentRoute, '/');
+    });
+
     testWidgets('to() the same page twice keeps one copy', (t) async {
       await pumpApp(t);
       Fluxy.to(() => const Detail(label: 'one'));
