@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'default_route.dart';
+import 'page_route.dart';
 
 enum Transition {
   fade,

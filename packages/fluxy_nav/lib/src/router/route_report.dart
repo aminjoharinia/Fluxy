@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:fluxy_state/fluxy_state.dart';
-import 'default_route.dart';
+import '../transitions/page_route.dart';
 
 class RouteReport extends StatefulWidget {
   const RouteReport({super.key, required this.builder});

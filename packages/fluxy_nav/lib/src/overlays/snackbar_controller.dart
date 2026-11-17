@@ -7,7 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_utils/fluxy_utils.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
-import '../root/get_root.dart';
+import '../app/fluxy_root.dart';
 
 class SnackbarController {
   final key = GlobalKey<FluxySnackBarState>();

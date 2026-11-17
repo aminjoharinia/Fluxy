@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:fluxy_state/fluxy_state.dart';
 
-import '../../get_navigation/src/routes/get_route.dart';
+import 'fluxy_page.dart';
 import 'nav_request.dart';
 import 'route_match.dart';
 

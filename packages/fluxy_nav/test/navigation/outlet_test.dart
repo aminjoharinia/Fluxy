@@ -159,11 +159,57 @@ void main() {
     expect(find.text('dashboard'), findsOneWidget);
   });
 
+  independentNavigators();
+
   testWidgets('arguments and parameters come from the address', (t) async {
     await pump(t, '/home/dashboard');
     Fluxy.toNamed('/home/products/9?tab=2', arguments: 'x');
     await t.pumpAndSettle();
     expect(Fluxy.parameters, {'id': '9', 'tab': '2'});
     expect(Fluxy.arguments, 'x');
+  });
+}
+
+class Tabs extends StatelessWidget {
+  const Tabs({super.key});
+  @override
+  Widget build(BuildContext context) =>
+      Scaffold(body: Router(routerDelegate: Fluxy.nestedKey('/tabs')!));
+}
+
+void independentNavigators() {
+  testWidgets('id: an independent navigator with its own history', (t) async {
+    await t.pumpWidget(
+      FluxyApp.router(
+        getPages: [
+          FluxyPage(
+            name: '/',
+            page: () => const Scaffold(body: Text('root')),
+          ),
+          FluxyPage(
+            name: '/tabs',
+            page: () => const Tabs(),
+            children: [
+              FluxyPage(name: '/a', page: () => const Text('tab a')),
+              FluxyPage(name: '/b', page: () => const Text('tab b')),
+            ],
+          ),
+        ],
+      ),
+    );
+    await t.pumpAndSettle();
+    Fluxy.toNamed('/tabs');
+    await t.pumpAndSettle();
+    Fluxy.toNamed('/a', id: '/tabs');
+    await t.pumpAndSettle();
+    expect(find.text('tab a'), findsOneWidget);
+    Fluxy.toNamed('/b', id: '/tabs');
+    await t.pumpAndSettle();
+    expect(find.text('tab b'), findsOneWidget);
+    expect(Fluxy.currentRoute, '/tabs', reason: 'the root stack is apart');
+    Fluxy.back(id: '/tabs');
+    await t.pumpAndSettle();
+    expect(find.text('tab a'), findsOneWidget);
+    expect(Fluxy.currentRoute, '/tabs');
   });
 }

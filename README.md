@@ -48,7 +48,7 @@ Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 ```
 
 - **State:** an `Obx` subscribes to exactly the Rx values its last build read. `Computed` derives values without glitches, `effect` reacts to them, and effects, `Computed`s and workers made in a controller's `onInit` are disposed with it. Write new values instead of editing in place (`mapWith`, `listWith`, `setIn`, `patch`); `rx.peek` reads without subscribing.
-- **Navigation:** `FluxyApp.router(getPages: ..., initialRoute: ..., unknownRoute: ...)`. Unknown addresses reach `unknownRoute`; web uses hash URLs unless you call `setUrlStrategy()` before `runApp`.
+- **Navigation:** `FluxyApp.router(getPages: ..., redirect: ...)`. Pages match by segment (static before `:param` before `*`), navigations apply in call order, and `redirect` (on the app and on each page, async allowed) decides where an address goes, the first one included. `FluxyRouterOutlet(parent: ...)` shows nested pages. Web uses hash URLs unless you call `setUrlStrategy()` before `runApp`. More in [packages/fluxy_nav](packages/fluxy_nav/README.md).
 - **Translations:** `.tr` inside an `Obx` updates on a language change; `Fluxy.updateLocale(locale)` rebuilds the rest.
 
 ## Coming from GetX
@@ -67,12 +67,12 @@ To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, the
 | `GetPage` | `FluxyPage` |
 | `GetPageBuilder` | `FluxyPageBuilder` |
 | `GetRouteAwarePageBuilder` | `FluxyRouteAwarePageBuilder` |
-| `GetMiddleware` | `FluxyMiddleware` |
+| `GetMiddleware` | `FluxyPage(redirect:)` / `FluxyApp(redirect:)` (`FluxyMiddleware` until v1.2.0) |
 | `GetDelegate` | `FluxyDelegate` |
 | `GetInformationParser` | `FluxyInformationParser` |
 | `GetNavigator` | `FluxyNavigator` |
 | `GetObserver` | `FluxyObserver` |
-| `GetRouterOutlet` | `FluxyRouterOutlet` |
+| `GetRouterOutlet` | `FluxyRouterOutlet` (`parent:` instead of `anchorRoute:` since v1.2.0) |
 | `GetPageRoute` | `FluxyPageRoute` |
 | `GetModalBottomSheetRoute` | `FluxyModalBottomSheetRoute` |
 | `GetPageRouteTransitionMixin` | `FluxyPageRouteTransitionMixin` |
@@ -116,6 +116,6 @@ To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, the
 | `GetQueueCancelledException` | `FluxyQueueCancelledException` |
 | `GetMicrotask` | `FluxyMicrotask` |
 
-What changed from GetX, release by release: [FLUXY.md](FLUXY.md). Working apps: [`example/`](example/) (bindings, `StateController` with `obx`, translations, snackbars) and [`example_nav2/`](example_nav2/) (nested routes, middleware). GetX's guides and changelog are gone from this repo (they used GetX's names and `GetConnect`); they stay in the tag `v0.0.0-upstream-a294d2f`.
+What changed from GetX, release by release: [FLUXY.md](FLUXY.md). Working apps: [`example/`](example/) (bindings, `StateController` with `obx`, translations, snackbars) and [`example_nav2/`](example_nav2/) (nested routes, redirects). GetX's guides and changelog are gone from this repo (they used GetX's names and `GetConnect`); they stay in the tag `v0.0.0-upstream-a294d2f`.
 
 How Fluxy compares with GetX 4, upstream GetX 5, Riverpod, BLoC and Signals in release builds: [benchmark/results/RESULTS.md](benchmark/results/RESULTS.md) (method in [benchmark/README.md](benchmark/README.md)).

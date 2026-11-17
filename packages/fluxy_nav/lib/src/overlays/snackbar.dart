@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
-import '../../get_navigation.dart';
+import 'package:fluxy_nav/fluxy_nav.dart';
 
 typedef OnTap = void Function(FluxySnackBar snack);
 typedef OnHover = void Function(

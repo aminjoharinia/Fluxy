@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'package:fluxy_state/fluxy_state.dart';
 
-import '../../../src/overlays/overlay_tracker.dart';
+import 'overlay_tracker.dart';
 
 class FluxyDialogRoute<T> extends PopupRoute<T> with CountedOverlay<T> {
   @override

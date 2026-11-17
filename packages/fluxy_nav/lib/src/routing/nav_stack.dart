@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../get_navigation/src/routes/get_navigation_interface.dart';
-import '../../get_navigation/src/routes/get_route.dart';
-import '../../get_navigation/src/routes/page_settings.dart';
+import '../router/navigation_interface.dart';
+import 'fluxy_page.dart';
+import 'page_settings.dart';
 import 'route_match.dart';
 
 /// One page in the navigation history.

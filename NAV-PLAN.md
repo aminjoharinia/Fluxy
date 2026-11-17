@@ -1,6 +1,6 @@
 # fluxy_nav re-engineering plan
 
-Status: in progress (2026-11-17); decisions below taken. Phases 0-4 done. Results per phase are under "Results" at the end.
+Status: in progress (2026-11-17); decisions below taken. Phases 0-5 done. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -118,3 +118,11 @@ Each phase ends green: package tests, the examples, and the app copy with `pubsp
 - example_nav2: `ensureAuth` / `ensureNotAuthed` page redirects (`lib/app/redirects`), a test for the login redirect.
 - App (`lib/main.dart`, uncommitted): its own delegate, the parser subclass, `_RootRoutingObserver`, `UnknownRoute` and `leaveUnknownStartAddress` replaced by `redirect: appRedirect` with `appRedirect = (r) => r.isUnknown || r.path == '/' ? startRoute() : null`. Analyzer clean, 97 tests pass.
 - Tests: `redirect_test.dart` (15), `app_shape_test.dart` rewritten for the `redirect:` set-up (7, including the address the app opens at); B7 rewritten for redirect order and un-skipped, no skipped tests left. 193 fluxy_nav tests, all checks green.
+
+### Phase 5 (2026-11-17): files, facade, docs
+
+- `lib/get_navigation/` is gone. Layout: `lib/src/routing/` (fluxy_page, page_settings, route_table, route_match, nav_stack, nav_queue, nav_request), `router/` (fluxy_delegate, information_parser, fluxy_navigator, router_outlet, navigation_interface, route_observer, route_report, url_strategy), `overlays/` (dialog_route, bottom_sheet_route, snackbar, snackbar_controller, overlay_tracker), `app/` (fluxy_app, fluxy_cupertino_app, fluxy_root, modules, reset, test_kit), `transitions/` (transition_mixin, default_transitions, page_route, transition, custom_transition, circular_reveal_clipper; code unchanged). `lib/fluxy_nav.dart` lists every export.
+- The 1,488-line facade is one extension per concern in `src/facade/`: `FluxyNavigationExt` (pages, back, routing state, defaults), `ExtensionDialog` (+ `isDialogOpen`, `closeDialog`, `closeAllDialogs`), `ExtensionBottomSheet` (+ `isBottomSheetOpen`, `closeBottomSheet`, `closeAllBottomSheets`), `ExtensionSnackbar` (+ `isSnackbarOpen`, `closeAllSnackbars`, `closeCurrentSnackbar`), `OverlayExt` (`showOverlay`, `isOverlaysOpen`, `closeOverlay`, `closeAllOverlays`, `close`), `FluxyAppExt` (locale, theme, `context`, `overlayContext`), `FluxyWindowExt` (window metrics). The commented-out `config` block is gone.
+- `FluxyTestMode` is exported; `example/` no longer has a `fluxy_nav` dev dependency.
+- Docs: FLUXY.md v1.2.0 entry, root README (navigation bullet, Coming from GetX rows for middleware and outlets), `packages/fluxy_nav/README.md` (pages, redirects, nested pages, overlays, tests).
+- A test for an independent navigator through `id:` (`Router(routerDelegate: Fluxy.nestedKey('/tabs'))`, `toNamed(..., id:)`, `back(id:)`). 194 fluxy_nav tests, all checks green, app 97 tests pass.

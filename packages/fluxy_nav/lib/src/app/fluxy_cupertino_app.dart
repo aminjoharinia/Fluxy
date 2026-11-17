@@ -1,22 +1,15 @@
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
+
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_i18n/fluxy_i18n.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
+import 'fluxy_root.dart';
 
-import '../../get_navigation.dart';
-import 'get_root.dart';
-
-/// A Material application configured for GetX navigation and route handling.
-///
-/// Material types accepted by this widget, including [ThemeData] and
-/// [ThemeMode], come from `package:material_ui/material_ui.dart`. Applications
-/// using Flutter 3.47 or later should import Material APIs from that package
-/// when configuring this widget.
-class FluxyApp extends StatelessWidget {
+class FluxyCupertinoApp extends StatelessWidget {
   final GlobalKey<NavigatorState>? navigatorKey;
-  final GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
   final Widget? home;
   final Map<String, WidgetBuilder>? routes;
   final String? initialRoute;
@@ -27,9 +20,6 @@ class FluxyApp extends StatelessWidget {
   final TransitionBuilder? builder;
   final String title;
   final GenerateAppTitle? onGenerateTitle;
-  final ThemeData? theme;
-  final ThemeData? darkTheme;
-  final ThemeMode themeMode;
   final CustomTransition? customTransition;
   final Color? color;
   final Map<String, Map<String, String>>? translationsKeys;
@@ -53,12 +43,10 @@ class FluxyApp extends StatelessWidget {
   final bool showSemanticsDebugger;
   final bool debugShowCheckedModeBanner;
   final Map<LogicalKeySet, Intent>? shortcuts;
-  final ScrollBehavior? scrollBehavior;
   final ThemeData? highContrastTheme;
   final ThemeData? highContrastDarkTheme;
   final Map<Type, Action<Intent>>? actions;
-  final bool debugShowMaterialGrid;
-  final ValueChanged<Routing?>? routingCallback;
+  final Function(Routing?)? routingCallback;
   final Transition? defaultTransition;
   final bool? opaqueRoute;
   final VoidCallback? onInit;
@@ -68,7 +56,7 @@ class FluxyApp extends StatelessWidget {
   final LogWriterCallback? logWriterCallback;
   final bool? popGesture;
   final SmartManagement smartManagement;
-  final List<Bind> binds;
+  final BindingsInterface? initialBinding;
   final Duration? transitionDuration;
   final bool? defaultGlobalState;
   final List<FluxyPage>? getPages;
@@ -84,12 +72,15 @@ class FluxyApp extends StatelessWidget {
   final RouterDelegate<Object>? routerDelegate;
   final RouterConfig<Object>? routerConfig;
   final BackButtonDispatcher? backButtonDispatcher;
+  final CupertinoThemeData? theme;
   final bool useInheritedMediaQuery;
+  final List<Bind> binds;
+  final ScrollBehavior? scrollBehavior;
 
-  const FluxyApp({
+  const FluxyCupertinoApp({
     super.key,
+    this.theme,
     this.navigatorKey,
-    this.scaffoldMessengerKey,
     this.home,
     Map<String, Widget Function(BuildContext)> this.routes =
         const <String, WidgetBuilder>{},
@@ -97,40 +88,41 @@ class FluxyApp extends StatelessWidget {
     this.onGenerateRoute,
     this.onGenerateInitialRoutes,
     this.onUnknownRoute,
-    this.useInheritedMediaQuery = false,
     List<NavigatorObserver> this.navigatorObservers =
         const <NavigatorObserver>[],
     this.builder,
+    this.translationsKeys,
+    this.translations,
     this.textDirection,
     this.title = '',
     this.onGenerateTitle,
     this.color,
-    this.theme,
-    this.darkTheme,
-    this.themeMode = ThemeMode.system,
+    this.customTransition,
+    this.onInit,
+    this.onDispose,
     this.locale,
     this.followDeviceLocale,
+    this.binds = const [],
+    this.scrollBehavior,
     this.fallbackLocale,
     this.localizationsDelegates,
     this.localeListResolutionCallback,
     this.localeResolutionCallback,
     this.supportedLocales = const <Locale>[Locale('en', 'US')],
-    this.debugShowMaterialGrid = false,
     this.showPerformanceOverlay = false,
     this.checkerboardRasterCacheImages = false,
     this.checkerboardOffscreenLayers = false,
     this.showSemanticsDebugger = false,
     this.debugShowCheckedModeBanner = true,
     this.shortcuts,
-    this.scrollBehavior,
-    this.customTransition,
-    this.translationsKeys,
-    this.translations,
-    this.onInit,
-    this.onReady,
-    this.onDispose,
+    this.smartManagement = SmartManagement.full,
+    this.initialBinding,
+    this.useInheritedMediaQuery = false,
+    this.unknownRoute,
+    this.redirect,
     this.routingCallback,
     this.defaultTransition,
+    this.onReady,
     this.getPages,
     this.opaqueRoute,
     this.enableLog = kDebugMode,
@@ -138,25 +130,21 @@ class FluxyApp extends StatelessWidget {
     this.popGesture,
     this.transitionDuration,
     this.defaultGlobalState,
-    this.smartManagement = SmartManagement.full,
-    this.binds = const [],
-    this.unknownRoute,
-    this.redirect,
     this.highContrastTheme,
     this.highContrastDarkTheme,
     this.actions,
-  }) : routeInformationProvider = null,
-       backButtonDispatcher = null,
-       routeInformationParser = null,
-       routerDelegate = null,
-       routerConfig = null;
+  })  : routeInformationProvider = null,
+        backButtonDispatcher = null,
+        routeInformationParser = null,
+        routerDelegate = null,
+        routerConfig = null;
 
-  const FluxyApp.router({
+  const FluxyCupertinoApp.router({
     super.key,
     /// Where the app opens when started at `/`, even when `/` is a page.
     this.initialRoute,
+    this.theme,
     this.routeInformationProvider,
-    this.scaffoldMessengerKey,
     this.routeInformationParser,
     this.routerDelegate,
     this.routerConfig,
@@ -164,26 +152,23 @@ class FluxyApp extends StatelessWidget {
     this.builder,
     this.title = '',
     this.onGenerateTitle,
-    this.color,
-    this.theme,
-    this.darkTheme,
     this.useInheritedMediaQuery = false,
+    this.color,
     this.highContrastTheme,
     this.highContrastDarkTheme,
-    this.themeMode = ThemeMode.system,
     this.locale,
     this.followDeviceLocale,
     this.localizationsDelegates,
     this.localeListResolutionCallback,
     this.localeResolutionCallback,
     this.supportedLocales = const <Locale>[Locale('en', 'US')],
-    this.debugShowMaterialGrid = false,
     this.showPerformanceOverlay = false,
     this.checkerboardRasterCacheImages = false,
     this.checkerboardOffscreenLayers = false,
     this.showSemanticsDebugger = false,
     this.debugShowCheckedModeBanner = true,
     this.shortcuts,
+    this.binds = const [],
     this.scrollBehavior,
     this.actions,
     this.customTransition,
@@ -201,19 +186,19 @@ class FluxyApp extends StatelessWidget {
     this.logWriterCallback,
     this.popGesture,
     this.smartManagement = SmartManagement.full,
-    this.binds = const [],
+    this.initialBinding,
     this.transitionDuration,
     this.defaultGlobalState,
     this.getPages,
     this.navigatorObservers,
     this.unknownRoute,
     this.redirect,
-  }) : navigatorKey = null,
-       onGenerateRoute = null,
-       home = null,
-       onGenerateInitialRoutes = null,
-       onUnknownRoute = null,
-       routes = null;
+  })  : navigatorKey = null,
+        onGenerateRoute = null,
+        home = null,
+        onGenerateInitialRoutes = null,
+        onUnknownRoute = null,
+        routes = null;
 
   @override
   Widget build(BuildContext context) {
@@ -241,77 +226,51 @@ class FluxyApp extends StatelessWidget {
         routeInformationProvider: routeInformationProvider,
         routerDelegate: routerDelegate,
         routingCallback: routingCallback,
-        scaffoldMessengerKey: scaffoldMessengerKey,
+        scaffoldMessengerKey: GlobalKey<ScaffoldMessengerState>(),
         smartManagement: smartManagement,
         transitionDuration: transitionDuration,
         translations: translations,
         translationsKeys: translationsKeys,
         unknownRoute: unknownRoute,
         redirect: redirect,
-        theme: theme,
-        darkTheme: darkTheme,
-        themeMode: themeMode,
         defaultPopGesture: popGesture,
       ),
-      // binds: [
-      //   Bind.lazyPut<GetMaterialController>(
-      //     () => GetMaterialController(
-
-      //     ),
-      //     onClose: () {
-      //       Fluxy.clearTranslations();
-      //       RouterReportManager.dispose();
-      //       Fluxy.resetInstance(clearRouteBindings: true);
-      //     },
-      //   ),
-      //   ...binds,
-      // ],
-      child: Builder(
-        builder: (context) {
-          final controller = FluxyRoot.of(context);
-          return MaterialApp.router(
-            routerDelegate: controller.config.routerDelegate,
-            routeInformationParser: controller.config.routeInformationParser,
-            backButtonDispatcher: backButtonDispatcher,
-            routeInformationProvider: routeInformationProvider,
-            routerConfig: routerConfig,
-            key: controller.config.unikey,
-            builder: (context, child) => Directionality(
-              textDirection:
-                  textDirection ??
-                  (rtlLanguages.contains(Fluxy.locale?.languageCode)
-                      ? TextDirection.rtl
-                      : TextDirection.ltr),
-              child: builder == null
-                  ? (child ?? const Material())
-                  : builder!(context, child ?? const Material()),
-            ),
-            title: title,
-            onGenerateTitle: onGenerateTitle,
-            color: color,
-            theme: controller.config.theme ?? ThemeData.fallback(),
-            darkTheme:
-                controller.config.darkTheme ??
-                controller.config.theme ??
-                ThemeData.fallback(),
-            themeMode: controller.config.themeMode,
-            locale: Fluxy.locale ?? locale,
-            scaffoldMessengerKey: controller.config.scaffoldMessengerKey,
-            localizationsDelegates: localizationsDelegates,
-            localeListResolutionCallback: localeListResolutionCallback,
-            localeResolutionCallback: localeResolutionCallback,
-            supportedLocales: supportedLocales,
-            debugShowMaterialGrid: debugShowMaterialGrid,
-            showPerformanceOverlay: showPerformanceOverlay,
-            checkerboardRasterCacheImages: checkerboardRasterCacheImages,
-            checkerboardOffscreenLayers: checkerboardOffscreenLayers,
-            showSemanticsDebugger: showSemanticsDebugger,
-            debugShowCheckedModeBanner: debugShowCheckedModeBanner,
-            shortcuts: shortcuts,
-            scrollBehavior: scrollBehavior,
-          );
-        },
-      ),
+      child: Builder(builder: (context) {
+        final controller = FluxyRoot.of(context);
+        return CupertinoApp.router(
+          routerDelegate: controller.config.routerDelegate,
+          routeInformationParser: controller.config.routeInformationParser,
+          backButtonDispatcher: backButtonDispatcher,
+          routeInformationProvider: routeInformationProvider,
+          routerConfig: routerConfig,
+          key: controller.config.unikey,
+          builder: (context, child) => Directionality(
+            textDirection: textDirection ??
+                (rtlLanguages.contains(Fluxy.locale?.languageCode)
+                    ? TextDirection.rtl
+                    : TextDirection.ltr),
+            child: builder == null
+                ? (child ?? const Material())
+                : builder!(context, child ?? const Material()),
+          ),
+          title: title,
+          onGenerateTitle: onGenerateTitle,
+          color: color,
+          theme: theme,
+          locale: Fluxy.locale ?? locale,
+          localizationsDelegates: localizationsDelegates,
+          localeListResolutionCallback: localeListResolutionCallback,
+          localeResolutionCallback: localeResolutionCallback,
+          supportedLocales: supportedLocales,
+          showPerformanceOverlay: showPerformanceOverlay,
+          checkerboardRasterCacheImages: checkerboardRasterCacheImages,
+          checkerboardOffscreenLayers: checkerboardOffscreenLayers,
+          showSemanticsDebugger: showSemanticsDebugger,
+          debugShowCheckedModeBanner: debugShowCheckedModeBanner,
+          shortcuts: shortcuts,
+          scrollBehavior: scrollBehavior,
+        );
+      }),
     );
   }
 }

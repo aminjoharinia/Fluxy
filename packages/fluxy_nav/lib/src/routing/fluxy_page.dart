@@ -8,7 +8,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_state/fluxy_state.dart';
-import '../../get_navigation.dart';
+import 'package:fluxy_nav/fluxy_nav.dart';
 
 class FluxyPage<T> extends Page<T> {
   final FluxyPageBuilder page;

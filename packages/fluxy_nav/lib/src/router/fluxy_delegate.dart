@@ -9,7 +9,7 @@ import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
-import '../../../src/routing/nav_queue.dart';
+import '../routing/nav_queue.dart';
 
 /// The router delegate: keeps the navigation history as a [NavStack] and
 /// shows it in a [Navigator].

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../get_navigation/src/routes/get_route.dart';
+import 'fluxy_page.dart';
 import 'nav_request.dart';
 
 /// The result of matching an address against a [RouteTable].

@@ -18,9 +18,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  # FluxyTestMode (Fluxy.arguments in tests) is not exported by package:fluxy.
-  fluxy_nav:
-    path: ../packages/fluxy_nav
 
 flutter:
   uses-material-design: true

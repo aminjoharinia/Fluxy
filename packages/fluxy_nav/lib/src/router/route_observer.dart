@@ -3,8 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
-import '../../../get_navigation.dart';
-import '../../dialog/dialog_route.dart';
+import '../overlays/dialog_route.dart';
 
 /// Extracts the name of a route based on it's instance type
 /// or null if not possible.
