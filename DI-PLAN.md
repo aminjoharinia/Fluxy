@@ -1,6 +1,6 @@
 # fluxy_state DI re-engineering plan
 
-Status: plan (2026-11-18). D2-D4 decided; D1 open.
+Status: in progress (2026-11-18); decisions D1-D4 taken.
 
 ## Why
 
@@ -69,7 +69,7 @@ Each phase ends green: every package, both examples, root, tool, and the app cop
 
 ## Decisions
 
-- **D1: Lifetime of a plain `Fluxy.put`.** Recommended: the app's lifetime (until `delete`), with page lifetimes only through page `bindings` / scopes. Alternative: keep GetX's route-linking (B1 stays; the app would need `permanent: true` on its 20 puts).
+- **D1: A plain `Fluxy.put` / `lazyPut` lives as long as the app** (until `delete`; 2026-11-18, user's choice after the speed / memory comparison: route-linking frees nothing while code holds a reference, as BOOFI's top-level controllers do). Page lifetimes come from page `bindings` (a page scope).
 - **D2: `put` of a type already registered: replace** (2026-11-18, user's choice): the old instance is closed, the new one registered and started, with a debug log.
 - **D3: `SmartManagement` and `fenix` are removed** (2026-11-18): lazy factories are kept after `delete` (today's `fenix: true`); page and widget scopes cover the rest.
 - **D4: v1.4.0, with typed handles and test overrides** (2026-11-18): breaking where it buys correctness, as with v1.2.0.
