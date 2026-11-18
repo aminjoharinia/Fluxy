@@ -122,10 +122,6 @@ extension FluxyNavigationExt on FluxyInterface {
     //   return null;
     // }
 
-    if (parameters != null) {
-      final uri = Uri(path: page, queryParameters: parameters);
-      page = uri.toString();
-    }
 
     return searchDelegate(id).toNamed(
       page,
@@ -162,10 +158,6 @@ extension FluxyNavigationExt on FluxyInterface {
     //   return null;
     // }
 
-    if (parameters != null) {
-      final uri = Uri(path: page, queryParameters: parameters);
-      page = uri.toString();
-    }
     return searchDelegate(id).offNamed(
       page,
       arguments: arguments,
@@ -219,10 +211,6 @@ extension FluxyNavigationExt on FluxyInterface {
     dynamic arguments,
     Map<String, String>? parameters,
   }) {
-    if (parameters != null) {
-      final uri = Uri(path: page, queryParameters: parameters);
-      page = uri.toString();
-    }
 
     return searchDelegate(id).offNamedUntil<T>(
       page,
@@ -251,13 +239,14 @@ extension FluxyNavigationExt on FluxyInterface {
     dynamic result,
     Map<String, String>? parameters,
   }) {
-    if (parameters != null) {
-      final uri = Uri(path: page, queryParameters: parameters);
-      page = uri.toString();
-    }
     return searchDelegate(
       id,
-    ).backAndtoNamed(page, arguments: arguments, result: result);
+    ).backAndtoNamed(
+      page,
+      arguments: arguments,
+      result: result,
+      parameters: parameters,
+    );
   }
 
   /// **Navigation.removeRoute()** shortcut.<br><br>
@@ -297,10 +286,6 @@ extension FluxyNavigationExt on FluxyInterface {
     String? id,
     Map<String, String>? parameters,
   }) {
-    if (parameters != null) {
-      final uri = Uri(path: newRouteName, queryParameters: parameters);
-      newRouteName = uri.toString();
-    }
 
     return searchDelegate(id).offAllNamed<T>(
       newRouteName,
@@ -338,8 +323,20 @@ extension FluxyNavigationExt on FluxyInterface {
     }
 
     if (times > 1) {
+      // Each open dialog or sheet counts as one step, then pages.
+      final delegate = searchDelegate(id);
+      var popups = 0;
+      delegate.navigatorKey.currentState?.popUntil((route) {
+        if (route is PopupRoute && popups < times) {
+          popups++;
+          return false;
+        }
+        return true;
+      });
+      final pages = times - popups;
+      if (pages < 1) return;
       var count = 0;
-      return searchDelegate(id).backUntil((route) => count++ == times);
+      return delegate.backUntil((route) => count++ == pages);
     } else {
       if (canPop) {
         final delegate = searchDelegate(id);

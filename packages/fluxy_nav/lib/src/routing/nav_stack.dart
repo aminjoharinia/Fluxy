@@ -188,7 +188,10 @@ class NavStack {
   /// key of its own. Otherwise, per [mode]:
   ///
   /// * `reorderRoutes` - the old entry leaves, the new one goes on top
-  ///   under the same key (the navigator keeps the page)
+  ///   under the same key, so the navigator keeps the page. When the new
+  ///   entry builds something else (`Fluxy.to(() => Detail(2))` over a
+  ///   `Detail(1)` opened the same way), it gets a new key, so the screen
+  ///   shows what was asked for
   /// * `recreate` - the same, under a new key (the page is built again)
   /// * `popUntilOriginalRoute` - the entries above the old one leave;
   ///   the new one isn't added
@@ -206,7 +209,10 @@ class NavStack {
       case PreventDuplicateHandlingMode.doNothing:
         return this;
       case PreventDuplicateHandlingMode.reorderRoutes:
-        return remove(existing).push(entry.withKey(existing.key));
+        final sameBuilder = identical(existing.page.page, entry.page.page);
+        return remove(existing).push(
+          entry.withKey(sameBuilder ? existing.key : UniqueKey()),
+        );
       case PreventDuplicateHandlingMode.recreate:
         return remove(existing).push(entry.withKey(UniqueKey()));
       case PreventDuplicateHandlingMode.popUntilOriginalRoute:

@@ -151,7 +151,12 @@ mixin IGetNavigation {
 
   void back<T>([T? result]);
 
-  Future<R?> backAndtoNamed<T, R>(String page, {T? result, Object? arguments});
+  Future<R?> backAndtoNamed<T, R>(
+    String page, {
+    T? result,
+    Object? arguments,
+    Map<String, String>? parameters,
+  });
 
   void backUntil(bool Function(FluxyPage) predicate);
 
