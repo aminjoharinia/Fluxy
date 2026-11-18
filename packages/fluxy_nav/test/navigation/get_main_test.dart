@@ -48,8 +48,10 @@ void main() {
 
     await tester.pumpAndSettle();
 
+    // The not-found page keeps the address that was asked for.
     expect(Fluxy.rootController.rootDelegate.currentConfiguration?.path,
-        '/404');
+        '/secondd');
+    expect(Fluxy.currentRoute, '/secondd');
   });
 
   testWidgets("Get.off navigates to provided route", (tester) async {
@@ -531,7 +533,7 @@ void main() {
   });
 
   testWidgets(
-      "Get.back with closeOverlays pops both snackbar and current route",
+      "closeAllOverlays then back pops both snackbar and current route",
       (tester) async {
     await tester.pumpWidget(
       Wrapper(
@@ -548,7 +550,9 @@ void main() {
     await tester.pumpAndSettle();
     Fluxy.snackbar('title', "message");
     await tester.pumpAndSettle();
-    Fluxy.backLegacy(closeOverlays: true);
+    Fluxy.closeAllOverlays();
+    await tester.pumpAndSettle();
+    Fluxy.back();
 
     await tester.pumpAndSettle();
 

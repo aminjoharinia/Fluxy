@@ -22,7 +22,10 @@ class NavRequest {
   const NavRequest(this.match, {this.arguments, this.from});
 
   /// Return this from a [FluxyRedirect] to cancel the navigation.
-  static const String stop = '';
+  ///
+  /// It's not an address, so it can't be returned by mistake; an empty
+  /// address is reported as an error (and cancels too).
+  static const String stop = '\u0000fluxy:stop';
 
   /// The address matched against the route table. [isUnknown] when no page
   /// is registered for it.

@@ -60,10 +60,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets("Get dialog close - with backLegacy", (tester) async {
+    testWidgets("Get dialog close - with back", (tester) async {
       await setUpCloseTest(tester);
-      // Close using backLegacy
-      Fluxy.backLegacy();
+      Fluxy.back();
       await tearDownCloseTest(tester);
     });
 

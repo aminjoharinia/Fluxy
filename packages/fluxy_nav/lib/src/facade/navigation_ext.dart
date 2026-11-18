@@ -51,7 +51,6 @@ extension FluxyNavigationExt on FluxyInterface {
     bool? popGesture,
     bool showCupertinoParallax = true,
     double Function(BuildContext context)? gestureWidth,
-    bool rebuildStack = true,
     PreventDuplicateHandlingMode preventDuplicateHandlingMode =
         PreventDuplicateHandlingMode.reorderRoutes,
   }) {
@@ -70,30 +69,9 @@ extension FluxyNavigationExt on FluxyInterface {
       popGesture: popGesture,
       showCupertinoParallax: showCupertinoParallax,
       gestureWidth: gestureWidth,
-      rebuildStack: rebuildStack,
       preventDuplicateHandlingMode: preventDuplicateHandlingMode,
     );
   }
-
-  //   FluxyPageBuilder _resolvePage(dynamic page, String method) {
-  //     if (page is FluxyPageBuilder) {
-  //       return page;
-  //     } else if (page is Widget) {
-  //       Fluxy.log(
-  //           '''WARNING, consider using: "Get.$method(() => Page())"
-  //instead of "Get.$method(Page())".
-  // Using a widget function instead of a widget fully guarantees that the widget
-  //and its controllers will be removed from memory when they are no longer used.
-  //       ''');
-  //       return () => page;
-  //     } else if (page is String) {
-  //       throw '''Unexpected String,
-  // use toNamed() instead''';
-  //     } else {
-  //       throw '''Unexpected format,
-  // you can only use widgets and widget functions here''';
-  //     }
-  //   }
 
   /// **Navigation.pushNamed()** shortcut.<br><br>
   ///
@@ -118,10 +96,6 @@ extension FluxyNavigationExt on FluxyInterface {
     bool preventDuplicates = true,
     Map<String, String>? parameters,
   }) {
-    // if (preventDuplicates && page == currentRoute) {
-    //   return null;
-    // }
-
 
     return searchDelegate(id).toNamed(
       page,
@@ -154,15 +128,10 @@ extension FluxyNavigationExt on FluxyInterface {
     String? id,
     Map<String, String>? parameters,
   }) {
-    // if (preventDuplicates && page == currentRoute) {
-    //   return null;
-    // }
-
     return searchDelegate(id).offNamed(
       page,
       arguments: arguments,
       id: id,
-      // preventDuplicates: preventDuplicates,
       parameters: parameters,
     );
   }
@@ -181,8 +150,6 @@ extension FluxyNavigationExt on FluxyInterface {
   /// `Fluxy.until((route) => !Fluxy.isDialogOpen())`, to make sure the
   /// dialog is closed
   void until(bool Function(FluxyPage<dynamic>) predicate, {String? id}) {
-    // if (key.currentState.mounted) // add this if appear problems on future with route navigate
-    // when widget don't mounted
     return searchDelegate(id).backUntil(predicate);
   }
 
@@ -281,7 +248,6 @@ extension FluxyNavigationExt on FluxyInterface {
   /// Note: Always put a slash on the route ('/page1'), to avoid unexpected errors
   Future<T?>? offAllNamed<T>(
     String newRouteName, {
-    // bool Function(FluxyPage<dynamic>)? predicate,
     dynamic arguments,
     String? id,
     Map<String, String>? parameters,
@@ -289,7 +255,6 @@ extension FluxyNavigationExt on FluxyInterface {
 
     return searchDelegate(id).offAllNamed<T>(
       newRouteName,
-      //predicate: predicate ?? (_) => false,
       arguments: arguments,
       id: id,
       parameters: parameters,
@@ -308,100 +273,40 @@ extension FluxyNavigationExt on FluxyInterface {
   ///
   /// It has the advantage of not needing context, so you can call
   /// from your business logic.
-  void back<T>({T? result, bool canPop = true, int times = 1, String? id}) {
-    if (times < 1) {
-      times = 1;
-    }
+  void back<T>({T? result, int times = 1, String? id}) {
+    if (times < 1) times = 1;
 
-    // Snackbars, dialogs, and bottom sheets are Navigator overlays
-    // (PopupRoute), not FluxyPage history. GetX 5 Fluxy.back() previously
-    // only called searchDelegate.back() when more than one page was open,
-    // so overlays (and sheets on the root page) never closed.
+    // Snackbars, dialogs and bottom sheets close before pages. A snackbar
+    // is an overlay, not a route; dialogs and sheets are popup routes on
+    // the navigator.
     if (times == 1 && isSnackbarOpen) {
       closeCurrentSnackbar();
       return;
     }
 
-    if (times > 1) {
-      // Each open dialog or sheet counts as one step, then pages.
-      final delegate = searchDelegate(id);
-      var popups = 0;
-      delegate.navigatorKey.currentState?.popUntil((route) {
-        if (route is PopupRoute && popups < times) {
-          popups++;
-          return false;
-        }
-        return true;
-      });
-      final pages = times - popups;
-      if (pages < 1) return;
-      var count = 0;
-      return delegate.backUntil((route) => count++ == pages);
-    } else {
-      if (canPop) {
-        final delegate = searchDelegate(id);
-        final nav = delegate.navigatorKey.currentState;
-        if (nav != null) {
-          Route<dynamic>? currentRoute;
-          nav.popUntil((route) {
-            currentRoute = route;
-            return true;
-          });
-          if (currentRoute is PopupRoute) {
-            return nav.pop<T>(result);
-          }
-        }
-        if (delegate.canBack == true) {
-          return delegate.back<T>(result);
-        }
-        if (nav?.canPop() == true) {
-          return nav!.pop<T>(result);
-        }
-      } else {
-        return searchDelegate(id).back<T>(result);
+    final delegate = searchDelegate(id);
+    final nav = delegate.navigatorKey.currentState;
+    if (times == 1) {
+      if (delegate.topRoute is PopupRoute) return nav!.pop<T>(result);
+      if (delegate.canBack) return delegate.back<T>(result);
+      // A route pushed on the navigator directly (Navigator.push).
+      if (nav?.canPop() == true) return nav!.pop<T>(result);
+      return;
+    }
+
+    // Each open dialog or sheet counts as one step, then pages.
+    var popups = 0;
+    nav?.popUntil((route) {
+      if (route is PopupRoute && popups < times) {
+        popups++;
+        return false;
       }
-    }
-  }
-
-  /// Pop the current page, snackbar, dialog or bottomsheet in the stack
-  ///
-  /// if your set [closeOverlays] to true, Fluxy.back() will close the
-  /// currently open snackbar/dialog/bottomsheet AND the current page
-  ///
-  /// [id] is for when you are using nested navigation,
-  /// as explained in documentation
-  ///
-  /// It has the advantage of not needing context, so you can call
-  /// from your business logic.
-  void backLegacy<T>({
-    T? result,
-    bool closeOverlays = false,
-    bool canPop = true,
-    int times = 1,
-    String? id,
-  }) {
-    if (closeOverlays) {
-      closeAllOverlays();
-    }
-
-    if (times < 1) {
-      times = 1;
-    }
-
-    if (times > 1) {
-      var count = 0;
-      return searchDelegate(id).navigatorKey.currentState?.popUntil((route) {
-        return count++ == times;
-      });
-    } else {
-      if (canPop) {
-        if (searchDelegate(id).navigatorKey.currentState?.canPop() == true) {
-          return searchDelegate(id).navigatorKey.currentState?.pop<T>(result);
-        }
-      } else {
-        return searchDelegate(id).navigatorKey.currentState?.pop<T>(result);
-      }
-    }
+      return true;
+    });
+    final pages = times - popups;
+    if (pages < 1) return;
+    var count = 0;
+    delegate.backUntil((route) => count++ == pages);
   }
 
   /// **Navigation.pushReplacement()** shortcut .<br><br>
@@ -444,11 +349,6 @@ extension FluxyNavigationExt on FluxyInterface {
     Duration? duration,
     double Function(BuildContext context)? gestureWidth,
   }) {
-    routeName ??= "/${page.runtimeType.toString()}";
-    routeName = _cleanRouteName(routeName);
-    if (preventDuplicates && routeName == currentRoute) {
-      return null;
-    }
     return searchDelegate(id).off(
       page,
       opaque: opaque ?? true,
@@ -520,15 +420,13 @@ extension FluxyNavigationExt on FluxyInterface {
     Duration? duration,
     double Function(BuildContext context)? gestureWidth,
   }) {
-    routeName ??= "/${page.runtimeType.toString()}";
-    routeName = _cleanRouteName(routeName);
     return searchDelegate(id).offAll<T>(
       page,
       predicate: predicate,
       opaque: opaque ?? true,
       popGesture: popGesture,
       id: id,
-      //  routeName routeName,
+      routeName: routeName,
       arguments: arguments,
       bindings: bindings,
       fullscreenDialog: fullscreenDialog,
@@ -539,22 +437,6 @@ extension FluxyNavigationExt on FluxyInterface {
     );
   }
 
-  /// Takes a route [name] String generated by [to], [off], [offAll]
-  /// (and similar context navigation methods), cleans the extra chars and
-  /// accommodates the format.
-  /// TODO: check for a more "appealing" URL naming convention.
-  /// `() => MyHomeScreenView` becomes `/my-home-screen-view`.
-  String _cleanRouteName(String name) {
-    name = name.replaceAll('() => ', '');
-
-    /// uncomment for URL styling.
-    // name = name.paramCase!;
-    if (!name.startsWith('/')) {
-      name = '/$name';
-    }
-    return Uri.tryParse(name)?.toString() ?? name;
-  }
-
   GlobalKey<NavigatorState>? addKey(GlobalKey<NavigatorState> newKey) {
     return rootController.addKey(newKey);
   }
@@ -563,28 +445,19 @@ extension FluxyNavigationExt on FluxyInterface {
     return rootController.nestedKey(key);
   }
 
+  /// The root delegate, or the one registered under [k] with
+  /// [nestedKey] (an independent navigator).
   FluxyDelegate searchDelegate(String? k) {
-    FluxyDelegate key;
-    if (k == null) {
-      key = Fluxy.rootController.rootDelegate;
-    } else {
-      if (!keys.containsKey(k)) {
-        throw 'Route id ($k) not found';
-      }
-      key = keys[k]!;
+    if (k == null) return Fluxy.rootController.rootDelegate;
+    final delegate = keys[k];
+    if (delegate == null) {
+      throw FlutterError(
+        'No navigator with id "$k".\n'
+        'Register one with Fluxy.nestedKey("$k") and give it to a Router '
+        'before navigating with id: "$k".',
+      );
     }
-
-    // if (_key.listenersLength == 0 && !testMode) {
-    //   throw """You are trying to use contextless navigation without
-    //   a FluxyApp or Fluxy.key.
-    //   If you are testing your app, you can use:
-    //   [Fluxy.testMode = true], or if you are running your app on
-    //   a physical device or emulator, you must exchange your [MaterialApp]
-    //   for a [FluxyApp].
-    //   """;
-    // }
-
-    return key;
+    return delegate;
   }
 
   /// give name from current route
@@ -644,10 +517,6 @@ extension FluxyNavigationExt on FluxyInterface {
     }
     return rootController.rootDelegate.arguments<T>();
   }
-
-  // set parameters(Map<String, String?> newParameters) {
-  //   rootController.parameters = newParameters;
-  // }
 
   // @Deprecated('Use FluxyTestMode.active=true instead')
   set testMode(bool isTest) => FluxyTestMode.active = isTest;

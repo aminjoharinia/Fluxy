@@ -96,6 +96,12 @@ class FluxyDelegate extends RouterDelegate<Uri>
   /// goes away. Always on; apps don't need to add an observer.
   final _reports = FluxyObserver();
 
+  final _top = _TopRouteObserver();
+
+  /// The navigator's top route: a page, or a dialog or sheet over it.
+  /// Null before the navigator is built.
+  Route<dynamic>? get topRoute => _top.route;
+
   final TransitionDelegate<dynamic>? transitionDelegate;
 
   /// Picks the root navigator's pages from the stack, instead of the
@@ -165,17 +171,12 @@ class FluxyDelegate extends RouterDelegate<Uri>
   /// `previous` the one under it, `args` the top page's arguments.
   Routing get routing {
     final top = _stack.top;
-    Route<dynamic>? route;
-    navigatorKey.currentState?.popUntil((r) {
-      route = r;
-      return true;
-    });
     return Routing(
       current: top?.name ?? '',
       previous: _stack.below?.name ?? '',
       args: top?.arguments,
       removed: _removed,
-      route: route,
+      route: topRoute,
       isBack: _wasBack,
       isDialog: FluxyOverlays.dialogs > 0,
       isBottomSheet: FluxyOverlays.bottomSheets > 0,
@@ -355,7 +356,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
       }
       if (to != null) return _redirectTo<T>(request, to, hops);
     }
-    if (request.isUnknown) return _unknownEntry<T>();
+    if (request.isUnknown) return _unknownEntry<T>(request.uri);
     return NavEntry.create<T>(match: request.match, arguments: request.arguments);
   }
 
@@ -365,9 +366,22 @@ class FluxyDelegate extends RouterDelegate<Uri>
     int hops,
   ) {
     if (target == NavRequest.stop) return null;
+    if (target.isEmpty) {
+      _redirectFailed(
+        request,
+        ArgumentError.value(
+          target,
+          'redirect',
+          'An empty address; return null to go on or NavRequest.stop to '
+              'cancel',
+        ),
+        StackTrace.current,
+      );
+      return null;
+    }
     if (target == request.location) {
       // Redirected to itself: go there.
-      if (request.isUnknown) return _unknownEntry<T>();
+      if (request.isUnknown) return _unknownEntry<T>(request.uri);
       return NavEntry.create<T>(
         match: request.match,
         arguments: request.arguments,
@@ -394,7 +408,19 @@ class FluxyDelegate extends RouterDelegate<Uri>
     ));
   }
 
-  NavEntry _unknownEntry<T>() {
+  /// The [notFoundRoute] entry. For an address no page matched
+  /// ([requested]), the entry keeps that address: the URL and
+  /// `Fluxy.currentRoute` show what was asked for, and the page can read
+  /// its query through `Fluxy.parameters`.
+  NavEntry _unknownEntry<T>([Uri? requested]) {
+    if (requested != null) {
+      return NavEntry.create<T>(
+        match: RouteMatch.direct(
+          notFoundRoute.copyWith(name: requested.path),
+          requested,
+        ),
+      );
+    }
     final match = _table.match(notFoundRoute.name);
     return NavEntry.create<T>(
       match: match.isUnknown
@@ -511,7 +537,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
         key: navigatorKey,
         onDidRemovePage: _onDidRemovePage,
         pages: pages,
-        observers: [_reports, ...?navigatorObservers],
+        observers: [_top, _reports, ...?navigatorObservers],
         transitionDelegate:
             transitionDelegate ?? const DefaultTransitionDelegate<dynamic>(),
       ),
@@ -560,16 +586,11 @@ class FluxyDelegate extends RouterDelegate<Uri>
     return SynchronousFuture<void>(null);
   }
 
+  /// Closes the dialog or sheet on top, if there is one.
   Future<bool> handlePopupRoutes({Object? result}) async {
-    Route? currentRoute;
-    navigatorKey.currentState!.popUntil((route) {
-      currentRoute = route;
-      return true;
-    });
-    if (currentRoute is PopupRoute) {
-      return await navigatorKey.currentState!.maybePop(result);
-    }
-    return false;
+    final nav = navigatorKey.currentState;
+    if (nav == null || topRoute is! PopupRoute) return false;
+    return nav.maybePop(result);
   }
 
   @override
@@ -765,13 +786,12 @@ class FluxyDelegate extends RouterDelegate<Uri>
     bool? popGesture,
     bool showCupertinoParallax = true,
     double Function(BuildContext context)? gestureWidth,
-    bool rebuildStack = true,
     PreventDuplicateHandlingMode preventDuplicateHandlingMode =
         PreventDuplicateHandlingMode.reorderRoutes,
   }) {
     final getPage = _pageFor<T>(
       page,
-      routeName: routeName ?? _cleanRouteName("/${page.runtimeType}"),
+      routeName: routeName ?? directRouteName(page),
       opaque: opaque,
       transition: transition,
       curve: curve,
@@ -792,7 +812,6 @@ class FluxyDelegate extends RouterDelegate<Uri>
           preventDuplicates: preventDuplicates,
           mode: preventDuplicateHandlingMode,
         ),
-        notify: rebuildStack,
       ),
     );
   }
@@ -816,7 +835,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
   }) {
     final getPage = _pageFor<T>(
       page,
-      routeName: routeName ?? _cleanRouteName("/${page.runtimeType}"),
+      routeName: routeName ?? directRouteName(page),
       opaque: opaque,
       transition: transition,
       curve: curve,
@@ -859,7 +878,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
   }) {
     final getPage = _pageFor<T>(
       page,
-      routeName: routeName ?? _cleanRouteName("/${page.runtimeType}"),
+      routeName: routeName ?? directRouteName(page),
       opaque: opaque,
       transition: transition,
       curve: curve,
@@ -960,7 +979,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
   ]) {
     final getPage = _pageFor<T>(
       page,
-      routeName: _cleanRouteName("/${page.runtimeType}"),
+      routeName: directRouteName(page),
     );
     return _result<T>(
       _navigate(
@@ -1001,15 +1020,45 @@ class FluxyDelegate extends RouterDelegate<Uri>
     ).toString();
   }
 
-  /// Takes a route [name] String generated by [to], [off], [offAll]
-  /// (and similar context navigation methods), cleans the extra chars and
-  /// accommodates the format.
-  /// `() => MyHomeScreenView` becomes `/MyHomeScreenView`.
-  String _cleanRouteName(String name) {
-    name = name.replaceAll('() => ', '');
-    if (!name.startsWith('/')) {
-      name = '/$name';
-    }
-    return Uri.tryParse(name)?.toString() ?? name;
+  /// The name a `Fluxy.to(() => Page())` page gets when no `routeName` is
+  /// given: `/Page`, from the type the builder returns.
+  ///
+  /// Type names are renamed in obfuscated builds (`--obfuscate`) and
+  /// minified on the web, so pass a `routeName` where the URL or
+  /// `Fluxy.currentRoute` must stay the same across builds.
+  static String directRouteName(Widget Function() page) {
+    var name = page.runtimeType.toString();
+    final arrow = name.lastIndexOf('=> ');
+    if (arrow >= 0) name = name.substring(arrow + 3);
+    name = name.replaceAll('minified:', '');
+    final generic = name.indexOf('<');
+    if (generic >= 0) name = name.substring(0, generic);
+    name = name.replaceAll(RegExp(r'[^A-Za-z0-9_$]'), '');
+    return '/${name.isEmpty ? 'page' : name}';
+  }
+}
+
+/// Follows the navigator's top route.
+class _TopRouteObserver extends NavigatorObserver {
+  Route<dynamic>? route;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    this.route = route;
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (identical(route, this.route)) this.route = previousRoute;
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (identical(route, this.route)) this.route = previousRoute;
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (identical(oldRoute, route)) route = newRoute;
   }
 }

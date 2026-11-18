@@ -382,7 +382,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
 
   void onInit() {
     if (config.getPages == null && config.home == null) {
-      throw 'You need add pages or home';
+      throw FlutterError('FluxyApp needs getPages or home.');
     }
 
     if (config.routerDelegate == null) {
@@ -390,7 +390,8 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
         pages: config.getPages ??
             [
               FluxyPage(
-                name: cleanRouteName("/${config.home.runtimeType}"),
+                // The home page is the root of the app.
+                name: '/',
                 page: () => config.home!,
               ),
             ],
@@ -417,9 +418,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     if (config.routeInformationParser == null) {
       final newRouteInformationParser =
           FluxyInformationParser.createInformationParser(
-        initialRoute: config.initialRoute ??
-            config.getPages?.first.name ??
-            cleanRouteName("/${config.home.runtimeType}"),
+        initialRoute: config.initialRoute ?? config.getPages?.first.name ?? '/',
         // An initialRoute the app asked for wins, even when '/' is a page.
         redirectRootToInitialRoute: config.initialRoute != null ||
             !rootDelegate.routeTable.contains('/'),
@@ -565,16 +564,5 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return widget.child;
-  }
-
-  String cleanRouteName(String name) {
-    name = name.replaceAll('() => ', '');
-
-    /// uncomment for URL styling.
-    // name = name.paramCase!;
-    if (!name.startsWith('/')) {
-      name = '/$name';
-    }
-    return Uri.tryParse(name)?.toString() ?? name;
   }
 }

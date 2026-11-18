@@ -49,7 +49,7 @@ void main() {
 
     expect(Fluxy.isBottomSheetOpen, true);
 
-    Fluxy.backLegacy();
+    Fluxy.back();
     await tester.pumpAndSettle();
 
     expect(Fluxy.isBottomSheetOpen, false);
