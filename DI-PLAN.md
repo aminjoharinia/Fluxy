@@ -1,6 +1,6 @@
 # fluxy_state DI re-engineering plan
 
-Status: plan (2026-11-18). Decisions D1-D4 below are open.
+Status: plan (2026-11-18). D2-D4 decided; D1 open.
 
 ## Why
 
@@ -67,9 +67,9 @@ Each phase ends green: every package, both examples, root, tool, and the app cop
 5. **Files and docs.** `lib/src/di/`, FLUXY.md, fluxy_state README, Coming from GetX rows (`SmartManagement`, `fenix`, route-linked deletion).
 6. **Benchmarks and release.** `find` is on the hot path (`FluxyView.controller` in build): measure `find` / `put` / `delete` and a page with bindings against v1.3.0 (benchmark app, runs alternated); release notes, tag, app switch.
 
-## Decisions (open)
+## Decisions
 
 - **D1: Lifetime of a plain `Fluxy.put`.** Recommended: the app's lifetime (until `delete`), with page lifetimes only through page `bindings` / scopes. Alternative: keep GetX's route-linking (B1 stays; the app would need `permanent: true` on its 20 puts).
-- **D2: `put` of a type already registered.** Recommended: replace (close the old one, start the new one) with a debug log. Alternatives: keep the old one and assert in debug; throw.
-- **D3: `SmartManagement` and `fenix`.** Recommended: remove both; lazy factories are kept after `delete` (today's `fenix: true`), page and widget scopes cover the rest.
-- **D4: Version and extras.** Recommended: v1.4.0 (breaking where it buys correctness, as with v1.2.0), typed handles and test overrides included. Alternatives: v2.0.0; handles later.
+- **D2: `put` of a type already registered: replace** (2026-11-18, user's choice): the old instance is closed, the new one registered and started, with a debug log.
+- **D3: `SmartManagement` and `fenix` are removed** (2026-11-18): lazy factories are kept after `delete` (today's `fenix: true`); page and widget scopes cover the rest.
+- **D4: v1.4.0, with typed handles and test overrides** (2026-11-18): breaking where it buys correctness, as with v1.2.0.
