@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.3.0
+    ref: v1.4.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.3.0
+    ref: v1.4.0
     path: packages/fluxy_state
 ```
 
