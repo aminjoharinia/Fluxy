@@ -206,8 +206,17 @@ class FluxyScope {
   /// replaced.
   S put<S>(S instance, {String? tag, bool permanent = false}) {
     _checkType<S>('put');
+    return putAt<S>(keyOf(S, tag), instance, tag: tag, permanent: permanent);
+  }
+
+  /// [put] under [key] (a [Dep] handle registers under itself).
+  S putAt<S>(
+    Object key,
+    S instance, {
+    String? tag,
+    bool permanent = false,
+  }) {
     _checkOpen();
-    final key = keyOf(S, tag);
     final old = _entries[key];
     if (old != null) {
       if (old._created && identical(old._instance, instance)) return instance;
@@ -236,8 +245,17 @@ class FluxyScope {
     bool permanent = false,
   }) {
     _checkType<S>('lazyPut');
+    lazyPutAt<S>(keyOf(S, tag), builder, tag: tag, permanent: permanent);
+  }
+
+  /// [lazyPut] under [key] (a [Dep] handle registers under itself).
+  void lazyPutAt<S>(
+    Object key,
+    InstanceBuilderCallback<S> builder, {
+    String? tag,
+    bool permanent = false,
+  }) {
     _checkOpen();
-    final key = keyOf(S, tag);
     if (_entries.containsKey(key)) {
       Fluxy.log('"$key" is already registered; lazyPut ignored.');
       return;
@@ -279,6 +297,10 @@ class FluxyScope {
 
   /// The entry for [key] in this scope or its parents.
   DependencyEntry<dynamic>? entryOf(Object key) {
+    if (_overrides._entries.isNotEmpty) {
+      final o = _overrides._entries[key];
+      if (o != null) return o;
+    }
     for (FluxyScope? s = this; s != null; s = s.parent) {
       final e = s._entries[key];
       if (e != null) return e;
@@ -296,6 +318,10 @@ class FluxyScope {
   /// The entry `Fluxy.find` uses for [key]: the open child scopes, newest
   /// first, then the root.
   static DependencyEntry<dynamic>? lookup(Object key) {
+    if (_overrides._entries.isNotEmpty) {
+      final o = _overrides._entries[key];
+      if (o != null) return o;
+    }
     if (_open.isEmpty) return root._entries[key];
     for (var i = _open.length - 1; i >= 0; i--) {
       final e = _open[i]._entries[key];
@@ -329,12 +355,13 @@ class FluxyScope {
       _close(i, 'spawned');
     }
     _spawned.clear();
-    if (identical(this, root)) return;
+    if (identical(this, root) || identical(this, _overrides)) return;
     _closed = true;
     _open.remove(this);
   }
 
-  /// Closes the open child scopes (newest first), then empties the root.
+  /// Closes the open child scopes (newest first), then empties the root
+  /// and drops the overrides.
   static void resetAll() {
     for (final s in _open.reversed.toList()) {
       s.close();
@@ -342,7 +369,27 @@ class FluxyScope {
     _open.clear();
     _registering.clear();
     root.close();
+    clearOverrides();
   }
+
+  // -------------------------------------------------------------------
+  // Overrides (tests)
+
+  static final FluxyScope _overrides = FluxyScope._detached('overrides');
+
+  FluxyScope._detached(this.name) : parent = null;
+
+  /// Makes every lookup of [key] (`Fluxy.find`, a scope's `find`, a [Dep])
+  /// return [instance], whatever is registered, until [clearOverrides] or
+  /// `Fluxy.reset()`. For tests.
+  static S overrideAt<S>(Object key, S instance) =>
+      _overrides.putAt<S>(key, instance);
+
+  /// Drops the overrides, closing the instances they started.
+  static void clearOverrides() => _overrides.close();
+
+  /// Whether any override is in place.
+  static bool get hasOverrides => _overrides._entries.isNotEmpty;
 
   // -------------------------------------------------------------------
 

@@ -160,6 +160,14 @@ extension Inst on FluxyInterface {
     }
   }
 
+  /// Makes every `find<S>(tag:)` return [instance], whatever is
+  /// registered, until [clearOverrides] or `Fluxy.reset()`. For tests.
+  S overrideWith<S>(S instance, {String? tag}) =>
+      FluxyScope.overrideAt<S>(FluxyScope.keyOf(S, tag), instance);
+
+  /// Drops the overrides set with [overrideWith] (or `Dep.overrideWith`).
+  void clearOverrides() => FluxyScope.clearOverrides();
+
   bool isRegistered<S>({String? tag}) =>
       FluxyScope.lookup(FluxyScope.keyOf(S, tag)) != null;
 
