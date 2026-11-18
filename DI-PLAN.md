@@ -1,6 +1,6 @@
 # fluxy_state DI re-engineering plan
 
-Status: in progress (2026-11-18); decisions D1-D4 taken.
+Status: done (2026-11-18); released as v1.4.0. Results per phase are under "Results" at the end.
 
 ## Why
 
@@ -73,3 +73,33 @@ Each phase ends green: every package, both examples, root, tool, and the app cop
 - **D2: `put` of a type already registered: replace** (2026-11-18, user's choice): the old instance is closed, the new one registered and started, with a debug log.
 - **D3: `SmartManagement` and `fenix` are removed** (2026-11-18): lazy factories are kept after `delete` (today's `fenix: true`); page and widget scopes cover the rest.
 - **D4: v1.4.0, with typed handles and test overrides** (2026-11-18): breaking where it buys correctness, as with v1.2.0.
+
+## Results
+
+### Phase 0 (2026-11-18): characterization tests
+
+- `packages/fluxy_nav/test/di/di_routes_test.dart`: lifecycle (`onInit` once, `onReady` after the frame, `own()` disposed on delete, `onClose` once), page bindings closing with the page (a `Binding` with `Bind.lazyPut`, and a void binding calling `Fluxy.put`), B1 (top-level put through a popped page, a dialog, `offAllNamed`), B6, B7. `packages/fluxy_state/test/instance/di_bugs_test.dart`: B2-B5, B8. Bugs skipped until fixed.
+- Found while writing them: `void dependencies() => Fluxy.put(C())` infers `put<void>` and registers under `void`.
+
+### Phases 1-3 (2026-11-18): container, scopes, owners
+
+- `lib/src/di/scope.dart`: `FluxyScope` (entries `instance` / `lazy` / `factory`, `put` replaces, `lazyPut` ignored when registered, `delete` keeps a lazy builder unless forced, `reload`, `close` newest first, spawned instances closed with their scope, `DependencyNotFound`, `put<void>` / `<dynamic>` / `<Object?>` rejected). `facade.dart`: the `Fluxy` extension on top (`find` is one map lookup with no open scope). `widgets.dart`: `DependencyScope`, `ScopeProvider`, `context.find`.
+- Lifetimes: root scope for `put` / `lazyPut`; `FluxyPageRoute` makes a page scope when the page has bindings / binds, runs them inside it (all `List<Bind>` bindings now wrap the page; only the last one did) and closes it on dispose. `Module`, `RouteReport(dependencies:)` on scopes. Dialogs, sheets and the observer no longer report routes.
+- `Binder` / `FluxyX` keep the entry they own (created, a not yet built `lazyPut`, `Bind.put`, or one another widget created) and count owners; a non-global binder's controller is local.
+- Removed: `RouterReportManager`, `SmartManagement`, `fenix`, `markAsDirty`, `RouteReportMixin` / `PageRouteReportMixin`, `key:` on `delete` / `reload`.
+- B1-B8 un-skipped and passing. Old tests that pinned GetX behaviour rewritten: a `put` in a build method now stays (`dispose_dependencies_test.dart` also checks page bindings), `lazyPut` keeps its builder, errors are `DependencyNotFound`.
+
+### Phase 4 (2026-11-18): handles and overrides
+
+- `lib/src/di/dep.dart`: `Dep<T>` (its own key; `call()` registers lazily in the root on first use; `of(context)`, `register()`, `put()`, `delete()`, `overrideWith()`). `Fluxy.overrideWith<T>` / `clearOverrides` (a detached override scope checked first; `resetInstance` drops it and closes its instances).
+- `test/instance/di_scope_test.dart` (19): container rules, scopes, `DependencyScope`, handles, overrides.
+
+### Phase 5 (2026-11-18): files and docs
+
+- `fluxy_state/lib/get_instance/` is now `lib/src/di/`. FLUXY.md v1.4.0 entry, fluxy_state README "Dependencies", root README (dependencies bullet, Coming from GetX rows for `SmartManagement`, `fenix`, `RouterReportManager`).
+
+### Phase 6 (2026-11-18): benchmark, release
+
+- `benchmark/nav` gained `di find`, `di put + delete`, `di lazyPut + find + delete` and `page with bindings push + pop`. Against v1.3.0 (release, runs alternated, best median of 4): `find` 1.36× faster (0.01 µs), `put + delete` 1.96× (0.65 µs), `lazyPut + find + delete` 1.85× (0.68 µs); a page with bindings 0.99× and the navigation scenarios 0.93-1.05× (the frame dominates; noise).
+- All packages, root, both examples and the app copy (97 tests) green.
+

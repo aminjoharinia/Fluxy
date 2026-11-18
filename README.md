@@ -49,6 +49,7 @@ Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 
 - **State:** an `Obx` subscribes to exactly the Rx values its last build read. `Computed` derives values without glitches, `effect` reacts to them, and effects, `Computed`s and workers made in a controller's `onInit` are disposed with it. Write new values instead of editing in place (`mapWith`, `listWith`, `setIn`, `patch`); `rx.peek` reads without subscribing.
 - **Navigation:** `FluxyApp.router(getPages: ..., redirect: ...)`. Pages match by segment (static before `:param` before `*`), navigations apply in call order, and `redirect` (on the app and on each page, async allowed) decides where an address goes, the first one included. `FluxyRouterOutlet(parent: ...)` shows nested pages. Web uses hash URLs unless you call `setUrlStrategy()` before `runApp`. More in [packages/fluxy_nav](packages/fluxy_nav/README.md).
+- **Dependencies:** `Fluxy.put` / `lazyPut` live until `delete`; a page's `bindings` (or a `DependencyScope`) give dependencies the page's lifetime. `Dep(() => C())` is a typed handle, `Fluxy.overrideWith` swaps one in tests. More in [packages/fluxy_state](packages/fluxy_state/README.md).
 - **Translations:** `.tr` inside an `Obx` updates on a language change; `Fluxy.updateLocale(locale)` rebuilds the rest.
 
 ## Coming from GetX
@@ -74,6 +75,9 @@ To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, the
 | `GetObserver` | `FluxyObserver` |
 | `GetRouterOutlet` | `FluxyRouterOutlet` (`parent:` instead of `anchorRoute:` since v1.2.0) |
 | `IGetNavigation` | `FluxyNavigation` (since v1.3.0) |
+| `SmartManagement`, `Get.smartManagement` | removed in v1.4.0: `put` / `lazyPut` live until `delete`; page `bindings` / `DependencyScope` give a page's lifetime |
+| `lazyPut(fenix: true)` | `lazyPut` (the builder always stays after `delete` since v1.4.0) |
+| `RouterReportManager`, `RouteReportMixin` | page scopes (v1.4.0); `RouteReport(dependencies:)` / `DependencyScope` |
 | `GetPageRoute` | `FluxyPageRoute` |
 | `GetModalBottomSheetRoute` | `FluxyModalBottomSheetRoute` |
 | `GetPageRouteTransitionMixin` | `FluxyPageRouteTransitionMixin` |

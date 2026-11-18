@@ -33,6 +33,7 @@ void main() {
 
   group('container rules', () {
     test('put of void or dynamic is rejected', () {
+      // ignore: void_checks
       expect(() => Fluxy.put<void>(C()), throwsArgumentError);
       expect(() => Fluxy.put<dynamic>(C()), throwsArgumentError);
       expect(() => Fluxy.lazyPut<Object?>(C.new), throwsArgumentError);
