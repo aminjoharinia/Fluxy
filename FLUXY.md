@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.2.0
+    ref: v1.3.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.2.0
+    ref: v1.3.0
     path: packages/fluxy_state
 ```
 
@@ -140,7 +140,7 @@ fluxy_state:
   - Measured against v1.0.0 (release build, runs alternated, [benchmark/nav](benchmark/nav/README.md)): matching an address 15× faster (1.25 µs over 152 pages), a deep link (`offAllNamed`) 2×, push + pop 1.13×, pushing onto a 100-deep stack 1.03×, a dialog the same; the frame dominates the last three.
   - Moving an app: replace `FluxyMiddleware` with `redirect:` (an async `redirectDelegate` becomes an async redirect returning the address, null to go on, `NavRequest.stop` instead of returning null), `anchorRoute:` with `parent:`, and drop parser subclasses or `UnknownRoute` pages that redirect, hand-wired `FluxyObserver`s, and imports of `package:fluxy_nav/get_navigation/...`.
   - Files: `lib/src/{routing,router,overlays,app,transitions,facade}`; the facade is one extension per concern (`FluxyNavigationExt`, `ExtensionDialog`, `ExtensionBottomSheet`, `ExtensionSnackbar`, `OverlayExt`, `FluxyAppExt`, `FluxyWindowExt`). Import `package:fluxy_nav/fluxy_nav.dart`; the `get_navigation/` paths are gone.
-- Unreleased (fluxy_nav, after the v1.2.0 review; breaking only where noted):
+- v1.3.0: fluxy_nav fixes and clean-ups after the v1.2.0 review (breaking only where noted):
   - Fixed: `toNamed` / `offNamed` / `offAllNamed` / `offNamedUntil` / `offAndToNamed` with `parameters` and a query in the address (`/item/1?a=1`) took the whole address as the path; the parameters now join the query (a parameter replaces a query value of the same name). `Fluxy.to(() => Detail(2))` over a `Detail(1)` opened the same way kept showing `Detail(1)`: a duplicate that builds something else gets a new key. `back(times:)` counts open dialogs and sheets as steps (they used to vanish with the pages under them).
   - Back: system back and `Fluxy.back()` close a dialog or sheet on an outlet's navigator (`useRootNavigator: false`) before a page. A dialog whose `PopScope` refuses system back keeps the page under it (the page used to be popped instead).
   - Browser back / forward, typed URLs and deep links (`setNewRoutePath`): an address already on the stack is gone back to (the entries above it leave, its page keeps its state) instead of moving to the top; other addresses are pushed.

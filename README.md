@@ -20,12 +20,12 @@ dependencies:
   fluxy:                   # everything
     git:
       url: https://github.com/aminjoharinia/Fluxy.git
-      ref: v1.2.0
+      ref: v1.3.0
   # or one package:
   fluxy_state:
     git:
       url: https://github.com/aminjoharinia/Fluxy.git
-      ref: v1.2.0
+      ref: v1.3.0
       path: packages/fluxy_state
 ```
 
@@ -73,6 +73,7 @@ To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, the
 | `GetNavigator` | `FluxyNavigator` |
 | `GetObserver` | `FluxyObserver` |
 | `GetRouterOutlet` | `FluxyRouterOutlet` (`parent:` instead of `anchorRoute:` since v1.2.0) |
+| `IGetNavigation` | `FluxyNavigation` (since v1.3.0) |
 | `GetPageRoute` | `FluxyPageRoute` |
 | `GetModalBottomSheetRoute` | `FluxyModalBottomSheetRoute` |
 | `GetPageRouteTransitionMixin` | `FluxyPageRouteTransitionMixin` |
