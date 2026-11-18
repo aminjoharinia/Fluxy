@@ -3,10 +3,9 @@ import 'package:fluxy_i18n/fluxy_i18n.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 
 extension FluxyResetExt on FluxyInterface {
-  void reset({bool clearRouteBindings = true}) {
-    Fluxy.resetInstance(clearRouteBindings: clearRouteBindings);
-    // Fluxy.clearRouteTree();
+  /// Closes every dependency and clears the translations. For tests.
+  void reset() {
+    Fluxy.resetInstance();
     Fluxy.clearTranslations();
-    // Fluxy.resetRootNavigator();
   }
 }

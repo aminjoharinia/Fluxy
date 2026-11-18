@@ -90,8 +90,8 @@ void main() {
     Fluxy.resetInstance();
   });
 
-  test('Get.lazyPut fenix test', () async {
-    Fluxy.lazyPut<Controller>(() => Controller(), fenix: true);
+  test('a lazyPut builder stays after delete', () async {
+    Fluxy.lazyPut<Controller>(() => Controller());
     Fluxy.find<Controller>().increment();
 
     expect(Fluxy.find<Controller>().count, 1);
@@ -100,14 +100,14 @@ void main() {
     Fluxy.resetInstance();
   });
 
-  test('Get.lazyPut without fenix', () async {
+  test('delete(force: true) removes a lazyPut registration', () async {
     Fluxy.lazyPut<Controller>(() => Controller());
     Fluxy.find<Controller>().increment();
 
     expect(Fluxy.find<Controller>().count, 1);
-    Fluxy.delete<Controller>();
-    expect(
-        () => Fluxy.find<Controller>(), throwsA(const m.TypeMatcher<String>()));
+    Fluxy.delete<Controller>(force: true);
+    expect(() => Fluxy.find<Controller>(),
+        throwsA(const m.TypeMatcher<DependencyNotFound>()));
     Fluxy.resetInstance();
   });
 
@@ -168,7 +168,7 @@ void main() {
       // Fluxy.put(DisposableController());
       expect(Fluxy.delete<DisposableController>(), true);
       expect(() => Fluxy.find<DisposableController>(),
-          throwsA(const m.TypeMatcher<String>()));
+          throwsA(const m.TypeMatcher<DependencyNotFound>()));
     });
 
     test('Get.put test after delete with disposable controller and init check',
@@ -227,7 +227,7 @@ void main() {
 
   group('Get.lazyReplace replaces parent instance', () {
     tearDown(Fluxy.resetInstance);
-    test('without fenix', () async {
+    test('a put instance', () async {
       Fluxy.put(DisposableController());
       Fluxy.lazyReplace<DisposableController>(() => Controller());
       final instance = Fluxy.find<DisposableController>();
@@ -235,9 +235,9 @@ void main() {
       expect((instance as Controller).init, greaterThan(0));
     });
 
-    test('with fenix', () async {
+    test('keeps the builder after delete', () async {
       Fluxy.put(DisposableController());
-      Fluxy.lazyReplace<DisposableController>(() => Controller(), fenix: true);
+      Fluxy.lazyReplace<DisposableController>(() => Controller());
       expect(Fluxy.find<DisposableController>(), isA<Controller>());
       (Fluxy.find<DisposableController>() as Controller).increment();
 
@@ -246,7 +246,7 @@ void main() {
       expect((Fluxy.find<DisposableController>() as Controller).count, 0);
     });
 
-    test('with fenix when parent is permanent', () async {
+    test('when the parent is permanent', () async {
       Fluxy.put(DisposableController(), permanent: true);
       Fluxy.lazyReplace<DisposableController>(() => Controller());
       final instance = Fluxy.find<DisposableController>();
@@ -254,8 +254,9 @@ void main() {
       (instance as Controller).increment();
 
       expect((Fluxy.find<DisposableController>() as Controller).count, 1);
-      Fluxy.delete<DisposableController>();
-      expect((Fluxy.find<DisposableController>() as Controller).count, 0);
+      // The replacement keeps the parent's permanent flag.
+      expect(Fluxy.delete<DisposableController>(), isFalse);
+      expect((Fluxy.find<DisposableController>() as Controller).count, 1);
     });
   });
 

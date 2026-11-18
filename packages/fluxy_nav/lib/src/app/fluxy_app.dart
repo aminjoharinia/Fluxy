@@ -66,7 +66,6 @@ class FluxyApp extends StatelessWidget {
   final bool? enableLog;
   final LogWriterCallback? logWriterCallback;
   final bool? popGesture;
-  final SmartManagement smartManagement;
   final List<Bind> binds;
   final Duration? transitionDuration;
   final bool? defaultGlobalState;
@@ -137,7 +136,6 @@ class FluxyApp extends StatelessWidget {
     this.popGesture,
     this.transitionDuration,
     this.defaultGlobalState,
-    this.smartManagement = SmartManagement.full,
     this.binds = const [],
     this.unknownRoute,
     this.redirect,
@@ -199,7 +197,6 @@ class FluxyApp extends StatelessWidget {
     this.enableLog = kDebugMode,
     this.logWriterCallback,
     this.popGesture,
-    this.smartManagement = SmartManagement.full,
     this.binds = const [],
     this.transitionDuration,
     this.defaultGlobalState,
@@ -241,7 +238,6 @@ class FluxyApp extends StatelessWidget {
         routerDelegate: routerDelegate,
         routingCallback: routingCallback,
         scaffoldMessengerKey: scaffoldMessengerKey,
-        smartManagement: smartManagement,
         transitionDuration: transitionDuration,
         translations: translations,
         translationsKeys: translationsKeys,
@@ -252,19 +248,6 @@ class FluxyApp extends StatelessWidget {
         themeMode: themeMode,
         defaultPopGesture: popGesture,
       ),
-      // binds: [
-      //   Bind.lazyPut<GetMaterialController>(
-      //     () => GetMaterialController(
-
-      //     ),
-      //     onClose: () {
-      //       Fluxy.clearTranslations();
-      //       RouterReportManager.dispose();
-      //       Fluxy.resetInstance(clearRouteBindings: true);
-      //     },
-      //   ),
-      //   ...binds,
-      // ],
       child: Builder(
         builder: (context) {
           final controller = FluxyRoot.of(context);

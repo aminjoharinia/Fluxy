@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
-import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 import '../overlays/dialog_route.dart';
 
@@ -45,9 +44,6 @@ class FluxyObserver extends NavigatorObserver {
     } else if (currentRoute.isGetPageRoute) {
       Fluxy.log("CLOSE TO ROUTE ${currentRoute.name}");
     }
-    if (previousRoute != null) {
-      RouterReportManager.instance.reportCurrentRoute(previousRoute);
-    }
 
     // Here we use a 'inverse didPush set', meaning that we use
     // previous route instead of 'route' because this is
@@ -83,7 +79,6 @@ class FluxyObserver extends NavigatorObserver {
       Fluxy.log("GOING TO ROUTE ${newRoute.name}");
     }
 
-    RouterReportManager.instance.reportCurrentRoute(route);
     _routeSend?.update((value) {
       if (route is PageRoute) {
         value.current = newRoute.name ?? '';
@@ -127,9 +122,6 @@ class FluxyObserver extends NavigatorObserver {
       value.isDialog = currentRoute.isDialog ? false : value.isDialog;
     });
 
-    if (route is FluxyPageRoute) {
-      RouterReportManager.instance.reportRouteWillDispose(route);
-    }
     routing?.call(_routeSend);
   }
 
@@ -143,9 +135,6 @@ class FluxyObserver extends NavigatorObserver {
     Fluxy.log("REPLACE ROUTE $oldName");
     Fluxy.log("NEW ROUTE $newName");
 
-    if (newRoute != null) {
-      RouterReportManager.instance.reportCurrentRoute(newRoute);
-    }
 
     _routeSend?.update((value) {
       // Only PageRoute is allowed to change current value
@@ -162,9 +151,6 @@ class FluxyObserver extends NavigatorObserver {
           currentRoute.isBottomSheet ? false : value.isBottomSheet;
       value.isDialog = currentRoute.isDialog ? false : value.isDialog;
     });
-    if (oldRoute is FluxyPageRoute) {
-      RouterReportManager.instance.reportRouteWillDispose(oldRoute);
-    }
 
     routing?.call(_routeSend);
   }

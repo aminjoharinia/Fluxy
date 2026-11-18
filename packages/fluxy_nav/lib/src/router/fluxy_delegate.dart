@@ -92,8 +92,8 @@ class FluxyDelegate extends RouterDelegate<Uri>
 
   final List<NavigatorObserver>? navigatorObservers;
 
-  /// Logs page changes and tells route-bound dependencies when their page
-  /// goes away. Always on; apps don't need to add an observer.
+  /// Logs page changes and overlays. Always on; apps don't need to add an
+  /// observer.
   final _reports = FluxyObserver();
 
   final _top = _TopRouteObserver();

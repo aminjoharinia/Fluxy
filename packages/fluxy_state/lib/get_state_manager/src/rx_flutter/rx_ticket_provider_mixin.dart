@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../../../get_instance/src/lifecycle.dart';
+import '../../../src/di/lifecycle.dart';
 import '../../get_state_manager.dart';
 
 /// Used like `SingleTickerProviderMixin` but only with Get Controllers.

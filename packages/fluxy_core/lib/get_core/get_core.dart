@@ -6,5 +6,4 @@ export 'src/get_main.dart';
 export 'src/log.dart';
 export 'src/equality.dart';
 export 'src/event_loop_extensions.dart';
-export 'src/smart_management.dart';
 export 'src/typedefs.dart';

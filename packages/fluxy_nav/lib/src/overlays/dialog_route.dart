@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 
-import 'package:fluxy_state/fluxy_state.dart';
 
 import 'overlay_tracker.dart';
 
@@ -16,9 +15,7 @@ class FluxyDialogRoute<T> extends PopupRoute<T> with CountedOverlay<T> {
     this._transitionDuration = const Duration(milliseconds: 200),
     this._transitionBuilder,
     super.settings,
-  }) : widget = pageBuilder {
-    RouterReportManager.instance.reportCurrentRoute(this);
-  }
+  }) : widget = pageBuilder;
 
   final RoutePageBuilder widget;
 
@@ -26,11 +23,6 @@ class FluxyDialogRoute<T> extends PopupRoute<T> with CountedOverlay<T> {
   bool get barrierDismissible => _barrierDismissible;
   final bool _barrierDismissible;
 
-  @override
-  void dispose() {
-    RouterReportManager.instance.reportRouteDispose(this);
-    super.dispose();
-  }
 
   @override
   String? get barrierLabel => _barrierLabel;

@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
 class FluxyModalBottomSheetRoute<T> extends PopupRoute<T>
@@ -26,9 +25,7 @@ class FluxyModalBottomSheetRoute<T> extends PopupRoute<T>
     this.enterBottomSheetDuration = const Duration(milliseconds: 250),
     this.exitBottomSheetDuration = const Duration(milliseconds: 200),
     this.curve,
-  }) {
-    RouterReportManager.instance.reportCurrentRoute(this);
-  }
+  });
   final bool? isPersistent;
   final WidgetBuilder? builder;
   final ThemeData? theme;
@@ -61,11 +58,6 @@ class FluxyModalBottomSheetRoute<T> extends PopupRoute<T>
 
   AnimationController? _animationController;
 
-  @override
-  void dispose() {
-    RouterReportManager.instance.reportRouteDispose(this);
-    super.dispose();
-  }
 
   @override
   Animation<double> createAnimation() {

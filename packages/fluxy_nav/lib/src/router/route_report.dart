@@ -1,31 +1,22 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:fluxy_state/fluxy_state.dart';
-import '../transitions/page_route.dart';
 
-class RouteReport extends StatefulWidget {
-  const RouteReport({super.key, required this.builder});
+/// Gives [builder]'s subtree its own dependency scope (a [DependencyScope]):
+/// [dependencies] register in it, and everything in it is closed when this
+/// widget goes.
+class RouteReport extends StatelessWidget {
+  const RouteReport({super.key, required this.builder, this.dependencies});
   final WidgetBuilder builder;
 
-  @override
-  RouteReportState createState() => RouteReportState();
-}
-
-class RouteReportState extends State<RouteReport> with RouteReportMixin {
-  @override
-  void initState() {
-    RouterReportManager.instance.reportCurrentRoute(this);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    RouterReportManager.instance.reportRouteDispose(this);
-    super.dispose();
-  }
+  /// Registers the dependencies that live as long as this widget.
+  final void Function()? dependencies;
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(context);
+    return DependencyScope(
+      dependencies: dependencies,
+      child: Builder(builder: builder),
+    );
   }
 }

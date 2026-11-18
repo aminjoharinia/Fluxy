@@ -114,7 +114,6 @@ void main() {
 
   group('Get singleton', () {
     test('defaults', () {
-      expect(Fluxy.smartManagement, SmartManagement.full);
       expect(Fluxy.isLogEnable, kDebugMode);
     });
 

@@ -132,21 +132,14 @@ abstract class Bind<T> extends StatelessWidget {
     );
   }
 
-  static bool fenixMode = false;
-
   static Bind lazyPut<S>(
     InstanceBuilderCallback<S> builder, {
     String? tag,
-    bool? fenix,
-    // VoidCallback? onInit,
     VoidCallback? onClose,
   }) {
-    Fluxy.lazyPut<S>(builder, tag: tag, fenix: fenix ?? fenixMode);
+    Fluxy.lazyPut<S>(builder, tag: tag);
     return _FactoryBind<S>(
       tag: tag,
-      // initState: (_) {
-      //   onInit?.call();
-      // },
       dispose: (_) {
         onClose?.call();
       },
@@ -182,27 +175,19 @@ abstract class Bind<T> extends StatelessWidget {
 
   static void reloadAll({bool force = false}) => Fluxy.reloadAll(force: force);
 
-  static void reload<S>({String? tag, Object? key, bool force = false}) =>
-      Fluxy.reload<S>(tag: tag, key: key, force: force);
+  static void reload<S>({String? tag, bool force = false}) =>
+      Fluxy.reload<S>(tag: tag, force: force);
 
   static bool isRegistered<S>({String? tag}) => Fluxy.isRegistered<S>(tag: tag);
 
   static bool isPrepared<S>({String? tag}) => Fluxy.isPrepared<S>(tag: tag);
 
-  static void replace<P>(P child, {String? tag}) {
-    final info = Fluxy.getInstanceInfo<P>(tag: tag);
-    final permanent = (info.isPermanent ?? false);
-    delete<P>(tag: tag, force: permanent);
-    Fluxy.put(child, tag: tag, permanent: permanent);
-  }
+  static void replace<P>(P child, {String? tag}) =>
+      Fluxy.replace<P>(child, tag: tag);
 
   static void lazyReplace<P>(InstanceBuilderCallback<P> builder,
-      {String? tag, bool? fenix}) {
-    final info = Fluxy.getInstanceInfo<P>(tag: tag);
-    final permanent = (info.isPermanent ?? false);
-    delete<P>(tag: tag, force: permanent);
-    Fluxy.lazyPut(builder, tag: tag, fenix: fenix ?? permanent);
-  }
+          {String? tag}) =>
+      Fluxy.lazyReplace<P>(builder, tag: tag);
 
   factory Bind.builder({
     Widget? child,
@@ -443,53 +428,47 @@ class BindElement<T> extends InheritedElement {
     }
   }
 
-  bool? _isCreator = false;
   bool? _needStart = false;
   VoidCallback? _remove;
   Object? _filter;
 
+  /// The registration this binder owns (created it, claimed a `lazyPut` /
+  /// `Bind.put` one, or shares one another widget created). It is deleted
+  /// when its last owner goes.
+  DependencyEntry<dynamic>? _owned;
+
   void initState() {
     widget.initState?.call(this);
 
-    var isRegistered = Fluxy.isRegistered<T>(tag: widget.tag);
-
     if (widget.global) {
-      if (isRegistered) {
-        if (Fluxy.isPrepared<T>(tag: widget.tag)) {
-          _isCreator = true;
-        } else {
-          _isCreator = false;
-        }
-
-        _controllerBuilder = () => Fluxy.find<T>(tag: widget.tag);
-      } else {
-        _controllerBuilder =
-            () => (widget.create?.call(this) ?? widget.init?.call());
-        _isCreator = true;
+      final key = FluxyScope.keyOf(T, widget.tag);
+      var entry = FluxyScope.lookup(key);
+      if (entry == null) {
+        T build() => (widget.create?.call(this) ?? widget.init?.call()) as T;
         if (widget.lazy) {
-          Fluxy.lazyPut<T>(_controllerBuilder!, tag: widget.tag);
+          Fluxy.lazyPut<T>(build, tag: widget.tag);
         } else {
-          Fluxy.put<T>(_controllerBuilder!(), tag: widget.tag);
+          Fluxy.put<T>(build(), tag: widget.tag);
         }
+        entry = FluxyScope.lookup(key)!;
+        _owned = entry..addOwner();
+      } else if (widget.assignId ||
+          entry.widgetOwned ||
+          (entry.kind == DependencyKind.lazy && !entry.isCreated)) {
+        _owned = entry..addOwner();
       }
+      final found = entry;
+      _controllerBuilder = () => found.resolve() as T;
     } else {
-      if (widget.create != null) {
-        _controllerBuilder = () => widget.create!.call(this);
-        Fluxy.spawn<T>(_controllerBuilder!, tag: widget.tag, permanent: false);
-      } else {
-        _controllerBuilder = widget.init;
-      }
+      // A local controller: not registered; started on first use and
+      // closed with this binder.
       _controllerBuilder =
           (widget.create != null ? () => widget.create!.call(this) : null) ??
               widget.init;
-      _isCreator = true;
       _needStart = true;
     }
   }
 
-  /// Register to listen Controller's events.
-  /// It gets a reference to the remove() callback, to delete the
-  /// setState "link" from the Controller.
   void _subscribeToController() {
     if (widget.filter != null) {
       _filter = widget.filter!(_controller as T);
@@ -528,11 +507,17 @@ class BindElement<T> extends InheritedElement {
 
   void dispose() {
     widget.dispose?.call(this);
-    if (_isCreator! || widget.assignId) {
-      if (widget.autoRemove && Fluxy.isRegistered<T>(tag: widget.tag)) {
-        Fluxy.delete<T>(tag: widget.tag);
-      }
+    final owned = _owned;
+    if (owned != null &&
+        owned.removeOwner() &&
+        widget.autoRemove &&
+        identical(owned.scope.local(owned.key), owned)) {
+      owned.delete();
+    } else if (!widget.global && widget.autoRemove) {
+      final local = _controller;
+      if (local is FluxyLifeCycleMixin) local.onDelete();
     }
+    _owned = null;
 
     for (final disposer in disposers) {
       disposer();
@@ -542,12 +527,10 @@ class BindElement<T> extends InheritedElement {
 
     _remove?.call();
     _controller = null;
-    _isCreator = null;
     _remove = null;
     _filter = null;
     _needStart = null;
     _controllerBuilder = null;
-    _controller = null;
   }
 
   @override

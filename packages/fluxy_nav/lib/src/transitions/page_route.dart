@@ -3,37 +3,8 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
-@optionalTypeArgs
-mixin RouteReportMixin<T extends StatefulWidget> on State<T> {
-  @override
-  void initState() {
-    super.initState();
-    RouterReportManager.instance.reportCurrentRoute(this);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    RouterReportManager.instance.reportRouteDispose(this);
-  }
-}
-
-mixin PageRouteReportMixin<T> on Route<T> {
-  @override
-  void install() {
-    super.install();
-    RouterReportManager.instance.reportCurrentRoute(this);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    RouterReportManager.instance.reportRouteDispose(this);
-  }
-}
-
 class FluxyPageRoute<T> extends PageRoute<T>
-    with FluxyPageRouteTransitionMixin<T>, PageRouteReportMixin {
+    with FluxyPageRouteTransitionMixin<T> {
   /// Creates a page route for use in an iOS designed app.
   ///
   /// The [builder], [maintainState], and [fullscreenDialog] arguments must not
@@ -103,31 +74,45 @@ class FluxyPageRoute<T> extends PageRoute<T>
   void dispose() {
     super.dispose();
     _child = null;
+    _scope?.close();
+    _scope = null;
   }
 
   Widget? _child;
 
-  Widget _getChild() {
+  /// The page's scope, when it has bindings: they register in it, and it
+  /// closes (with everything in it) when the route is disposed.
+  FluxyScope? _scope;
+
+  /// The page's own scope, if it has one.
+  FluxyScope? get scope => _scope;
+
+  Widget _getChild(BuildContext context) {
     if (_child != null) return _child!;
-
     final pageToBuild = page!;
-    if (bindings.isNotEmpty) {
-      for (final item in bindings) {
-        final dep = item.dependencies();
-        if (dep is List<Bind>) {
-          _child = Binds(binds: dep, child: pageToBuild());
-        }
-      }
-    } else if (binds != null && binds!.isNotEmpty) {
-      _child = Binds(binds: binds!, child: pageToBuild());
-    }
+    final hasDependencies =
+        bindings.isNotEmpty || (binds != null && binds!.isNotEmpty);
+    if (!hasDependencies) return _child = pageToBuild();
 
-    return _child ??= pageToBuild();
+    final scope = _scope = FluxyScope(
+      name: routeName ?? settings.name,
+      parent: DependencyScope.maybeOf(context),
+    );
+    final built = scope.run(() {
+      final all = <Bind>[...?binds];
+      for (final binding in bindings) {
+        final dependencies = binding.dependencies();
+        if (dependencies is List<Bind>) all.addAll(dependencies);
+      }
+      final child = pageToBuild();
+      return all.isEmpty ? child : Binds(binds: all, child: child);
+    });
+    return _child = ScopeProvider(scope: scope, child: built);
   }
 
   @override
   Widget buildContent(BuildContext context) {
-    return _getChild();
+    return _getChild(context);
   }
 
   @override

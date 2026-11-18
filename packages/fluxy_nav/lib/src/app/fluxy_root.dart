@@ -16,7 +16,6 @@ class ConfigData {
   final VoidCallback? onDispose;
   final bool? enableLog;
   final LogWriterCallback? logWriterCallback;
-  final SmartManagement smartManagement;
   final List<Bind> binds;
   final Duration? transitionDuration;
   final bool? defaultGlobalState;
@@ -65,7 +64,6 @@ class ConfigData {
     required this.onDispose,
     required this.enableLog,
     required this.logWriterCallback,
-    required this.smartManagement,
     required this.binds,
     required this.transitionDuration,
     required this.defaultGlobalState,
@@ -109,7 +107,6 @@ class ConfigData {
     VoidCallback? onDispose,
     bool? enableLog,
     LogWriterCallback? logWriterCallback,
-    SmartManagement? smartManagement,
     List<Bind>? binds,
     Duration? transitionDuration,
     bool? defaultGlobalState,
@@ -152,7 +149,6 @@ class ConfigData {
       onDispose: onDispose ?? this.onDispose,
       enableLog: enableLog ?? this.enableLog,
       logWriterCallback: logWriterCallback ?? this.logWriterCallback,
-      smartManagement: smartManagement ?? this.smartManagement,
       binds: binds ?? this.binds,
       transitionDuration: transitionDuration ?? this.transitionDuration,
       defaultGlobalState: defaultGlobalState ?? this.defaultGlobalState,
@@ -207,7 +203,6 @@ class ConfigData {
         other.onDispose == onDispose &&
         other.enableLog == enableLog &&
         other.logWriterCallback == logWriterCallback &&
-        other.smartManagement == smartManagement &&
         listEquals(other.binds, binds) &&
         other.transitionDuration == transitionDuration &&
         other.defaultGlobalState == defaultGlobalState &&
@@ -253,7 +248,6 @@ class ConfigData {
         onDispose.hashCode ^
         enableLog.hashCode ^
         logWriterCallback.hashCode ^
-        smartManagement.hashCode ^
         binds.hashCode ^
         transitionDuration.hashCode ^
         defaultGlobalState.hashCode ^
@@ -367,9 +361,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     config.onDispose?.call();
     Fluxy.clearTranslations();
     config.snackBarQueue.disposeControllers();
-    RouterReportManager.instance.clearRouteKeys();
-    RouterReportManager.dispose();
-    Fluxy.resetInstance(clearRouteBindings: true);
+    Fluxy.resetInstance();
     _controller = null;
     Engine.instance.removeObserver(this);
   }
@@ -440,7 +432,6 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
       Fluxy.addTranslations(config.translationsKeys!);
     }
 
-    Fluxy.smartManagement = config.smartManagement;
     config.onInit?.call();
 
     Fluxy.isLogEnable = config.enableLog ?? kDebugMode;

@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
-import '../../../get_instance/src/extension_instance.dart';
-import '../../../get_instance/src/lifecycle.dart';
+import '../../../src/di/facade.dart';
+import '../../../src/di/scope.dart';
+import '../../../src/di/lifecycle.dart';
 import '../simple/list_notifier.dart';
 
 typedef FluxyXControllerBuilder<T extends FluxyLifeCycleMixin> = Widget Function(
@@ -58,31 +59,31 @@ class FluxyX<T extends FluxyLifeCycleMixin> extends StatefulWidget {
 
 class FluxyXState<T extends FluxyLifeCycleMixin> extends State<FluxyX<T>> {
   T? controller;
-  bool? _isCreator = false;
+
+  /// The registration this widget owns (created, or shares with other
+  /// widgets); deleted when its last owner goes.
+  DependencyEntry<dynamic>? _owned;
 
   @override
   void initState() {
-    // var isPrepared = Fluxy.isPrepared<T>(tag: widget.tag);
-    final isRegistered = Fluxy.isRegistered<T>(tag: widget.tag);
-
     if (widget.global) {
-      if (isRegistered) {
-        _isCreator = Fluxy.isPrepared<T>(tag: widget.tag);
-        controller = Fluxy.find<T>(tag: widget.tag);
-      } else {
-        controller = widget.init;
-        _isCreator = true;
-        Fluxy.put<T>(controller!, tag: widget.tag);
+      final key = FluxyScope.keyOf(T, widget.tag);
+      var entry = FluxyScope.lookup(key);
+      if (entry == null) {
+        Fluxy.put<T>(widget.init!, tag: widget.tag);
+        entry = FluxyScope.lookup(key)!;
+        _owned = entry..addOwner();
+      } else if (widget.assignId ||
+          entry.widgetOwned ||
+          (entry.kind == DependencyKind.lazy && !entry.isCreated)) {
+        _owned = entry..addOwner();
       }
+      controller = entry.resolve() as T;
     } else {
       controller = widget.init;
-      _isCreator = true;
       controller?.onStart();
     }
     widget.initState?.call(this);
-    if (widget.global && Fluxy.smartManagement == SmartManagement.onlyBuilder) {
-      controller?.onStart();
-    }
 
     super.initState();
   }
@@ -104,11 +105,16 @@ class FluxyXState<T extends FluxyLifeCycleMixin> extends State<FluxyX<T>> {
   @override
   void dispose() {
     if (widget.dispose != null) widget.dispose!(this);
-    if (_isCreator! || widget.assignId) {
-      if (widget.autoRemove && Fluxy.isRegistered<T>(tag: widget.tag)) {
-        Fluxy.delete<T>(tag: widget.tag);
-      }
+    final owned = _owned;
+    if (owned != null &&
+        owned.removeOwner() &&
+        widget.autoRemove &&
+        identical(owned.scope.local(owned.key), owned)) {
+      owned.delete();
+    } else if (!widget.global && widget.autoRemove) {
+      controller?.onDelete();
     }
+    _owned = null;
 
     subscriptions.dispose();
     for (final disposer in disposers) {
@@ -118,7 +124,6 @@ class FluxyXState<T extends FluxyLifeCycleMixin> extends State<FluxyX<T>> {
     disposers.clear();
 
     controller = null;
-    _isCreator = null;
     super.dispose();
   }
 

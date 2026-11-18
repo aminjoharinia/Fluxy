@@ -73,6 +73,10 @@ Widget app({String home = '/'}) => FluxyApp(
     FluxyPage(name: '/plain', page: () => const Scaffold(body: Text('plain'))),
     FluxyPage(name: '/uses', page: () => const UsesCtrl()),
     FluxyPage(
+      name: '/finds',
+      page: () => Scaffold(body: Text('n ${Fluxy.find<Counter>().n}')),
+    ),
+    FluxyPage(
       name: '/bound',
       binding: PageBinding(),
       page: () => Scaffold(body: Text('bound ${Fluxy.find<PageCtrl>().closes}')),
@@ -152,7 +156,7 @@ void main() {
       await t.pumpAndSettle();
       expect(c.isClosed, isFalse);
       expect(Fluxy.find<Counter>(), same(c));
-    }, skip: true); // B1
+    });
 
     testWidgets('first used inside a dialog', (t) async {
       await t.pumpWidget(app(home: '/plain'));
@@ -164,7 +168,7 @@ void main() {
       await t.pumpAndSettle();
       expect(c.isClosed, isFalse);
       expect(c.workerDisposed, isFalse);
-    }, skip: true); // B1
+    });
 
     testWidgets('first used on the root page, then offAllNamed', (t) async {
       await t.pumpWidget(app());
@@ -179,21 +183,21 @@ void main() {
       ctrl.count.value++;
       await t.pump();
       expect(find.text('count 1'), findsOneWidget);
-    }, skip: true); // B1
+    });
   });
 
   testWidgets('B7: a lazyPut found on a page stays registered', (t) async {
     Fluxy.lazyPut(() => Counter(3));
     await t.pumpWidget(app(home: '/plain'));
     await t.pumpAndSettle();
-    Fluxy.toNamed('/uses');
+    Fluxy.toNamed('/finds');
     await t.pumpAndSettle();
-    Fluxy.find<Counter>();
+    expect(find.text('n 3'), findsOneWidget);
     Fluxy.back();
     await t.pumpAndSettle();
     expect(Fluxy.isRegistered<Counter>(), isTrue);
     expect(Fluxy.find<Counter>().n, 3);
-  }, skip: true); // B7
+  });
 
   testWidgets('B6: a shared FluxyBuilder controller stays while one shows it', (
     t,
@@ -224,5 +228,5 @@ void main() {
     await t.pump();
     expect(c.isClosed, isFalse);
     expect(Fluxy.isRegistered<Counter>(), isTrue);
-  }, skip: true); // B6
+  });
 }

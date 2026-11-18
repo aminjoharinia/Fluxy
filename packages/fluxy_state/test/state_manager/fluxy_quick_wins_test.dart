@@ -287,7 +287,7 @@ void main() {
       expect(identical(a, b), isTrue);
       expect(built, 1);
       expect(a.initialized, isTrue);
-      expect(() => Fluxy.find<_Listener>(), throwsA(contains('not found')));
+      expect(() => Fluxy.find<_Listener>(), throwsA(isA<DependencyNotFound>()));
       expect(Fluxy.findOrNull<_Listener>(), isNull);
       expect(Fluxy.findOrNull<_Controller>(), same(a));
     });
