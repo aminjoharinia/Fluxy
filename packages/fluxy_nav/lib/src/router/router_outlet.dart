@@ -71,6 +71,9 @@ class _FluxyRouterOutletState extends State<FluxyRouterOutlet> {
   @override
   void didUpdateWidget(FluxyRouterOutlet oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.navigatorKey != widget.navigatorKey) {
+      _delegate?.detachOutlet(oldWidget.navigatorKey ?? _ownKey!);
+    }
     _listen();
   }
 
@@ -78,14 +81,23 @@ class _FluxyRouterOutletState extends State<FluxyRouterOutlet> {
     final delegate = widget.delegate ??
         (Router.maybeOf(context)?.routerDelegate as FluxyDelegate?) ??
         Fluxy.rootController.rootDelegate;
-    if (identical(delegate, _delegate)) return;
-    _delegate?.removeListener(_changed);
-    _delegate = delegate..addListener(_changed);
+    if (identical(delegate, _delegate)) {
+      delegate.attachOutlet(_key);
+      return;
+    }
+    _delegate
+      ?..removeListener(_changed)
+      ..detachOutlet(_key);
+    _delegate = delegate
+      ..addListener(_changed)
+      ..attachOutlet(_key);
   }
 
   @override
   void dispose() {
-    _delegate?.removeListener(_changed);
+    _delegate
+      ?..removeListener(_changed)
+      ..detachOutlet(_key);
     super.dispose();
   }
 

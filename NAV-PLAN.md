@@ -145,7 +145,6 @@ String? appRedirect(NavRequest request) => request.isUnknown || request.path == 
 
 ## Deferred
 
-- `IGetNavigation` (the delegate's navigation interface) keeps its GetX name; `tool/renames.txt` / `lib/fix_data.yaml` still map `GetMiddleware` to the removed `FluxyMiddleware` (a GetX app moving to Fluxy now needs redirects by hand).
-- Browser back / forward goes through `setNewRoutePath`, so it reorders the stack (like before) instead of popping; the router could keep history positions in `RouteInformation.state`.
-- The system back button pops the root stack only; a dialog opened on an outlet's navigator isn't closed by it first.
-- `routingCallback` hears every stack change and overlay change; it no longer gets the observer's per-route events.
+Done after the v1.2.0 review (2026-11-18, unreleased; see FLUXY.md): `IGetNavigation` is `FluxyNavigation` and the stale `GetMiddleware` mapping is gone; browser back / forward goes back to an address already on the stack instead of reordering (by address, not by `RouteInformation.state`); system back closes a dialog on an outlet's navigator first.
+
+Still open: `routingCallback` hears every stack change and overlay change, not the observer's per-route events. Browser history is matched by address, so two history entries with the same address can't be told apart.

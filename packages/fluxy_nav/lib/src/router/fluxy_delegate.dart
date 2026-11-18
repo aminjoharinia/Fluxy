@@ -23,7 +23,7 @@ class FluxyDelegate extends RouterDelegate<Uri>
     with
         ChangeNotifier,
         PopNavigatorRouterDelegateMixin<Uri>,
-        IGetNavigation {
+        FluxyNavigation {
   factory FluxyDelegate.createDelegate({
     FluxyPage<dynamic>? notFoundRoute,
     List<FluxyPage> pages = const [],
@@ -572,32 +572,79 @@ class FluxyDelegate extends RouterDelegate<Uri>
   Uri? get currentConfiguration => _stack.top?.match.uri;
 
   /// Opens [configuration] (the first address, or one the platform asks
-  /// for: a typed URL, browser back / forward), through the redirects.
+  /// for: a typed URL, a deep link, browser back / forward), through the
+  /// redirects.
+  ///
+  /// An address already on the stack is gone back to: the entries above it
+  /// leave (their futures complete with null) and its page keeps its state,
+  /// so browser back pops instead of reordering the history. Other
+  /// addresses are pushed.
   @override
   Future<void> setNewRoutePath(Uri configuration) {
     final result = _navigate(
       () => _resolve<dynamic>(configuration.toString()),
       (stack, entry) => stack.add(
         entry,
-        mode: entry.page.preventDuplicateHandlingMode,
+        mode: PreventDuplicateHandlingMode.popUntilOriginalRoute,
       ),
     );
     if (result is Future<NavEntry?>) return result;
     return SynchronousFuture<void>(null);
   }
 
-  /// Closes the dialog or sheet on top, if there is one.
-  Future<bool> handlePopupRoutes({Object? result}) async {
-    final nav = navigatorKey.currentState;
-    if (nav == null || topRoute is! PopupRoute) return false;
-    return nav.maybePop(result);
+  // ---------------------------------------------------------------------
+  // Popups (dialogs, sheets)
+
+  /// The navigators of the mounted [FluxyRouterOutlet]s, outer first.
+  final _outletNavigators = <GlobalKey<NavigatorState>>[];
+
+  /// Called by a [FluxyRouterOutlet], so that back closes a dialog opened
+  /// on its navigator (`useRootNavigator: false`) before a page.
+  void attachOutlet(GlobalKey<NavigatorState> key) {
+    if (!_outletNavigators.contains(key)) _outletNavigators.add(key);
   }
 
+  void detachOutlet(GlobalKey<NavigatorState> key) =>
+      _outletNavigators.remove(key);
+
+  static Route<dynamic>? _topOf(NavigatorState navigator) {
+    Route<dynamic>? top;
+    navigator.popUntil((route) {
+      top = route;
+      return true;
+    });
+    return top;
+  }
+
+  /// The navigator with the dialog or sheet back closes first: the root
+  /// navigator's, then the innermost outlet's. Null when none is open.
+  NavigatorState? get popupNavigator {
+    final root = navigatorKey.currentState;
+    if (root != null && topRoute is PopupRoute) return root;
+    for (final key in _outletNavigators.reversed) {
+      final navigator = key.currentState;
+      if (navigator != null && _topOf(navigator) is PopupRoute) {
+        return navigator;
+      }
+    }
+    return null;
+  }
+
+  /// Asks the dialog or sheet on top to close ([NavigatorState.maybePop],
+  /// so a `PopScope` can refuse). True when there was one, even if it
+  /// refused: the page under it stays.
+  Future<bool> handlePopupRoutes({Object? result}) async {
+    final navigator = popupNavigator;
+    if (navigator == null) return false;
+    await navigator.maybePop(result);
+    return true;
+  }
+
+  /// The system back button: closes a dialog or sheet, then pops a page
+  /// per [backButtonPopMode]. False (the app may close) on the last page.
   @override
   Future<bool> popRoute({Object? result, PopMode? popMode}) async {
-    //Returning false will cause the entire app to be popped.
-    final wasPopup = await handlePopupRoutes(result: result);
-    if (wasPopup) return true;
+    if (await handlePopupRoutes(result: result)) return true;
 
     final mode = popMode ?? backButtonPopMode;
     if (_canPop(mode)) {

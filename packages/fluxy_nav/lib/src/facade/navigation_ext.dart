@@ -287,7 +287,8 @@ extension FluxyNavigationExt on FluxyInterface {
     final delegate = searchDelegate(id);
     final nav = delegate.navigatorKey.currentState;
     if (times == 1) {
-      if (delegate.topRoute is PopupRoute) return nav!.pop<T>(result);
+      final popup = delegate.popupNavigator;
+      if (popup != null) return popup.pop<T>(result);
       if (delegate.canBack) return delegate.back<T>(result);
       // A route pushed on the navigator directly (Navigator.push).
       if (nav?.canPop() == true) return nav!.pop<T>(result);

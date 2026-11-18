@@ -307,14 +307,6 @@ transforms:
     changes:
       - kind: rename
         newName: 'FluxyRouteAwarePageBuilder'
-  - title: "Rename to 'FluxyMiddleware'"
-    date: 2026-11-17
-    element:
-      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
-      typedef: 'GetMiddleware'
-    changes:
-      - kind: rename
-        newName: 'FluxyMiddleware'
   - title: "Rename to 'FluxyDelegate'"
     date: 2026-11-17
     element:
@@ -323,6 +315,14 @@ transforms:
     changes:
       - kind: rename
         newName: 'FluxyDelegate'
+  - title: "Rename to 'FluxyNavigation'"
+    date: 2026-11-18
+    element:
+      uris: ['package:fluxy/fluxy.dart', 'package:fluxy/state_manager.dart', 'package:fluxy/instance_manager.dart', 'package:fluxy/route_manager.dart', 'package:fluxy/utils.dart', 'package:fluxy_core/fluxy_core.dart', 'package:fluxy_state/fluxy_state.dart', 'package:fluxy_utils/fluxy_utils.dart', 'package:fluxy_ui/fluxy_ui.dart', 'package:fluxy_nav/fluxy_nav.dart', 'package:fluxy_i18n/fluxy_i18n.dart']
+      mixin: 'IGetNavigation'
+    changes:
+      - kind: rename
+        newName: 'FluxyNavigation'
   - title: "Rename to 'FluxyInformationParser'"
     date: 2026-11-17
     element:

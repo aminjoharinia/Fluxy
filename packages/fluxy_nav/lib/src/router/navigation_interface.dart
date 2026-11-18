@@ -47,7 +47,7 @@ enum PreventDuplicateHandlingMode {
   recreate,
 }
 
-mixin IGetNavigation {
+mixin FluxyNavigation {
   Future<T?> to<T>(
     Widget Function() page, {
     bool? opaque,

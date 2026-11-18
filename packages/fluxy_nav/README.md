@@ -17,13 +17,15 @@ FluxyApp.router(
 );
 
 Fluxy.toNamed('/item/42?tab=2');   // Fluxy.parameters == {'id': '42', 'tab': '2'}
-Fluxy.to(() => const Detail());    // a page outside the table, at /Detail
+Fluxy.to(() => const Detail());    // a page outside the table, at /Detail (pass routeName: for a stable URL)
 final ok = await Fluxy.toNamed<bool>('/settings'); // Fluxy.back(result: true)
 ```
 
 - Segments match by priority, whatever the order the pages are listed in: static (`/settings`) before `:param` before `*wildcard`. `:name?` is optional. A trailing slash doesn't matter, case does.
 - The history is an immutable `NavStack` (`Fluxy.rootController.rootDelegate.stack`). Navigations run one at a time in call order; with nothing pending, the stack changes before the call returns.
 - A page's future completes when it leaves the stack, with the value it was popped with (`Fluxy.back(result:)`, `Navigator.pop(context, value)`, the back gesture); otherwise null.
+- An unknown address opens `unknownRoute` but keeps its address (URL, `Fluxy.currentRoute`, query in `Fluxy.parameters`).
+- Browser back / forward and deep links: an address already on the stack is gone back to (the entries above it leave); a new one is pushed.
 - Same address twice: by default the old entry moves to the top (`preventDuplicateHandlingMode` on the page: `reorderRoutes`, `recreate`, `popUntilOriginalRoute`, `doNothing`; `preventDuplicates: false` pushes a second one).
 
 ## Redirects
@@ -64,7 +66,7 @@ The outlet shows the pages of the current address below `parent` (all levels, or
 
 ## Overlays
 
-`Fluxy.dialog`, `defaultDialog`, `generalDialog`, `bottomSheet`, `snackbar` / `rawSnackbar`, `showOverlay`. `Fluxy.back()` closes a snackbar, then a dialog or sheet, then the page; the last page stays. `Fluxy.isDialogOpen` / `isBottomSheetOpen` count the open ones on any navigator; `closeAllDialogs` / `closeAllBottomSheets` only pop those.
+`Fluxy.dialog`, `defaultDialog`, `generalDialog`, `bottomSheet`, `snackbar` / `rawSnackbar`, `showOverlay`. `Fluxy.back()` and the system back button close a snackbar, then a dialog or sheet (on the root navigator, then on an outlet's), then the page; the last page stays. `back(times: n)` counts each dialog or sheet as a step. `Fluxy.isDialogOpen` / `isBottomSheetOpen` count the open ones on any navigator; `closeAllDialogs` / `closeAllBottomSheets` only pop those.
 
 ## Tests
 

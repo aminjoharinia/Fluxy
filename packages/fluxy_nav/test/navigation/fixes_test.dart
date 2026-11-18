@@ -240,4 +240,101 @@ void main() {
       expect(locations(), ['/', '/Detail']);
     });
   });
+  group('deferred items', () {
+    testWidgets('an address on the stack is gone back to (browser back)', (
+      t,
+    ) async {
+      await t.pumpWidget(app());
+      await t.pumpAndSettle();
+      final one = Fluxy.toNamed('/item/1');
+      await t.pumpAndSettle();
+      final two = Fluxy.toNamed('/item/2');
+      await t.pumpAndSettle();
+      final delegate = Fluxy.rootController.rootDelegate;
+      final kept = delegate.stack.entries[1].key;
+      await delegate.setNewRoutePath(Uri.parse('/item/1'));
+      await t.pumpAndSettle();
+      expect(locations(), ['/', '/item/1']);
+      expect(delegate.stack.top!.key, kept);
+      expect(await two, isNull);
+      // Forward: a new address is pushed.
+      await delegate.setNewRoutePath(Uri.parse('/item/2'));
+      await t.pumpAndSettle();
+      expect(locations(), ['/', '/item/1', '/item/2']);
+      one?.ignore();
+    });
+
+    testWidgets('system back closes a dialog on an outlet navigator first', (
+      t,
+    ) async {
+      await t.pumpWidget(
+        FluxyApp(
+          getPages: [
+            FluxyPage(
+              name: '/',
+              page: () => const Scaffold(body: Text('root')),
+            ),
+            FluxyPage(
+              name: '/shell',
+              participatesInRootNavigator: true,
+              page: () => const Scaffold(
+                body: FluxyRouterOutlet(parent: '/shell'),
+              ),
+              children: [
+                FluxyPage(
+                  name: '/tab',
+                  participatesInRootNavigator: false,
+                  page: () => Scaffold(
+                    body: Builder(
+                      builder: (context) => TextButton(
+                        onPressed: () => showDialog<void>(
+                          context: context,
+                          useRootNavigator: false,
+                          builder: (_) => const Text('inner dialog'),
+                        ),
+                        child: const Text('open'),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      await t.pumpAndSettle();
+      Fluxy.toNamed('/shell/tab');
+      await t.pumpAndSettle();
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+      expect(find.text('inner dialog'), findsOneWidget);
+      final delegate = Fluxy.rootController.rootDelegate;
+      expect(await delegate.popRoute(), isTrue);
+      await t.pumpAndSettle();
+      expect(find.text('inner dialog'), findsNothing);
+      expect(locations(), ['/', '/shell/tab']);
+      // Fluxy.back too.
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+      Fluxy.back();
+      await t.pumpAndSettle();
+      expect(find.text('inner dialog'), findsNothing);
+      expect(locations(), ['/', '/shell/tab']);
+    });
+
+    testWidgets('a dialog that refuses to close keeps the page under it', (
+      t,
+    ) async {
+      await t.pumpWidget(app());
+      await t.pumpAndSettle();
+      Fluxy.toNamed('/item/1');
+      await t.pumpAndSettle();
+      Fluxy.dialog(const PopScope(canPop: false, child: Text('stay')));
+      await t.pumpAndSettle();
+      expect(await Fluxy.rootController.rootDelegate.popRoute(), isTrue);
+      await t.pumpAndSettle();
+      expect(find.text('stay'), findsOneWidget);
+      expect(locations(), ['/', '/item/1']);
+    });
+  });
 }

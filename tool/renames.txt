@@ -59,8 +59,9 @@ GetCupertinoApp FluxyCupertinoApp
 GetPage FluxyPage
 GetPageBuilder FluxyPageBuilder
 GetRouteAwarePageBuilder FluxyRouteAwarePageBuilder
-GetMiddleware FluxyMiddleware
+# GetMiddleware has no rename: FluxyMiddleware was removed in v1.2.0; use FluxyPage(redirect:)
 GetDelegate FluxyDelegate
+IGetNavigation FluxyNavigation
 GetInformationParser FluxyInformationParser
 GetNavigator FluxyNavigator
 GetObserver FluxyObserver
