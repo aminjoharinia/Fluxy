@@ -14,6 +14,11 @@ Apps:
 
 5. **No public "notify without a value change" on `RxList` / `RxMap`** (Hesabak, 2 sites kept with `// ignore: invalid_use_of_protected_member`). `WarehouseService` refreshes `productsList` after a warehouse transfer because product cards and pickers show warehouse balances, which are computed from `warehouseTransfers`. `trigger` and `update(fn)` exist only on `Rx<T>`, and on `RxMap`, `update` is the `Map` method. BOOFI never needed this. **Options:** keep it protected and recommend reading both collections in the view (or in a `Computed` over both); or add an explicit, rarely needed `markChanged()` to collections. Decide when a second app needs it.
 
+### i18n
+
+16. **Hesabak's English template lookup is lost on Fluxy** (found 2026-11-19 while planning [I18N-PLAN.md](I18N-PLAN.md), B1). `EnglishTranslations` is a `MapBase` that also answers interpolated lines through `{0}` templates; `addTranslations` copies it with `Map.of`, so only the exact keys survive and interpolated lines stay Persian in English. GetX 4 kept the map object. **Fix:** I18N-PLAN phase 1 (dictionaries stored as given).
+17. **All three apps use a made-up `Locale('persian', 'US')`** so Flutter keeps the root left-to-right, then set direction per widget and keep their own `isEnglish` / direction getters. **Plan:** I18N-PLAN items 4-5 (direction policy, Material locale warning); each app then moves to `fa_IR`.
+
 ### For the apps
 
 13. **The secure storage packages depended on GetX itself** (Hesabak and NestCut). `get_secure_storage` 1.0.5 (NestCut) and `orca_secure_storage` up to v2.4.2 (our fork, Hesabak) depend on `get`, so Hesabak on Fluxy still resolves `get` and ships two state managers. **Fixed in Orca v2.5.0**, which no longer depends on `get` and keeps the 2.4.x file format (only `listenable`'s `ValueStorage` and the `queue` type changed; neither app uses them). **Apps:** Hesabak moves its pin from v2.4.2 to v2.5.0; NestCut switches from `get_secure_storage` to Orca v2.5.0 when it moves to Fluxy (Orca reads get_secure_storage 1.x files). After that, `get` should drop out of both lockfiles; check with `grep '^  get:' pubspec.lock`.
