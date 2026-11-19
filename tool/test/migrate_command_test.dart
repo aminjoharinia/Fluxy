@@ -156,7 +156,7 @@ void f() {
     );
   });
 
-  test('the shipped renames.txt lower-cases GetX 4 enum values (APP-NOTES 20)',
+  test('the shipped renames.txt lower-cases GetX 4 enum values',
       () async {
     write('lib/s.dart', '''
 void f() {
@@ -179,7 +179,7 @@ void f() {
     expect(out, contains('MySnackPosition.BOTTOM'));
   });
 
-  group('clean-ups (APP-NOTES 1, 3, 4, 12)', () {
+  group('clean-ups', () {
     const app = '''
 import 'package:get/get.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';

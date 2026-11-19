@@ -1,4 +1,4 @@
-// The BOOFI app's main.dart routing set-up from v1.2.0: one FluxyApp.router
+// A real app's main.dart routing set-up from v1.2.0: one FluxyApp.router
 // with `redirect:` instead of its own delegate, a parser subclass, an
 // UnknownRoute page redirecting after a frame and a hand-wired observer.
 import 'package:flutter_test/flutter_test.dart';
@@ -30,7 +30,7 @@ List<FluxyPage> appPages() => [
   ),
 ];
 
-Widget boofiApp({String? opened}) => FluxyApp.router(
+Widget realApp({String? opened}) => FluxyApp.router(
   getPages: appPages(),
   redirect: (r) => r.isUnknown || r.path == '/' ? startRoute() : null,
   routeInformationProvider: opened == null
@@ -47,7 +47,7 @@ void main() {
   });
 
   testWidgets('signed out: opens on /Landing', (t) async {
-    await t.pumpWidget(boofiApp());
+    await t.pumpWidget(realApp());
     await t.pumpAndSettle();
     expect(find.text('landing'), findsOneWidget);
     expect(stackNames(), ['/Landing']);
@@ -55,28 +55,28 @@ void main() {
 
   testWidgets('signed in: opens on /Home', (t) async {
     signedIn = true;
-    await t.pumpWidget(boofiApp());
+    await t.pumpWidget(realApp());
     await t.pumpAndSettle();
     expect(find.text('home'), findsOneWidget);
   });
 
   testWidgets('opened at an unknown address: the start route', (t) async {
     signedIn = true;
-    await t.pumpWidget(boofiApp(opened: '/old-bookmark'));
+    await t.pumpWidget(realApp(opened: '/old-bookmark'));
     await t.pumpAndSettle();
     expect(find.text('home'), findsOneWidget);
     expect(Fluxy.currentRoute, '/Home');
   });
 
   testWidgets('opened at a page: that page', (t) async {
-    await t.pumpWidget(boofiApp(opened: '/Manage'));
+    await t.pumpWidget(realApp(opened: '/Manage'));
     await t.pumpAndSettle();
     expect(find.text('manage'), findsOneWidget);
   });
 
   testWidgets('an unknown address later goes to the start route', (t) async {
     signedIn = true;
-    await t.pumpWidget(boofiApp());
+    await t.pumpWidget(realApp());
     await t.pumpAndSettle();
     Fluxy.toNamed('/typo');
     await t.pumpAndSettle();
@@ -85,7 +85,7 @@ void main() {
   });
 
   testWidgets('dialogs and pages, no observer', (t) async {
-    await t.pumpWidget(boofiApp());
+    await t.pumpWidget(realApp());
     await t.pumpAndSettle();
     Fluxy.toNamed('/Manage');
     await t.pumpAndSettle();
@@ -102,7 +102,7 @@ void main() {
   });
 
   testWidgets('sign-in then offAll to the home page', (t) async {
-    await t.pumpWidget(boofiApp());
+    await t.pumpWidget(realApp());
     await t.pumpAndSettle();
     signedIn = true;
     Fluxy.offAllNamed(startRoute());

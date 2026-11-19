@@ -1,4 +1,4 @@
-// I18N-PLAN phase 0: the language switch and app wiring the apps rely on,
+// The language switch and app wiring the apps rely on,
 // and the bugs that need an app (B3, B10, B12, D2), fixed in phases 1 and 3.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';
@@ -89,7 +89,7 @@ void main() {
       expect(find.text('سلام'), findsOneWidget);
     });
 
-    testWidgets('NestCut: the whole app in an Obx, passing a new locale',
+    testWidgets('the whole app in an Obx, passing a new locale',
         (tester) async {
       final persian = false.obs;
       await tester.pumpWidget(Obx(() => FluxyApp(
@@ -105,7 +105,7 @@ void main() {
       expect(find.text('سلام'), findsOneWidget);
     });
 
-    testWidgets('NestCut: translations and locale set before runApp',
+    testWidgets('translations and locale set before runApp',
         (tester) async {
       Fluxy.addTranslations(_Messages().keys);
       Fluxy.fallbackLocale = _persian;

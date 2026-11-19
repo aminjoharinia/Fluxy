@@ -57,7 +57,7 @@ void main() {
     expect(Fluxy.isRegistered<Controller>(), false);
   });
 
-  // APP-NOTES 11: apps put controllers in main() before runApp; an app widget
+  // Apps put controllers in main() before runApp; an app widget
   // unmounted and mounted again must find them open.
   group('disposing FluxyApp', () {
     testWidgets('keeps root dependencies and translations', (tester) async {

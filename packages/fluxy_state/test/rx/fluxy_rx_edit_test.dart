@@ -124,7 +124,7 @@ void main() {
       expect(map['tags'], isEmpty);
     });
 
-    // APP-NOTES 6: Hesabak's group maps are `{}.obs` (RxMap<dynamic, dynamic>).
+    // Apps' maps are often `{}.obs` (RxMap<dynamic, dynamic>).
     test('RxMap entry edits work on untyped and non-String keys', () {
       final untyped = {}.obs;
       untyped['g1'] = {'name': 'A'};

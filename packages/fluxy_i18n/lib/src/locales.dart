@@ -171,8 +171,8 @@ extension LocalesIntl on FluxyInterface {
   /// with the key and the current locale. Runs during a build: log or
   /// collect, don't change state. `FluxyApp(onMissingTranslation:)` sets it.
   ///
-  /// An app whose keys are the text of one language (Hesabak: Persian text
-  /// as the key) can ignore that locale:
+  /// An app whose keys are the text of one language (Persian text as
+  /// the key) can ignore that locale:
   /// `(key, locale) { if (locale?.languageCode != 'persian') log(key); }`.
   void Function(String key, Locale? locale)? get onMissingTranslation =>
       _host.onMissing;

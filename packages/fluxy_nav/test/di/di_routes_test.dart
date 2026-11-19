@@ -1,5 +1,4 @@
-// Dependencies and routes (DI-PLAN.md phase 0): what the BOOFI app relies
-// on, and the route-linked bugs B1, B6, B7, skipped until fixed.
+// Dependencies and routes: what apps rely on, and the route-linked bugs B1, B6, B7, skipped until fixed.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
@@ -42,7 +41,7 @@ class PageCtrl extends FluxyController {
   }
 }
 
-// The BOOFI pattern: `final CTRL = Fluxy.put(Controller());` at the top
+// A common app pattern: `final CTRL = Fluxy.put(Controller());` at the top
 // level, created on first access.
 Counter? _global;
 Counter get ctrl => _global ??= Fluxy.put<Counter>(Counter());

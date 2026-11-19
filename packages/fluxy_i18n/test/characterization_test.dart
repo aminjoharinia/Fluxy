@@ -1,4 +1,4 @@
-// I18N-PLAN phase 0: what BOOFI, Hesabak and NestCut rely on, and the bugs
+// What apps moved from GetX rely on, and the bugs
 // B1-B12 (the ones that need no widgets live here; the rest are in
 // fluxy_nav/test/internationalization/characterization_test.dart).
 // The bug tests were skipped until their phase fixed them.
@@ -13,7 +13,7 @@ import 'package:fluxy_state/fluxy_state.dart';
 const _persian = Locale('persian', 'US');
 const _english = Locale('en', 'US');
 
-/// Hesabak's shape: Persian text is the key; the English dictionary is a
+/// Persian text is the key; the English dictionary is a
 /// `MapBase` that also answers lines built from a template (`'مانده: {0}'`).
 class _TemplateDictionary extends MapBase<String, String> {
   final Map<String, String> _exact = const {'مانده': 'Balance'};
@@ -48,7 +48,7 @@ void main() {
   });
 
   group('what the apps rely on', () {
-    test('BOOFI / NestCut: persian_US and en_US, persian_US as fallback', () {
+    test('persian_US and en_US, persian_US as fallback', () {
       Fluxy.addTranslations(const {
         'en_US': {'save': 'Save', 'only_en': 'English only'},
         'persian_US': {'save': 'ذخیره', 'only_fa': 'فقط فارسی'},
@@ -62,7 +62,7 @@ void main() {
       expect('only_en'.tr, 'only_en'); // not in persian: the key
     });
 
-    test('Hesabak: Persian text as the key comes back unchanged in Persian',
+    test('Persian text as the key comes back unchanged in Persian',
         () {
       Fluxy.addTranslations(const {
         'en_US': {'مانده': 'Balance'},
@@ -76,7 +76,7 @@ void main() {
       expect('مانده'.tr, 'Balance');
     });
 
-    test('NestCut / BOOFI: @name placeholders, values inserted as given', () {
+    test('@name placeholders, values inserted as given', () {
       Fluxy.addTranslations(const {
         'en_US': {'grace': '@days days left', 'until': 'Valid until @date'},
         'persian_US': {'grace': '@days روز مانده'},
@@ -87,7 +87,7 @@ void main() {
       expect('until'.trParams({'date': '2026/11/19'}), 'Valid until 2026/11/19');
     });
 
-    test('NestCut: dictionaries and locale set in main() before any app', () {
+    test('dictionaries and locale set in main() before any app', () {
       Fluxy.addTranslations(const {
         'en_US': {'mm': 'mm'},
         'persian_US': {'mm': 'میلی‌متر'},

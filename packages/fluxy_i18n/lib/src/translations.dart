@@ -1,6 +1,5 @@
 /// Language codes usually written right-to-left. Data for an app's own
-/// `FluxyApp(directionFor:)`; Fluxy never applies it by itself (I18N-PLAN
-/// D2).
+/// `FluxyApp(directionFor:)`; Fluxy never applies it by itself.
 const List<String> rtlLanguages = <String>[
   'ar', // Arabic
   'fa', // Farsi

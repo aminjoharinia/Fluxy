@@ -1,4 +1,4 @@
-// Registry bugs from DI-PLAN.md (B2-B5, B8), skipped until fixed.
+// Registry bugs (B2-B5, B8), skipped until fixed.
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';

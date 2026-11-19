@@ -5,7 +5,7 @@ import 'plural.dart';
 extension Trans on String {
   /// The translation of this key in the current locale, falling back to
   /// other dictionaries of the same language, then to the fallback locale,
-  /// then to the key itself (the order is in `I18N-PLAN.md` / the README).
+  /// then to the key itself (the order is in the README).
   ///
   /// Inside an `Obx`, the `Obx` rebuilds when the locale or the dictionaries
   /// change.

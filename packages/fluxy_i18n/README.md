@@ -2,7 +2,7 @@
 
 Translations for Fluxy apps: dictionaries, the app's locale, `'key'.tr` (reactive inside `Obx`), placeholders, plurals, native digits and the text-direction rule. `Fluxy.updateLocale` and the `FluxyApp` wiring live in fluxy_nav, since they rebuild the app.
 
-Depends on: fluxy_core, fluxy_state (for reactive `.tr`). Rebuilt in v1.7.0; the design and the bugs it fixed are in [I18N-PLAN.md](../../I18N-PLAN.md).
+Depends on: fluxy_core, fluxy_state (for reactive `.tr`). Rebuilt in v1.7.0.
 
 ## Setting up
 
@@ -40,7 +40,7 @@ Dictionary keys are `lang`, `lang_COUNTRY`, `lang_Script` or `lang_Script_COUNTR
 
 and returns the key itself when none has it. The order is worked out once per change of locale or dictionaries, not on every `.tr`.
 
-**Dictionaries are kept as given, never copied.** A custom `Map` works: `.tr` only calls its `[]`, so a map that answers keys it doesn't list (templates, a database, a cache) keeps answering. Hesabak's English dictionary answers `'مانده: ۱۲۰'` from the template `'مانده: {0}'`:
+**Dictionaries are kept as given, never copied.** A custom `Map` works: `.tr` only calls its `[]`, so a map that answers keys it doesn't list (templates, a database, a cache) keeps answering. Here an English dictionary answers `'مانده: ۱۲۰'` from the template `'مانده: {0}'`:
 
 ```dart
 class EnglishTranslations extends MapBase<String, String> {

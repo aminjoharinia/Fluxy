@@ -3,7 +3,7 @@ import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 import 'package:material_ui/material_ui.dart';
 
-// APP-NOTES 2 and 10: Fluxy.backToFirst() and the nullable Fluxy.navigator.
+// Fluxy.backToFirst() and the nullable Fluxy.navigator.
 void main() {
   testWidgets('backToFirst closes dialogs and sheets, then pops to the first page',
       (tester) async {

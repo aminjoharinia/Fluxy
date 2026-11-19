@@ -86,7 +86,7 @@ void main() {
     expect(Theme.of(ctx).brightness, Brightness.dark);
   });
 
-  // APP-NOTES 14 (NestCut builds its app inside an Obx on its language).
+  // An app may build its FluxyApp inside an Obx on its language.
   group('a rebuilt FluxyApp takes a new locale', () {
     const tr = {
       'en_US': {'hi': 'Hello'},
@@ -133,8 +133,8 @@ void main() {
     });
   });
 
-  // APP-NOTES 15 (Hesabak's boot applies the saved dark mode before
-  // FluxyApp is built; GetX 4 kept it, Fluxy threw).
+  // An app's boot may apply the saved dark mode before FluxyApp is
+  // built; GetX 4 kept it, Fluxy threw).
   group('theme changes before FluxyApp is mounted', () {
     tearDown(Fluxy.reset);
     late BuildContext ctx;

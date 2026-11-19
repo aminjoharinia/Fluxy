@@ -1,5 +1,4 @@
-// Behaviour the BOOFI app relies on, pinned before the router is rebuilt
-// (NAV-PLAN.md phase 0). These must stay green through every phase.
+// Behaviour apps rely on, pinned before the router was rebuilt. These must stay green through every phase.
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';

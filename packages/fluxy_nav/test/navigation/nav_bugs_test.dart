@@ -1,4 +1,4 @@
-// The bugs B1-B7 from NAV-PLAN.md, confirmed on v1.0.0. Each test is skipped
+// The bugs B1-B7 in the old router, confirmed on v1.0.0. Each test is skipped
 // until the phase that fixes it.
 import 'dart:async';
 

@@ -21,7 +21,7 @@ void main() {
 
   // An app that imports package:fluxy next to another library naming
   // VoidCallback (here dart:ui itself) must compile: Fluxy uses dart:ui's
-  // typedef and declares none of its own (APP-NOTES 8).
+  // typedef and declares none of its own.
   test('VoidCallback is dart:ui\'s, so it never clashes', () {
     var calls = 0;
     void run(VoidCallback fn) => fn();

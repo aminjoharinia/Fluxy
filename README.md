@@ -132,7 +132,7 @@ Since v1.7.0 a language never turns the app right-to-left by itself (GetX flippe
 
 ### Moving an app that uses flutter/material
 
-Fluxy is built on `material_ui` / `cupertino_ui`, so `FluxyApp(theme:, themeMode:)` take their types, and an app importing `package:flutter/material.dart` gets `ThemeData` / `ThemeMode` type errors. Moving Hesabak took these steps:
+Fluxy is built on `material_ui` / `cupertino_ui`, so `FluxyApp(theme:, themeMode:)` take their types, and an app importing `package:flutter/material.dart` gets `ThemeData` / `ThemeMode` type errors. Moving an app took these steps:
 
 1. Add `material_ui` and `cupertino_ui` to `pubspec.yaml`, and rewrite the imports: `dart run tool/migrate.dart <app> --material-ui` turns `package:flutter/material.dart` into `package:material_ui/material_ui.dart` and `flutter/cupertino` into `cupertino_ui`.
 2. Packages still on `flutter/material` (date pickers, `printing`, `intl_phone_field`, `flutter_slidable` …) read `flutter/material`'s `Theme`. Wrap the app in `MaterialUiCompatibilityBridge` (deprecated, but the official bridge) in `FluxyApp(builder:)`, so they get the app's colours and fonts, dark mode included:

@@ -1,4 +1,4 @@
-// I18N-PLAN phase 3: the app's direction rule, the locale handed to the
+// The app's direction rule, the locale handed to the
 // Material / Cupertino app, the language switch without a hot reload, the
 // supportedLocales warning.
 import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoPageScaffold;

@@ -1,4 +1,4 @@
-// FluxyScope, Dep handles and overrides (DI-PLAN.md phases 1-4).
+// FluxyScope, Dep handles and overrides.
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';

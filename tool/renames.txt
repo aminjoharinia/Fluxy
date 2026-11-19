@@ -83,7 +83,7 @@ GetNavigationExt FluxyNavigationExt
 GetResetExt FluxyResetExt
 
 # GetX 4's upper-case enum values. Fluxy has GetX 5's lower-case ones
-# (found moving IELTS Turtle: SnackPosition.BOTTOM in 10 places).
+# (found moving an app: SnackPosition.BOTTOM in 10 places).
 SnackPosition.TOP SnackPosition.top
 SnackPosition.BOTTOM SnackPosition.bottom
 SnackStyle.FLOATING SnackStyle.floating
