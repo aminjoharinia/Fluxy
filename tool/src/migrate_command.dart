@@ -4,6 +4,7 @@ library;
 
 import 'dart:io';
 
+import 'cleanups.dart';
 import 'rename_map.dart';
 import 'rewriter.dart';
 
@@ -12,12 +13,22 @@ Usage: dart run tool/migrate.dart <project-dir> [options]
 
 Rewrites the Dart files of <project-dir> with the pairs of a rename map
 (whole words; strings and comments are left alone, except names inside
-string interpolation).
+string interpolation). Before that, it drops a refresh() that directly
+follows a write that already notifies, turns deep package:get/<path>
+imports into the whole library, and lists what to review: other refresh()
+calls and strings that name an old GetX name.
 
 Options:
   --map <file>       Rename map, one "Old New" pair per line, # comments.
                      Default: renames.txt next to migrate.dart.
   --dry-run          Report what would change, write nothing.
+  --keep-refresh     Report redundant refresh() calls instead of dropping
+                     them.
+  --material-ui      Also rewrite package:flutter/material.dart to
+                     package:material_ui/material_ui.dart and
+                     package:flutter/cupertino.dart to
+                     package:cupertino_ui/cupertino_ui.dart (add both
+                     packages to pubspec.yaml; see the README).
   --format <mode>    After writing, run dart format on changed files:
                        auto    only files that were dart format clean before
                                (default; keeps unformatted code unformatted)
@@ -25,11 +36,19 @@ Options:
                        never   none
   -h, --help         Show this help.''';
 
+/// The pairs `--material-ui` adds to the map.
+const materialUiPairs = '''
+
+package:flutter/material.dart package:material_ui/material_ui.dart
+package:flutter/cupertino.dart package:cupertino_ui/cupertino_ui.dart
+''';
+
 /// When to run `dart format` on changed files.
 enum FormatMode { auto, always, never }
 
-/// Directories never scanned.
-const _skippedDirs = {'build', 'node_modules', 'Pods'};
+/// Directories never scanned (`actions-runner`: a self-hosted GitHub runner
+/// kept in the app folder holds another checkout of the app).
+const _skippedDirs = {'build', 'node_modules', 'Pods', 'actions-runner'};
 
 /// Files that declare the old names on purpose (Fluxy's deprecated aliases).
 const _skippedFiles = {'deprecated_names.dart'};
@@ -59,6 +78,8 @@ Future<int> _run(
   String? project;
   String mapPath = defaultMapPath;
   var dryRun = false;
+  var keepRefresh = false;
+  var materialUi = false;
   var format = FormatMode.auto;
   for (var n = 0; n < args.length; n++) {
     final arg = args[n];
@@ -72,6 +93,10 @@ Future<int> _run(
       return 0;
     } else if (arg == '--dry-run') {
       dryRun = true;
+    } else if (arg == '--keep-refresh') {
+      keepRefresh = true;
+    } else if (arg == '--material-ui') {
+      materialUi = true;
     } else if (arg == '--map') {
       mapPath = value();
     } else if (arg.startsWith('--map=')) {
@@ -99,7 +124,10 @@ Future<int> _run(
 
   final RenameMap map;
   try {
-    map = RenameMap.parse(mapFile.readAsStringSync(), source: mapPath);
+    map = RenameMap.parse(
+      mapFile.readAsStringSync() + (materialUi ? materialUiPairs : ''),
+      source: mapPath,
+    );
   } on RenameMapException catch (e) {
     sink.writeln('error: $e');
     return 65;
@@ -111,11 +139,16 @@ Future<int> _run(
 
   final rootPath = root.absolute.path;
   final changed = <String, RewriteResult>{}; // relative path -> result
+  final review = <String>[];
   for (final file in dartFiles(root)) {
+    final path = _relative(file.absolute.path, rootPath);
     final source = file.readAsStringSync();
-    final result = rewrite(source, map);
-    if (result.changes > 0) {
-      changed[_relative(file.absolute.path, rootPath)] = result;
+    final cleaned = cleanup(source, dropRefresh: !keepRefresh, map: map);
+    final result = rewrite(cleaned.source, map);
+    final changes = cleaned.changes + result.changes;
+    if (changes > 0) changed[path] = RewriteResult(result.source, changes);
+    for (final note in cleaned.notes) {
+      review.add('$path:$note');
     }
   }
 
@@ -124,6 +157,12 @@ Future<int> _run(
     sink.writeln('$path: ${changed[path]!.changes}');
   }
   final total = changed.values.fold(0, (n, r) => n + r.changes);
+  if (review.isNotEmpty) {
+    sink.writeln('Review (${review.length}):');
+    for (final line in review) {
+      sink.writeln('  $line');
+    }
+  }
   final summary =
       '$total change(s) in ${paths.length} file(s) '
       '(${map.length} rename(s) in the map)';
@@ -174,7 +213,8 @@ Future<int> _run(
 }
 
 /// The Dart files under [root], skipping hidden folders (`.dart_tool`,
-/// `.git`, `.symlinks`, ...), `build`, `node_modules` and `Pods`, and
+/// `.git`, `.symlinks`, ...), `build`, `node_modules`, `Pods` and
+/// `actions-runner`, and
 /// `deprecated_names.dart` files (they declare the old names on purpose).
 Iterable<File> dartFiles(Directory root) sync* {
   final entries = root.listSync(followLinks: false)

@@ -392,15 +392,20 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     if (delegate is FluxyDelegate) config.routingCallback?.call(delegate.routing);
   }
 
+  /// Tears down what the app itself set up: its navigator (pages close their
+  /// scopes with their routes), overlays, snackbars and listeners.
+  ///
+  /// Dependencies in the root scope (`Fluxy.put` / `lazyPut`) and
+  /// translations stay: apps register them in `main()` before `runApp`, and a
+  /// `FluxyApp` unmounted and mounted again (a boot gate, a key change) must
+  /// find them, as in GetX 4. Tests clear everything with `Fluxy.reset()`.
   void onClose() {
     _home.dispose();
     config.routerDelegate?.removeListener(_reportRouting);
     FluxyOverlays.changes.removeListener(_reportRouting);
     FluxyOverlays.reset();
     config.onDispose?.call();
-    Fluxy.clearTranslations();
     config.snackBarQueue.disposeControllers();
-    Fluxy.resetInstance();
     _controller = null;
     Engine.instance.removeObserver(this);
   }

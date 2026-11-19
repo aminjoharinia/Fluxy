@@ -73,6 +73,7 @@ Each phase ends green: every package, both examples, root, tool, and the app cop
 - **D2: `put` of a type already registered: replace** (2026-11-18, user's choice): the old instance is closed, the new one registered and started, with a debug log.
 - **D3: `SmartManagement` and `fenix` are removed** (2026-11-18): lazy factories are kept after `delete` (today's `fenix: true`); page and widget scopes cover the rest.
 - **D4: v1.4.0, with typed handles and test overrides** (2026-11-18): breaking where it buys correctness, as with v1.2.0.
+- **D5: disposing a `FluxyApp` keeps the root scope and translations** (2026-11-19, follow-up to D1, found moving Hesabak): it closes only what the app set up (its navigator, so its pages' scopes, overlays, snackbars). An app remounted later finds the controllers it put in `main()`, as in GetX 4. `Fluxy.reset()` clears everything, for tests. Released in v1.6.0.
 
 ## Results
 

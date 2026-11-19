@@ -56,7 +56,9 @@ Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 
 Fluxy keeps GetX's API under its own names (no deprecated aliases): every `Get` prefix became `Fluxy`. Member names did not change (`Fluxy.to`, `Fluxy.back`, `Fluxy.put`, `getPages:` …), nor did the short idioms: `.obs`, `Rx…`, `Obx`, `ObxValue`, `StateMixin`, `.tr`, `Bindings`, the `FluxyStatus` cases (`LoadingStatus`, `SuccessStatus`, `ErrorStatus`, `EmptyStatus`).
 
-To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, then run the codemod from a Fluxy checkout (`dart run tool/migrate.dart <app>`, see [tool/README.md](tool/README.md)). Or rewrite the imports (`package:get/` → `package:fluxy/`) and run `dart fix --apply`: the root package ships the type renames in `lib/fix_data.yaml`.
+To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, then run the codemod from a Fluxy checkout (`dart run tool/migrate.dart <app>`, see [tool/README.md](tool/README.md)). Or rewrite the imports (`package:get/` → `package:fluxy/`) and run `dart fix --apply`: the root package ships the type renames in `lib/fix_data.yaml`. The codemod also drops `refresh()` calls that follow a write that already notifies (`refresh()` is `@protected` in Fluxy), fixes deep `package:get/<path>` imports, and lists what to review: the other `refresh()` calls and strings that still name GetX.
+
+Behaviour to know: as in GetX 4, `Fluxy.put` / `lazyPut` and translations registered in `main()` survive the `FluxyApp` being disposed and mounted again (since v1.6.0); only a page's own `bindings` close with it. `Fluxy.reset()` clears everything, for tests.
 
 | GetX | Fluxy |
 |---|---|
@@ -122,6 +124,24 @@ To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, the
 | `GetMicrotask` | `FluxyMicrotask` |
 | `Get.until((route) => route.isFirst)` | `Fluxy.backToFirst()` (closes dialogs and sheets too; since v1.6.0) |
 | `Get.key.currentState` (null without an app) | `Fluxy.navigator` (null without an app; `Fluxy.key` throws there; since v1.6.0) |
+
+### Moving an app that uses flutter/material
+
+Fluxy is built on `material_ui` / `cupertino_ui`, so `FluxyApp(theme:, themeMode:)` take their types, and an app importing `package:flutter/material.dart` gets `ThemeData` / `ThemeMode` type errors. Moving Hesabak took these steps:
+
+1. Add `material_ui` and `cupertino_ui` to `pubspec.yaml`, and rewrite the imports: `dart run tool/migrate.dart <app> --material-ui` turns `package:flutter/material.dart` into `package:material_ui/material_ui.dart` and `flutter/cupertino` into `cupertino_ui`.
+2. Packages still on `flutter/material` (date pickers, `printing`, `intl_phone_field`, `flutter_slidable` …) read `flutter/material`'s `Theme`. Wrap the app in `MaterialUiCompatibilityBridge` (deprecated, but the official bridge) in `FluxyApp(builder:)`, so they get the app's colours and fonts, dark mode included:
+
+   ```dart
+   builder: (context, child) =>
+       // ignore: deprecated_member_use
+       MaterialUiCompatibilityBridge(delegates: const [], child: child!),
+   ```
+
+3. Localizations: keep those packages' delegates as `flutter/material` ones (for example `PersianMaterialLocalizations.delegate`, and `DefaultMaterialLocalizations.delegate` imported `as legacy` from `flutter/material`), and add `material_ui`'s `GlobalMaterialLocalizations.delegate` and `cupertino_ui`'s `GlobalCupertinoLocalizations.delegate` for the app's own widgets.
+4. Code that hands `MaterialLocalizations` to such a package imports that type from `flutter/material`.
+
+Remove the bridge once those packages move to `material_ui`.
 
 What changed from GetX, release by release: [FLUXY.md](FLUXY.md). Working apps: [`example/`](example/) (bindings, `StateController` with `obx`, translations, snackbars) and [`example_nav2/`](example_nav2/) (nested routes, redirects). GetX's guides and changelog are gone from this repo (they used GetX's names and `GetConnect`); they stay in the tag `v0.0.0-upstream-a294d2f`.
 

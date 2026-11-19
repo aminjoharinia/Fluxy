@@ -52,6 +52,7 @@ class B extends GetxController {
     write('.dart_tool/gen.dart', 'GetxController x;\n');
     write('build/out.dart', 'GetxController x;\n');
     write('ios/.symlinks/p.dart', 'GetxController x;\n');
+    write('actions-runner/_work/app/lib/r.dart', 'GetxController x;\n');
     write('lib/readme.txt', 'GetxController\n');
     write('lib/deprecated_names.dart', 'typedef GetxController = X;\n');
   });
@@ -81,6 +82,10 @@ class B extends GetxController {
       expect(read('.dart_tool/gen.dart'), 'GetxController x;\n');
       expect(read('build/out.dart'), 'GetxController x;\n');
       expect(read('ios/.symlinks/p.dart'), 'GetxController x;\n');
+      expect(
+        read('actions-runner/_work/app/lib/r.dart'),
+        'GetxController x;\n',
+      );
       expect(read('lib/readme.txt'), 'GetxController\n');
       expect(
         read('lib/deprecated_names.dart'),
@@ -149,5 +154,76 @@ void f() {
       read('lib/a.dart'),
       startsWith("import 'package:fluxy/fluxy.dart';"),
     );
+  });
+
+  group('clean-ups (APP-NOTES 1, 3, 4, 12)', () {
+    const app = '''
+import 'package:get/get.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:flutter/material.dart';
+
+class P extends GetxController {
+  final rows = [].obs;
+  void f() {
+    rows.add(1);
+    rows.refresh();
+    rows.peek.first.on = true;
+    rows.refresh();
+  }
+}
+
+const src = 'Get.put(P())';
+''';
+
+    test('drop a redundant refresh(), fix deep imports, list the rest',
+        () async {
+      write('lib/p.dart', app);
+      final shipped = File('renames.txt');
+      expect(
+        await run([project.path, '--map', shipped.path, '--format', 'never']),
+        0,
+      );
+      final out = read('lib/p.dart');
+      expect(out, startsWith("import 'package:fluxy/fluxy.dart';\n"
+          "import 'package:flutter/material.dart';\n"));
+      expect('refresh()'.allMatches(out).length, 1);
+      expect(out, contains('class P extends FluxyController'));
+      expect(out, contains("const src = 'Get.put(P())';"));
+      final text = log.toString();
+      expect(text, contains('Review ('));
+      expect(text, contains('lib/p.dart:2: dropped package:get/get_utils'));
+      expect(text, contains('lib/p.dart:11: rows.refresh() kept'));
+      expect(text, contains('lib/p.dart:15: a string names Get'));
+    });
+
+    test('--keep-refresh reports instead of dropping', () async {
+      write('lib/p.dart', app);
+      expect(await run([project.path, '--keep-refresh', '--format', 'never']),
+          0);
+      expect('refresh()'.allMatches(read('lib/p.dart')).length, 2);
+      expect(log.toString(), contains('lib/p.dart:9: rows.refresh() is redundant'));
+    });
+
+    test('--material-ui rewrites the Material and Cupertino imports',
+        () async {
+      write('lib/m.dart', '''
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
+import 'package:flutter/widgets.dart';
+''');
+      expect(await run([project.path, '--material-ui', '--format', 'never']),
+          0);
+      expect(read('lib/m.dart'), '''
+import 'package:material_ui/material_ui.dart';
+import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoIcons;
+import 'package:flutter/widgets.dart';
+''');
+    });
+
+    test('without --material-ui, flutter/material stays', () async {
+      write('lib/m.dart', "import 'package:flutter/material.dart';\n");
+      await run([project.path, '--format', 'never']);
+      expect(read('lib/m.dart'), "import 'package:flutter/material.dart';\n");
+    });
   });
 }
