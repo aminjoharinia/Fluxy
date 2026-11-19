@@ -16,8 +16,12 @@ Apps:
 
 ### i18n
 
-16. **Hesabak's English template lookup is lost on Fluxy** (found 2026-11-19 while planning [I18N-PLAN.md](I18N-PLAN.md), B1). `EnglishTranslations` is a `MapBase` that also answers interpolated lines through `{0}` templates; `addTranslations` copies it with `Map.of`, so only the exact keys survive and interpolated lines stay Persian in English. GetX 4 kept the map object. **Fix:** I18N-PLAN phase 1 (dictionaries stored as given).
-17. **All three apps use a made-up `Locale('persian', 'US')`** so Flutter keeps the root left-to-right, then set direction per widget and keep their own `isEnglish` / direction getters. **Plan:** I18N-PLAN items 4-5 (direction policy, Material locale warning); each app then moves to `fa_IR`.
+16. **Hesabak's English template lookup is lost on Fluxy** (found 2026-11-19 while planning [I18N-PLAN.md](I18N-PLAN.md), B1). `EnglishTranslations` is a `MapBase` that also answers interpolated lines through `{0}` templates; `addTranslations` copies it with `Map.of`, so only the exact keys survive and interpolated lines stay Persian in English. GetX 4 kept the map object. **Fixed** in I18N-PLAN phase 1 (dictionaries stored as given; v1.7.0, unreleased): nothing to change in Hesabak.
+17. **All three apps use a made-up `Locale('persian', 'US')`** so GetX kept the root left-to-right, then set direction per widget and keep their own `isEnglish` / direction getters. **Fluxy side done** in I18N-PLAN phase 3 (v1.7.0, unreleased): the language never sets the direction, so `fa_IR` keeps the root left-to-right. **Apps (optional, after moving to v1.7.0):**
+    - Rename the dictionary key `persian_US` to `fa_IR` and the locale constants (`Locale('persian', 'US')` to `Locale('fa', 'IR')`): BOOFI `lib/main.dart` and `lib/Pages/Setting.dart`; Hesabak `kPersianLocale` in `lib/Pages/Languages.dart`; NestCut `lib/main.dart` and `lib/Services/Database.dart`. Plural rules, digits and Material localizations then see Persian (Hesabak's `supportedLocales: [fa_IR, en_US]` already resolves it; BOOFI and NestCut log the "not in supportedLocales" line once until they list `fa_IR` or keep English Material strings on purpose).
+    - Direction getters can read `Fluxy.textDirection` after passing `directionFor:` (Hesabak `appTextDirection`, NestCut `authDirection`) — only if the app wants the root to follow the language; otherwise leave them.
+    - NestCut's `localDigits()` (14 calls) can become `'…'.localDigits()`; input parsing can use `.westernDigits`.
+    - Run `dart run tool/i18n_check.dart <app> --locale en_US`: BOOFI has 10 keys missing in English (mostly `OrderFirmware.dart`), Hesabak 2 (`'—'`, `'Money Unit'`).
 
 ### For the apps
 

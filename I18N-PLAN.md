@@ -1,6 +1,6 @@
 # fluxy_i18n re-engineering plan
 
-Status: phases 0-4 done (2026-11-19), phase 5 (files and docs) next. Decisions at the end.
+Status: phases 0-5 done (2026-11-19), phase 6 (release v1.7.0) next. Decisions at the end.
 
 ## Why
 
@@ -118,3 +118,11 @@ Decided 2026-11-19 (user's choice: the proposed defaults, with D2 changed).
 - `lib/src/digits.dart` (D5): `'12:30'.localDigits([locale])` / `n.localDigits([locale])` write Western digits in the language's CLDR default digits (Persian / `persian` / Pashto ۰-۹, Arabic and Sorani ٠-٩ except the Maghreb, Marathi / Nepali Devanagari, Bengali, Burmese; English, Urdu, Hindi and the rest unchanged), default `Fluxy.locale` (reactive); `'۱۲۳'.westernDigits` reads every native digit set back for parsing. `nativeZeroFor(locale)` exported. NestCut's `localDigits()` (14 calls) and `mainCTRL.language` checks can move to it.
 - `tool/i18n_check.dart` (D4) with `tool/src/dart_tokens.dart` (a small tokenizer, no analyzer dependency, like the codemod) and `tool/src/i18n_check_command.dart`: keys used (literals before `.tr` members, `trCount` forms, `trPlural` plural keys; interpolations and variables counted as not checked) against dictionaries (a `Translations` `keys` getter, `addTranslations` / `appendTranslations`, `translationsKeys:`, following constants, spreads and constructor / `Map.of` calls). `--locale`, `--ignore`, `--dir`, `--no-unused`, `--fail`. On the apps: BOOFI en_US 10 missing / 279 unused (spot-checked: real); Hesabak en_US 2 missing; NestCut none missing, 167 unused. `tool/README.md` section.
 - Tests: fluxy_i18n `digits_missing_test.dart` (10), fluxy_nav one more wiring test (`FluxyApp(onMissingTranslation:)`), tool `i18n_check_test.dart` (6). fluxy_i18n 67, fluxy_nav 266, tool 69; every package, root and both examples pass; BOOFI (97) and Hesabak (1,371) copies analyze clean and pass.
+
+### Phase 5 (2026-11-19): files and docs
+
+- Files: `packages/fluxy_i18n/lib/src/{locales,lookup,plural,args,digits,tr,translations}.dart` (`intl.dart` renamed `tr.dart`: it holds only the `.tr` extensions). `rtlLanguages` stays in `translations.dart` as data.
+- fluxy_i18n README rewritten: setting up, lookup order, custom `Map` dictionaries (Hesabak's template map), reactivity and `updateLocale`, placeholders, plurals, text direction (D2), digits, missing keys and the check tool, a Coming from GetX table.
+- Root README: package table, the Translations bullet, a "since v1.7.0" note on direction, two Coming from GetX rows (automatic right-to-left, `trPlural` / `trCount`). FLUXY.md was kept up to date per phase.
+- APP-NOTES: 16 marked fixed (nothing to do in Hesabak); 17 lists each app's optional steps after v1.7.0 (`persian_US` → `fa_IR` with file names, direction getters, NestCut's digits, the check tool's missing keys).
+- fluxy_i18n 67, fluxy_nav 266, tool 69, root analyze clean (docs and an internal rename only; the app copies were not re-run).

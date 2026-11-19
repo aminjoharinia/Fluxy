@@ -6,7 +6,7 @@ Fluxy is a private fork of [GetX](https://github.com/jonataslaw/getx) (MIT), spl
 |---|---|
 | `fluxy_core` | `Fluxy` object, logging, `Fluxy.asap`, `Equality` |
 | `fluxy_state` | `.obs` / `Rx*`, `Obx`, glitch-free `Computed`, `effect`, `RxFuture`, `RxCommand`, controllers, workers, DI, `Fluxy.batch`, `peek`, copy-on-write edits |
-| `fluxy_i18n` | `Translations`, reactive `.tr`, `.trParams`, locale state |
+| `fluxy_i18n` | `Translations`, reactive `.tr`, `.trParams`, CLDR plurals (`trCount`), native digits, locale and direction state |
 | `fluxy_utils` | `FluxyPlatform`, validators, extensions, `FluxyQueue` |
 | `fluxy_nav` | `FluxyApp` / `FluxyCupertinoApp`, router, `Fluxy.to` / `back`, dialogs, sheets, snackbars |
 | `fluxy_ui` | responsive views, `hp` / `wp`, animation extensions |
@@ -50,7 +50,7 @@ Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 - **State:** an `Obx` subscribes to exactly the Rx values its last build read. `Computed` derives values without glitches, `effect` reacts to them, and effects, `Computed`s and workers made in a controller's `onInit` are disposed with it. Write new values instead of editing in place (`mapWith`, `listWith`, `setIn`, `patch`); `rx.peek` reads without subscribing.
 - **Navigation:** `FluxyApp.router(getPages: ..., redirect: ...)`. Pages match by segment (static before `:param` before `*`), navigations apply in call order, and `redirect` (on the app and on each page, async allowed) decides where an address goes, the first one included. `FluxyRouterOutlet(parent: ...)` shows nested pages. Web uses hash URLs unless you call `setUrlStrategy()` before `runApp`. More in [packages/fluxy_nav](packages/fluxy_nav/README.md).
 - **Dependencies:** `Fluxy.put` / `lazyPut` live until `delete`; a page's `bindings` (or a `DependencyScope`) give dependencies the page's lifetime. `Dep(() => C())` is a typed handle, `Fluxy.overrideWith` swaps one in tests. More in [packages/fluxy_state](packages/fluxy_state/README.md).
-- **Translations:** `.tr` inside an `Obx` updates on a language change; `Fluxy.updateLocale(locale)` rebuilds the rest.
+- **Translations:** `.tr` inside an `Obx` updates on a language change; `Fluxy.updateLocale(locale)` rebuilds the rest. `trCount` picks plural forms by CLDR rules, `localDigits()` writes the language's digits, and the text direction is the app's choice (`textDirection:` / `directionFor:`), never the language's. More in [packages/fluxy_i18n](packages/fluxy_i18n/README.md).
 
 ## Coming from GetX
 
@@ -59,6 +59,8 @@ Fluxy keeps GetX's API under its own names (no deprecated aliases): every `Get` 
 To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, then run the codemod from a Fluxy checkout (`dart run tool/migrate.dart <app>`, see [tool/README.md](tool/README.md)). Or rewrite the imports (`package:get/` → `package:fluxy/`) and run `dart fix --apply`: the root package ships the type renames in `lib/fix_data.yaml`. The codemod also drops `refresh()` calls that follow a write that already notifies (`refresh()` is `@protected` in Fluxy), fixes deep `package:get/<path>` imports, and lists what to review: the other `refresh()` calls and strings that still name GetX.
 
 Behaviour to know: as in GetX 4, `Fluxy.put` / `lazyPut` and translations registered in `main()` survive the `FluxyApp` being disposed and mounted again (since v1.6.0); only a page's own `bindings` close with it. `Fluxy.reset()` clears everything, for tests.
+
+Since v1.7.0 a language never turns the app right-to-left by itself (GetX flipped it for `fa`, `ar`, `he`, `ps`, `ur`): an app that wants that passes `FluxyApp(directionFor: (l) => rtlLanguages.contains(l.languageCode) ? TextDirection.rtl : TextDirection.ltr)`. Apps that used `Locale('persian', 'US')` to avoid the flip can use `Locale('fa', 'IR')`. Other translation changes: [fluxy_i18n, Coming from GetX](packages/fluxy_i18n/README.md#coming-from-getx).
 
 | GetX | Fluxy |
 |---|---|
@@ -124,6 +126,8 @@ Behaviour to know: as in GetX 4, `Fluxy.put` / `lazyPut` and translations regist
 | `GetMicrotask` | `FluxyMicrotask` |
 | `Get.until((route) => route.isFirst)` | `Fluxy.backToFirst()` (closes dialogs and sheets too; since v1.6.0) |
 | `Get.key.currentState` (null without an app) | `Fluxy.navigator` (null without an app; `Fluxy.key` throws there; since v1.6.0) |
+| automatic right-to-left for `fa` / `ar` / `he` / `ps` / `ur` | `FluxyApp(textDirection:)` / `directionFor:` (left-to-right otherwise; since v1.7.0) |
+| `trPlural(pluralKey, n)` (`n == 1`) | same call on the CLDR `one` category; `trCount(n)` with `key.one` / `key.few` / … forms (since v1.7.0) |
 
 ### Moving an app that uses flutter/material
 
