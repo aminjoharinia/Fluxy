@@ -1,6 +1,5 @@
 // I18N-PLAN phase 0: the language switch and app wiring the apps rely on,
-// and the bugs that need an app (B3, B10, B12, D2). A bug test is skipped
-// until its phase fixes it.
+// and the bugs that need an app (B3, B10, B12, D2), fixed in phases 1 and 3.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';
 import 'package:fluxy_i18n/fluxy_i18n.dart';
@@ -143,7 +142,7 @@ void main() {
     });
   });
 
-  group('bugs and decisions (skipped until done)', () {
+  group('bugs and decisions', () {
     testWidgets('B3: an app without a locale starts in the device language',
         (tester) async {
       tester.binding.platformDispatcher
@@ -156,7 +155,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(Fluxy.locale, const Locale('en', 'US'));
       expect(find.text('Hello'), findsOneWidget);
-    }, skip: true); // I18N-PLAN phase 3
+    });
 
     test('B10: Fluxy.reset() forgets the locale and the fallback', () {
       Fluxy.locale = const Locale('de');
@@ -190,6 +189,6 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(_rootDirection, TextDirection.ltr);
-    }, skip: true); // I18N-PLAN phase 3
+    });
   });
 }

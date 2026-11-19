@@ -29,6 +29,22 @@ class FluxyLocales {
 
   List<ChainEntry>? _chain;
 
+  /// The app's text-direction rule (D2: the language never sets it by
+  /// itself). Set by the app (`FluxyApp(textDirection:, directionFor:)`).
+  TextDirection? fixedDirection;
+  TextDirection Function(Locale locale)? directionFor;
+
+  /// The app's text direction for the current locale: [fixedDirection], else
+  /// [directionFor] of the locale, else left-to-right. Reactive on the locale.
+  TextDirection get textDirection {
+    final locale = _locale.value;
+    final fixed = fixedDirection;
+    if (fixed != null) return fixed;
+    final rule = directionFor;
+    if (rule != null && locale != null) return rule(locale);
+    return TextDirection.ltr;
+  }
+
   Locale? get locale => _locale.value;
   set locale(Locale? value) {
     if (_locale.peek == value) return;
@@ -97,6 +113,8 @@ class FluxyLocales {
   /// Clears the dictionaries and both locales. For tests (`Fluxy.reset()`).
   void reset() {
     translations.clear();
+    fixedDirection = null;
+    directionFor = null;
     _locale.value = null;
     _fallbackLocale.value = null;
     changed();
@@ -113,6 +131,24 @@ extension LocalesIntl on FluxyInterface {
   /// Where `.tr` looks when the locale's dictionaries don't have a key (also
   /// when no locale is set). Reactive.
   Locale? get fallbackLocale => _host.fallbackLocale;
+
+  /// The app's text direction: what it passed as `FluxyApp(textDirection:)`,
+  /// else its `directionFor(locale)`, else left-to-right. The language never
+  /// sets it by itself (Persian text is often left-to-right). Reactive on
+  /// the locale; the root `Directionality` of a `FluxyApp` shows it.
+  TextDirection get textDirection => _host.textDirection;
+
+  /// Sets the app's direction rule (see [textDirection]). `FluxyApp` calls
+  /// it from its `textDirection:` / `directionFor:`; an app built some other
+  /// way may call it itself.
+  void setTextDirectionRule({
+    TextDirection? fixed,
+    TextDirection Function(Locale locale)? directionFor,
+  }) {
+    _host
+      ..fixedDirection = fixed
+      ..directionFor = directionFor;
+  }
 
   /// Setting it updates every `Obx` that shows `.tr` text. Widgets that read
   /// `.tr` outside an `Obx` need a rebuild; `Fluxy.updateLocale` does that.
@@ -159,7 +195,8 @@ extension LocalesIntl on FluxyInterface {
     _host.changed();
   }
 
-  /// Clears the dictionaries, the locale and the fallback locale.
+  /// Clears the dictionaries, the locale, the fallback locale and the
+  /// direction rule.
   /// `Fluxy.reset()` calls it; for tests.
   void resetLocales() => _host.reset();
 }

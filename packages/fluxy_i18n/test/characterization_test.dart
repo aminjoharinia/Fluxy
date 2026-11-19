@@ -1,7 +1,7 @@
 // I18N-PLAN phase 0: what BOOFI, Hesabak and NestCut rely on, and the bugs
 // B1-B12 (the ones that need no widgets live here; the rest are in
 // fluxy_nav/test/internationalization/characterization_test.dart).
-// A bug test is skipped until its phase fixes it.
+// The bug tests were skipped until their phase fixed them.
 import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
@@ -106,7 +106,7 @@ void main() {
     });
   });
 
-  group('bugs (skipped until fixed)', () {
+  group('bugs (fixed in phases 1-2)', () {
     test('B1: a custom Map dictionary is kept, not copied', () {
       Fluxy.addTranslations({'en_US': _TemplateDictionary()});
       Fluxy.locale = _english;

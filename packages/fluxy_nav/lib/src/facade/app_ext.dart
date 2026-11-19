@@ -1,3 +1,4 @@
+import 'package:flutter/scheduler.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
@@ -25,21 +26,28 @@ extension FluxyAppExt on FluxyInterface {
     }
   }
 
-  /// As a rule, Flutter knows which widget to update,
-  /// so this command is rarely needed. We can mention situations
-  /// where you use const so that widgets are not updated with setState,
-  /// but you want it to be forcefully updated when an event like
-  /// language change happens. using context to make the widget dirty
-  /// for performRebuild() is a viable solution.
-  /// However, in situations where this is not possible, or at least,
-  /// is not desired by the developer, the only solution for updating
-  /// widgets that Flutter does not want to update is to use reassemble
-  /// to forcibly rebuild all widgets. Attention: calling this function will
-  /// reconstruct the application from the sketch, use this with caution.
-  /// Your entire application will be rebuilt, and touch events will not
-  /// work until the end of rendering.
+  /// Rebuilds every widget of the app once, `const` ones included, for text
+  /// read outside an `Obx` (a `.tr` in a plain `build`) after the language
+  /// changed. Completes after that frame.
+  ///
+  /// It marks every element for a rebuild; unlike the hot-reload hook GetX
+  /// used (`performReassemble`), it doesn't call `State.reassemble` or force
+  /// a new layout and paint of every render object. Called while a frame is
+  /// being built, it waits for the end of that frame.
   Future<void> forceAppUpdate() async {
-    await engine.performReassemble();
+    final binding = WidgetsBinding.instance;
+    if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      await binding.endOfFrame;
+    }
+    final root = binding.rootElement;
+    if (root == null) return;
+    void mark(Element element) {
+      element.markNeedsBuild();
+      element.visitChildren(mark);
+    }
+
+    mark(root);
+    await binding.endOfFrame;
   }
 
   void appUpdate() => rootController.update();

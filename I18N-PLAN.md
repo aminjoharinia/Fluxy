@@ -1,6 +1,6 @@
 # fluxy_i18n re-engineering plan
 
-Status: phases 0-2 done (2026-11-19), phase 3 next. Decisions at the end.
+Status: phases 0-3 done (2026-11-19), phase 4 next. Decisions at the end.
 
 ## Why
 
@@ -103,3 +103,11 @@ Decided 2026-11-19 (user's choice: the proposed defaults, with D2 changed).
 - `lib/src/plural.dart`: `PluralCategory` and `pluralCategory(language, count)` (exported), a built-in CLDR cardinal table (D1): English-like, `n = 1`, Persian-like (`i = 0 or n = 1`), French / Brazilian Portuguese, other-only (CJK, Thai, Vietnamese, Indonesian…), Russian / Ukrainian / Belarusian, Polish, Czech / Slovak, Arabic, Hebrew, Romanian, Croatian / Serbian / Bosnian, Lithuanian, Latvian; unknown languages use the English rule; `persian` / `farsi` read as `fa`, `pt_PT` as English. Operands n / i / v / f, so `1.5` and `1.0` are counted as CLDR does.
 - `lib/src/args.dart`: `fillArgs` (one pass, B7) and `fillParams` (the v0.5 `trParams` scan, moved). `intl.dart`: `trCount` (new), `trPlural` / `trPluralParams` on the CLDR `one` category with a null plural key giving the singular (B8). The lookup chain now carries each dictionary's key, so a form is chosen by the rules of the language that answers (a fallback dictionary uses its own).
 - Tests: `plural_test.dart` (16: rules per language with edge counts, `trCount` in English / Russian / Arabic / Persian, fallback rules, params, an `Obx` following the locale, the two-key `trPlural`, one-pass `trArgs`); B7, B8 un-skipped. fluxy_i18n 57, none skipped; every package, root and both examples pass; BOOFI (97) and Hesabak (1,371) copies analyze clean and pass.
+
+### Phase 3 (2026-11-19): switch, direction, device locale
+
+- Direction (D2): `FluxyLocales` keeps the app's rule (`fixedDirection` / `directionFor`), `Fluxy.textDirection` reads it (reactive on the locale; left-to-right without a rule), `Fluxy.setTextDirectionRule` sets it, `resetLocales` clears it. `FluxyApp` / `FluxyCupertinoApp` gain `directionFor:` next to `textDirection:` (both through `ConfigData`); `FluxyRoot` applies them at mount and on every rebuilt app. The root `Directionality` is `FluxyRootDirection` (an `Obx` over `Fluxy.textDirection`), so `fa` / `ar` no longer flip the app by themselves. `rtlLanguages` is data only now, with `ckb`, `dv`, `sd`, `ug`, `yi` added.
+- The Material / Cupertino app is built in an `Obx`: `Fluxy.locale = x` alone updates the locale Flutter's `Localizations` get (`fluxyAppLocale`), with a debug log once per locale whose language is not in `supportedLocales` (unless the app passes a resolution callback).
+- `Fluxy.forceAppUpdate()` (used by `updateLocale(rebuildAll: true)` and a rebuilt app's new locale) marks every element for a rebuild and completes after that frame, instead of `performReassemble` (no `State.reassemble`, no forced layout / paint of every render object; waits for the end of a frame when called during one). A rough timing on a 3,000-row screen in a debug widget test: 339 ms with reassemble, 139 ms marking (2.4x); release numbers not measured.
+- A device-following app (no `locale:`, or `followDeviceLocale: true` without one) starts in the device language unless `Fluxy.locale` was set before `runApp` (B3).
+- Tests: `locale_wiring_test.dart` (13: no rule = left-to-right for Persian and Arabic, `directionFor` following `Fluxy.locale`, `textDirection` winning, a rebuilt app's new rule, an `Obx` over `Fluxy.textDirection`, the Cupertino app, reset, Material locale following `Fluxy.locale`, the warning once / not with a callback, no `reassemble` on `updateLocale`, device language at start, a locale set before `runApp` kept); B3 and D2 / B12 un-skipped; no skipped tests left in either package. Every package (fluxy_nav 265), root and both examples pass; BOOFI (97) and Hesabak (1,371) copies analyze clean and pass.

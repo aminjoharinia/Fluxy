@@ -33,7 +33,17 @@ class FluxyApp extends StatelessWidget {
   final Color? color;
   final Map<String, Map<String, String>>? translationsKeys;
   final Translations? translations;
+  /// The app's text direction, fixed. Wins over [directionFor].
+  ///
+  /// The language never sets the direction by itself: without this and
+  /// [directionFor] the app is left-to-right in every language (Persian
+  /// text is often left-to-right). `Fluxy.textDirection` reads the result.
   final TextDirection? textDirection;
+
+  /// The text direction for a locale, for apps that want it to follow the
+  /// language, e.g. `(l) => rtlLanguages.contains(l.languageCode) ?
+  /// TextDirection.rtl : TextDirection.ltr`.
+  final TextDirection Function(Locale locale)? directionFor;
   final Locale? locale;
 
   /// Whether a change of the device language (system settings) switches
@@ -100,6 +110,7 @@ class FluxyApp extends StatelessWidget {
         const <NavigatorObserver>[],
     this.builder,
     this.textDirection,
+    this.directionFor,
     this.title = '',
     this.onGenerateTitle,
     this.color,
@@ -187,6 +198,7 @@ class FluxyApp extends StatelessWidget {
     this.translationsKeys,
     this.translations,
     this.textDirection,
+    this.directionFor,
     this.fallbackLocale,
     this.routingCallback,
     this.defaultTransition,
@@ -227,6 +239,8 @@ class FluxyApp extends StatelessWidget {
         initialRoute: initialRoute,
         locale: locale,
         followDeviceLocale: followDeviceLocale,
+        textDirection: textDirection,
+        directionFor: directionFor,
         logWriterCallback: logWriterCallback,
         navigatorKey: navigatorKey,
         navigatorObservers: navigatorObservers,
@@ -251,19 +265,14 @@ class FluxyApp extends StatelessWidget {
       child: Builder(
         builder: (context) {
           final controller = FluxyRoot.of(context);
-          return MaterialApp.router(
+          return Obx(() => MaterialApp.router(
             routerDelegate: controller.config.routerDelegate,
             routeInformationParser: controller.config.routeInformationParser,
             backButtonDispatcher: backButtonDispatcher,
             routeInformationProvider: routeInformationProvider,
             routerConfig: routerConfig,
             key: controller.config.unikey,
-            builder: (context, child) => Directionality(
-              textDirection:
-                  textDirection ??
-                  (rtlLanguages.contains(Fluxy.locale?.languageCode)
-                      ? TextDirection.rtl
-                      : TextDirection.ltr),
+            builder: (context, child) => FluxyRootDirection(
               child: builder == null
                   ? (child ?? const Material())
                   : builder!(context, child ?? const Material()),
@@ -277,7 +286,12 @@ class FluxyApp extends StatelessWidget {
                 controller.config.theme ??
                 ThemeData.fallback(),
             themeMode: controller.config.themeMode,
-            locale: Fluxy.locale ?? locale,
+            locale: fluxyAppLocale(
+            locale,
+            supportedLocales,
+            appResolves: localeResolutionCallback != null ||
+                localeListResolutionCallback != null,
+          ),
             scaffoldMessengerKey: controller.config.scaffoldMessengerKey,
             localizationsDelegates: localizationsDelegates,
             localeListResolutionCallback: localeListResolutionCallback,
@@ -291,7 +305,7 @@ class FluxyApp extends StatelessWidget {
             debugShowCheckedModeBanner: debugShowCheckedModeBanner,
             shortcuts: shortcuts,
             scrollBehavior: scrollBehavior,
-          );
+          ));
         },
       ),
     );

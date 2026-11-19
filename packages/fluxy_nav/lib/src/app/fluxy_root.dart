@@ -39,6 +39,13 @@ class ConfigData {
   /// `null` (the default): only when no [locale] was given, so an app that
   /// picks its own language keeps it.
   final bool? followDeviceLocale;
+
+  /// The app's text direction, fixed. Wins over [directionFor].
+  final TextDirection? textDirection;
+
+  /// The text direction for a locale. Without it (and without
+  /// [textDirection]) the app is left-to-right whatever the language.
+  final TextDirection Function(Locale locale)? directionFor;
   final String? initialRoute;
   final CustomTransition? customTransition;
   final Widget? home;
@@ -82,6 +89,8 @@ class ConfigData {
     required this.locale,
     required this.fallbackLocale,
     this.followDeviceLocale,
+    this.textDirection,
+    this.directionFor,
     required this.initialRoute,
     required this.customTransition,
     required this.home,
@@ -125,6 +134,8 @@ class ConfigData {
     Locale? locale,
     Locale? fallbackLocale,
     bool? followDeviceLocale,
+    TextDirection? textDirection,
+    TextDirection Function(Locale locale)? directionFor,
     String? initialRoute,
     CustomTransition? customTransition,
     Widget? home,
@@ -169,6 +180,8 @@ class ConfigData {
       locale: locale ?? this.locale,
       fallbackLocale: fallbackLocale ?? this.fallbackLocale,
       followDeviceLocale: followDeviceLocale ?? this.followDeviceLocale,
+      textDirection: textDirection ?? this.textDirection,
+      directionFor: directionFor ?? this.directionFor,
       initialRoute: initialRoute ?? this.initialRoute,
       customTransition: customTransition ?? this.customTransition,
       home: home ?? this.home,
@@ -221,6 +234,8 @@ class ConfigData {
         other.locale == locale &&
         other.fallbackLocale == fallbackLocale &&
         other.followDeviceLocale == followDeviceLocale &&
+        other.textDirection == textDirection &&
+        other.directionFor == directionFor &&
         other.initialRoute == initialRoute &&
         other.customTransition == customTransition &&
         other.home == home &&
@@ -266,6 +281,8 @@ class ConfigData {
         locale.hashCode ^
         fallbackLocale.hashCode ^
         followDeviceLocale.hashCode ^
+        textDirection.hashCode ^
+        directionFor.hashCode ^
         initialRoute.hashCode ^
         customTransition.hashCode ^
         home.hashCode ^
@@ -371,6 +388,13 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     // everything once, as updateLocale does, for `.tr` in const widgets.
     // Translations are not re-read: apps often pass a new `Translations`
     // object on every build, and re-adding them would rebuild every `.tr`.
+    // The direction rule follows the app's current widget (a closure passed
+    // in build is a new object each time; setting it notifies nobody, and
+    // this rebuild already rebuilds the root Directionality).
+    Fluxy.setTextDirectionRule(
+      fixed: next.textDirection,
+      directionFor: next.directionFor,
+    );
     var languageChanged = false;
     if (next.locale != previous.locale && next.locale != null) {
       Fluxy.locale = next.locale;
@@ -468,7 +492,14 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
           config.copyWith(routeInformationParser: newRouteInformationParser);
     }
 
-    if (config.locale != null) Fluxy.locale = config.locale;
+    if (config.locale != null) {
+      Fluxy.locale = config.locale;
+    } else if (Fluxy.locale == null && _followsDevice) {
+      // An app that follows the device starts in its language (it used to
+      // stay without a locale until the device language changed).
+      Fluxy.locale = Fluxy.deviceLocale;
+    }
+    _applyDirectionRule();
 
     if (config.fallbackLocale != null) {
       Fluxy.fallbackLocale = config.fallbackLocale;
@@ -533,10 +564,16 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     }
   }
 
+  bool get _followsDevice => config.followDeviceLocale ?? config.locale == null;
+
+  void _applyDirectionRule() => Fluxy.setTextDirectionRule(
+        fixed: config.textDirection,
+        directionFor: config.directionFor,
+      );
+
   @override
   void didChangeLocales(List<Locale>? locales) {
-    final follow = config.followDeviceLocale ?? config.locale == null;
-    if (!follow) return;
+    if (!_followsDevice) return;
     Fluxy.asap(() {
       final locale = Fluxy.deviceLocale;
       if (locale != null) {
@@ -657,3 +694,50 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     return widget.child;
   }
 }
+
+/// The root `Directionality` of a [FluxyApp] / `FluxyCupertinoApp`: the
+/// app's rule (`textDirection:` / `directionFor:`), else left-to-right.
+/// Rebuilds when the locale changes.
+class FluxyRootDirection extends StatelessWidget {
+  const FluxyRootDirection({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Obx(
+        () => Directionality(textDirection: Fluxy.textDirection, child: child),
+      );
+}
+
+/// The locale handed to `MaterialApp` / `CupertinoApp`: `Fluxy.locale`
+/// (what `.tr` uses), else the app's `locale:`. Reading it subscribes the
+/// building `Obx`.
+///
+/// In debug, says once per locale when its language is not in
+/// [supportedLocales] (and no resolution callback decides): Flutter then
+/// shows Material / Cupertino strings in another language than `.tr`.
+Locale? fluxyAppLocale(
+  Locale? appLocale,
+  Iterable<Locale> supportedLocales, {
+  required bool appResolves,
+}) {
+  final locale = Fluxy.locale ?? appLocale;
+  assert(() {
+    if (locale != null &&
+        !appResolves &&
+        !_warnedLocales.contains(locale) &&
+        !supportedLocales
+            .any((l) => l.languageCode == locale.languageCode)) {
+      _warnedLocales.add(locale);
+      Fluxy.log(
+        'Locale $locale is not in supportedLocales ($supportedLocales): '
+        'Flutter shows Material and Cupertino strings for '
+        '${supportedLocales.isEmpty ? 'its default' : supportedLocales.first} '
+        'while .tr uses $locale.',
+      );
+    }
+    return true;
+  }());
+  return locale;
+}
+
+final Set<Locale> _warnedLocales = {};
