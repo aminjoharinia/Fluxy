@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:fluxy_core/fluxy_core.dart';
-import 'package:fluxy_state/fluxy_state.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 
 /// Shows the pages of the current address that sit below [parent], in a

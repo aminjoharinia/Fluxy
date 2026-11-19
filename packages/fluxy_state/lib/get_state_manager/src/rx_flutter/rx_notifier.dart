@@ -126,8 +126,6 @@ mixin StateMixin<T> on ListNotifier {
 
 typedef FuturizeCallback<T> = Future<T> Function(VoidCallback fn);
 
-typedef VoidCallback = void Function();
-
 class FluxyListenable<T> extends ListNotifierSingle implements RxInterface<T> {
   FluxyListenable(T val) : _value = val;
 

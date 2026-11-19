@@ -345,9 +345,10 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
   late final ValueNotifier<Widget?> _home = ValueNotifier(widget.config.home);
 
   /// A rebuilt [FluxyApp] (a parent's build, or a test pumping another app
-  /// in the same place) keeps its navigation state but takes a new `home`
-  /// and new themes. A theme set with `Fluxy.changeTheme` / `changeThemeMode`
-  /// stays until the app passes a different one.
+  /// in the same place) keeps its navigation state but takes a new `home`,
+  /// new themes and a new `locale` / `fallbackLocale`. A theme set with
+  /// `Fluxy.changeTheme` / `changeThemeMode`, or a language set with
+  /// `Fluxy.updateLocale`, stays until the app passes a different one.
   @override
   void didUpdateWidget(covariant FluxyRoot oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -361,6 +362,28 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
         darkTheme: next.darkTheme != previous.darkTheme ? next.darkTheme : null,
         themeMode: next.themeMode != previous.themeMode ? next.themeMode : null,
       );
+    }
+    // The same rule for the language: a changed `locale` / `fallbackLocale`
+    // is applied, and one set with `Fluxy.updateLocale` stays until the app
+    // passes a different one. Set now, so this build already uses it (Obx
+    // defers its own rebuild while a build is running); then rebuild
+    // everything once, as updateLocale does, for `.tr` in const widgets.
+    // Translations are not re-read: apps often pass a new `Translations`
+    // object on every build, and re-adding them would rebuild every `.tr`.
+    var languageChanged = false;
+    if (next.locale != previous.locale && next.locale != null) {
+      Fluxy.locale = next.locale;
+      languageChanged = true;
+    }
+    if (next.fallbackLocale != previous.fallbackLocale &&
+        next.fallbackLocale != null) {
+      Fluxy.fallbackLocale = next.fallbackLocale;
+      languageChanged = true;
+    }
+    if (languageChanged) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Fluxy.forceAppUpdate();
+      });
     }
   }
 

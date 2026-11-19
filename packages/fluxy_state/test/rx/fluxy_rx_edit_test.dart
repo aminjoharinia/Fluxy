@@ -123,6 +123,31 @@ void main() {
       map.removeEntryAt('tags', 0);
       expect(map['tags'], isEmpty);
     });
+
+    // APP-NOTES 6: Hesabak's group maps are `{}.obs` (RxMap<dynamic, dynamic>).
+    test('RxMap entry edits work on untyped and non-String keys', () {
+      final untyped = {}.obs;
+      untyped['g1'] = {'name': 'A'};
+      final before = untyped['g1'];
+      var calls = 0;
+      untyped.addListener(() => calls++);
+      untyped.patch('g1', {'open': true});
+      expect(untyped['g1'], {'name': 'A', 'open': true});
+      expect(before, {'name': 'A'}, reason: 'the old entry is not changed');
+      untyped.addEntry('tags', 'x');
+      untyped.removeEntry('tags', 'x');
+      expect(untyped['tags'], isEmpty);
+      expect(calls, 3);
+
+      final byId = <int, dynamic>{}.obs;
+      byId.addEntry(7, 'a');
+      byId.addEntry(7, 'b');
+      byId.removeEntryAt(7, 0);
+      byId[8] = {'n': 1};
+      byId.patch(8, {'n': 2});
+      expect(byId[7], ['b']);
+      expect(byId[8], {'n': 2});
+    });
   });
 
   group('watchRx and RxSlice', () {

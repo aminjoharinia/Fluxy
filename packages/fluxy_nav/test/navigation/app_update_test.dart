@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxy_core/fluxy_core.dart';
+import 'package:fluxy_i18n/fluxy_i18n.dart';
 import 'package:fluxy_nav/fluxy_nav.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -70,4 +71,57 @@ void main() {
     await tester.pumpAndSettle();
     expect(Theme.of(ctx).brightness, Brightness.dark);
   });
+
+  // APP-NOTES 14 (NestCut builds its app inside an Obx on its language).
+  group('a rebuilt FluxyApp takes a new locale', () {
+    const tr = {
+      'en_US': {'hi': 'Hello'},
+      'fa_IR': {'hi': 'Salam'},
+    };
+    Widget app(Locale locale, {Locale? fallback}) => FluxyApp(
+          translationsKeys: tr,
+          locale: locale,
+          fallbackLocale: fallback,
+          home: const _Hi(),
+        );
+
+    testWidgets('const widgets reading .tr show the new language',
+        (tester) async {
+      await tester.pumpWidget(app(const Locale('en', 'US')));
+      expect(find.text('Hello'), findsOneWidget);
+      await tester.pumpWidget(app(const Locale('fa', 'IR')));
+      expect(Fluxy.locale, const Locale('fa', 'IR'));
+      await tester.pumpAndSettle();
+      expect(find.text('Salam'), findsOneWidget);
+      expect(find.text('Hello'), findsNothing);
+    });
+
+    testWidgets('updateLocale survives a rebuild that passes the same locale',
+        (tester) async {
+      await tester.pumpWidget(app(const Locale('en', 'US')));
+      Fluxy.updateLocale(const Locale('fa', 'IR'));
+      await tester.pumpAndSettle();
+      expect(find.text('Salam'), findsOneWidget);
+      await tester.pumpWidget(app(const Locale('en', 'US')));
+      await tester.pumpAndSettle();
+      expect(Fluxy.locale, const Locale('fa', 'IR'));
+      expect(find.text('Salam'), findsOneWidget);
+    });
+
+    testWidgets('a changed fallbackLocale is applied', (tester) async {
+      const other = Locale('de', 'DE');
+      await tester.pumpWidget(app(other, fallback: const Locale('en', 'US')));
+      expect(find.text('Hello'), findsOneWidget);
+      await tester.pumpWidget(app(other, fallback: const Locale('fa', 'IR')));
+      await tester.pumpAndSettle();
+      expect(Fluxy.fallbackLocale, const Locale('fa', 'IR'));
+      expect(find.text('Salam'), findsOneWidget);
+    });
+  });
+}
+
+class _Hi extends StatelessWidget {
+  const _Hi();
+  @override
+  Widget build(BuildContext context) => Text('hi'.tr);
 }

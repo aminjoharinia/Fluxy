@@ -90,25 +90,27 @@ extension RxListItemEdit<E> on RxList<E> {
   }
 }
 
-extension RxMapEntryEdit<V> on RxMap<String, V> {
+/// Any key type: untyped maps (`{}.obs`, an `RxMap<dynamic, dynamic>`) and
+/// int-keyed maps get these too.
+extension RxMapEntryEdit<K, V> on RxMap<K, V> {
   /// Replaces entry [key] (a map) by a copy with [changes] merged in.
-  void patch(String key, Map<String, dynamic> changes) {
+  void patch(K key, Map<String, dynamic> changes) {
     this[key] = mapWith(peek[key], changes) as V;
   }
 
   /// Appends [value] to the list under [key] (created when missing), as a
   /// new list.
-  void addEntry(String key, [Object? value = '']) {
+  void addEntry(K key, [Object? value = '']) {
     this[key] = listWith(peek[key], value) as V;
   }
 
   /// Removes item [index] of the list under [key], as a new list.
-  void removeEntryAt(String key, int index) {
+  void removeEntryAt(K key, int index) {
     this[key] = listWithout(peek[key], index) as V;
   }
 
   /// Removes [value] from the list under [key], as a new list.
-  void removeEntry(String key, Object? value) {
+  void removeEntry(K key, Object? value) {
     final list = peek[key];
     this[key] = [if (list is List) ...list.where((e) => e != value)] as V;
   }

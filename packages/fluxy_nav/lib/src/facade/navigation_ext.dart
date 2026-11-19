@@ -9,7 +9,7 @@ import '../app/fluxy_root.dart';
 /// It replaces the Flutter Navigator, but needs no context.
 /// You can to use navigator.push(YourRoute()) rather
 /// Navigator.push(context, YourRoute());
-NavigatorState? get navigator => FluxyNavigationExt(Fluxy).key.currentState;
+NavigatorState? get navigator => FluxyNavigationExt(Fluxy).navigator;
 
 extension FluxyNavigationExt on FluxyInterface {
   /// **Navigation.push()** shortcut.<br><br>
@@ -151,6 +151,20 @@ extension FluxyNavigationExt on FluxyInterface {
   /// dialog is closed
   void until(bool Function(FluxyPage<dynamic>) predicate, {String? id}) {
     return searchDelegate(id).backUntil(predicate);
+  }
+
+  /// Closes every open dialog and bottom sheet, then goes back to the first
+  /// page of the stack (sign-out, "back to home").
+  ///
+  /// The Fluxy form of GetX's `Get.until((route) => route.isFirst)`, which
+  /// pages cannot express (a [FluxyPage] has no `isFirst`). Snackbars stay.
+  /// [id] picks a nested navigator. Does nothing when already on the first
+  /// page with no dialog open.
+  void backToFirst({String? id}) {
+    closeAllDialogsAndBottomSheets(id);
+    // The stack always keeps its bottom page, so popping until nothing
+    // matches stops there.
+    searchDelegate(id).backUntil((_) => false);
   }
 
   /// **Navigation.pushNamedAndRemoveUntil()** shortcut.<br><br>
@@ -473,7 +487,18 @@ extension FluxyNavigationExt on FluxyInterface {
   /// check if default opaque route is enable
   bool get isOpaqueRouteDefault => defaultOpaqueRoute;
 
+  /// The root navigator's key. Throws when no [FluxyApp] is mounted; use
+  /// [navigator] where that can happen.
   GlobalKey<NavigatorState> get key => rootController.key;
+
+  /// The root [NavigatorState], or `null` when no [FluxyApp] is mounted (or it
+  /// has not built its navigator yet).
+  ///
+  /// For code that may run without an app: widget tests that pump a page
+  /// alone, toasts, sign-out. GetX code read `Get.key.currentState`, which was
+  /// null there; `Fluxy.key` throws instead.
+  NavigatorState? get navigator =>
+      FluxyRootState.maybeController?.key.currentState;
 
   Map<String, FluxyDelegate> get keys => rootController.keys;
 

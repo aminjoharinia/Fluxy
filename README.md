@@ -120,6 +120,8 @@ To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, the
 | `GetQueue` | `FluxyQueue` |
 | `GetQueueCancelledException` | `FluxyQueueCancelledException` |
 | `GetMicrotask` | `FluxyMicrotask` |
+| `Get.until((route) => route.isFirst)` | `Fluxy.backToFirst()` (closes dialogs and sheets too; since v1.6.0) |
+| `Get.key.currentState` (null without an app) | `Fluxy.navigator` (null without an app; `Fluxy.key` throws there; since v1.6.0) |
 
 What changed from GetX, release by release: [FLUXY.md](FLUXY.md). Working apps: [`example/`](example/) (bindings, `StateController` with `obx`, translations, snackbars) and [`example_nav2/`](example_nav2/) (nested routes, redirects). GetX's guides and changelog are gone from this repo (they used GetX's names and `GetConnect`); they stay in the tag `v0.0.0-upstream-a294d2f`.
 
