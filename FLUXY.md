@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.5.0
+    ref: v1.6.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.5.0
+    ref: v1.6.0
     path: packages/fluxy_state
 ```
 
@@ -162,7 +162,7 @@ fluxy_state:
   - `RxList` read methods read the list once instead of `length` + `this[i]` per item (two tracked reads each): `isEmpty`, `isNotEmpty`, `first`, `last`, `single`, `elementAt`, `forEach`, `any`, `every`, `contains`, `indexOf`, `lastIndexOf`, `indexWhere`, `lastIndexWhere`, `firstWhere`, `lastWhere`, `singleWhere`, `fold`, `reduce`, `join`, `map`, `expand`, `skip`, `skipWhile`, `take`, `takeWhile`, `getRange`, `sublist`, `toList`, `toSet`. `RxMap`: `values`, `entries`, `length`, `isEmpty`, `isNotEmpty`, `containsKey`, `containsValue`, `forEach`, `map`. Lazy ones (`map`, `skip`…) now iterate the list that was current when called, like `where` already did.
   - Measured against v1.4.0 (release build, runs alternated, [benchmark/nav](benchmark/nav/README.md)): a `Computed` over 5,000 rows recomputes 2.1× faster with `rows[i]`, 2.8× with `fold`, 2.7× with `any` + `firstWhere`; `RxMap.forEach` over 2,000 entries 7×. The main benchmark suite is unchanged (within ±4%).
   - fluxy_nav: `FluxyApp` calls `onReady` after the first frame from a post-frame callback (a `Future` left a zero-length timer, failing widget tests that pump once). A rebuilt `FluxyApp` takes a new `home` (same type: updated in place) and new `theme` / `darkTheme` / `themeMode`; a theme set with `Fluxy.changeTheme` / `changeThemeMode` stays until the app passes a different one. Found moving Hesabak from GetX 4 ([APP-NOTES.md](APP-NOTES.md)).
-- Unreleased (v1.6.0), from moving Hesabak and checking NestCut ([APP-NOTES.md](APP-NOTES.md) notes 1-4, 6-12, 14):
+- v1.6.0, from moving Hesabak and checking NestCut ([APP-NOTES.md](APP-NOTES.md) notes 1-4, 6-12, 14):
   - fluxy_state no longer declares its own `typedef VoidCallback`; it uses `dart:ui`'s, the same type. The duplicate shadowed Flutter's and was an `ambiguous_import` error next to any package doing the same.
   - The rx_edit map helpers (`patch`, `addEntry`, `removeEntryAt`, `removeEntry`) work on any `RxMap<K, V>`, untyped `{}.obs` and int keys included, not only `RxMap<String, V>`.
   - `Fluxy.backToFirst({id})`: closes every dialog and bottom sheet, then goes back to the first page; the form of GetX's `until((route) => route.isFirst)`.
