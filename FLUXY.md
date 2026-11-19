@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.4.0
+    ref: v1.5.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.4.0
+    ref: v1.5.0
     path: packages/fluxy_state
 ```
 
@@ -157,7 +157,7 @@ fluxy_state:
   - Removed: `SmartManagement` (and `Fluxy.smartManagement`, `FluxyApp(smartManagement:)`), `fenix:` (the builder always stays), `RouterReportManager`, `RouteReportMixin`, `PageRouteReportMixin`, `markAsDirty`, the `key:` parameters of `delete` / `reload`, `Bind.fenixMode`, `resetInstance(clearRouteBindings:)` / `reset(clearRouteBindings:)`.
   - Files: `packages/fluxy_state/lib/src/di/` (scope, facade, dep, widgets, lifecycle, bindings); `lib/get_instance/` is gone.
   - Moving an app: drop `smartManagement:` and `fenix:`; a controller that should go with its page belongs in that page's `bindings` (a `put` in a build method now stays); `Fluxy.put` of an already registered type now replaces it.
-- Unreleased: fluxy_state reactive reads over large collections (from the Hesabak review: report code loops over 5,000-row `RxList`s inside `Obx`), and fluxy_nav fixes from moving Hesabak:
+- v1.5.0: fluxy_state reactive reads over large collections (from the Hesabak review: report code loops over 5,000-row `RxList`s inside `Obx`), and fluxy_nav fixes from moving Hesabak:
   - The same `Rx` read again right after itself in one `Obx` / `Computed` run (`for (i…) rows[i]`) is dropped with one identity check; it used to leave the positional fast path for a scan of the sources on every read. Other reads cost the same as before (the check runs only after the fast match misses).
   - `RxList` read methods read the list once instead of `length` + `this[i]` per item (two tracked reads each): `isEmpty`, `isNotEmpty`, `first`, `last`, `single`, `elementAt`, `forEach`, `any`, `every`, `contains`, `indexOf`, `lastIndexOf`, `indexWhere`, `lastIndexWhere`, `firstWhere`, `lastWhere`, `singleWhere`, `fold`, `reduce`, `join`, `map`, `expand`, `skip`, `skipWhile`, `take`, `takeWhile`, `getRange`, `sublist`, `toList`, `toSet`. `RxMap`: `values`, `entries`, `length`, `isEmpty`, `isNotEmpty`, `containsKey`, `containsValue`, `forEach`, `map`. Lazy ones (`map`, `skip`…) now iterate the list that was current when called, like `where` already did.
   - Measured against v1.4.0 (release build, runs alternated, [benchmark/nav](benchmark/nav/README.md)): a `Computed` over 5,000 rows recomputes 2.1× faster with `rows[i]`, 2.8× with `fold`, 2.7× with `any` + `firstWhere`; `RxMap.forEach` over 2,000 entries 7×. The main benchmark suite is unchanged (within ±4%).

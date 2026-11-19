@@ -24,9 +24,9 @@ Pages have no transition, so each frame finishes its route changes. Each scenari
 benchmark/nav/run.sh          # this checkout against v1.0.0
 ```
 
-## Results (2026-11-19, unreleased against v1.4.0, 4 runs each, Apple silicon)
+## Results (2026-11-19, v1.5.0 against v1.4.0, 4 runs each, Apple silicon)
 
-| Scenario | v1.4.0 | this checkout | speed-up |
+| Scenario | v1.4.0 | v1.5.0 | speed-up |
 |---|---|---|---|
 | rx list loop [i] 5k | 81.64 µs | 38.66 µs | 2.11× |
 | rx list fold 5k | 85.03 µs | 30.77 µs | 2.76× |
