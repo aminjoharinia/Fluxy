@@ -118,7 +118,61 @@ void main() {
       expect(find.text('Salam'), findsOneWidget);
     });
   });
+
+  // APP-NOTES 15 (Hesabak's boot applies the saved dark mode before
+  // FluxyApp is built; GetX 4 kept it, Fluxy threw).
+  group('theme changes before FluxyApp is mounted', () {
+    tearDown(Fluxy.reset);
+    late BuildContext ctx;
+    Widget app({ThemeMode mode = ThemeMode.light}) => FluxyApp(
+          theme: ThemeData(brightness: Brightness.light),
+          darkTheme: ThemeData(brightness: Brightness.dark),
+          themeMode: mode,
+          home: Builder(builder: (c) {
+            ctx = c;
+            return const SizedBox();
+          }),
+        );
+
+    testWidgets('changeThemeMode during boot is applied on mount',
+        (tester) async {
+      Fluxy.changeThemeMode(ThemeMode.dark); // no app yet: kept, no throw
+      await tester.pumpWidget(app());
+      expect(Theme.of(ctx).brightness, Brightness.dark);
+      // Kept until the app passes a different mode, like a call after mount.
+      await tester.pumpWidget(app());
+      expect(Theme.of(ctx).brightness, Brightness.dark);
+      await tester.pumpWidget(app(mode: ThemeMode.system));
+      await tester.pumpWidget(app(mode: ThemeMode.light));
+      await tester.pumpAndSettle(); // the theme animates
+      expect(Theme.of(ctx).brightness, Brightness.light);
+    });
+
+    testWidgets('changeTheme during boot is applied on mount', (tester) async {
+      Fluxy.changeTheme(ThemeData(
+          brightness: Brightness.light, primaryColor: const Color(0xFF123456)));
+      await tester.pumpWidget(app());
+      expect(Theme.of(ctx).primaryColor, const Color(0xFF123456));
+    });
+
+    testWidgets('a change between an unmount and a remount is kept',
+        (tester) async {
+      await tester.pumpWidget(app());
+      await tester.pumpWidget(const SizedBox());
+      Fluxy.changeThemeMode(ThemeMode.dark);
+      await tester.pumpWidget(app());
+      expect(Theme.of(ctx).brightness, Brightness.dark);
+    });
+
+    testWidgets('Fluxy.reset forgets a kept change', (tester) async {
+      Fluxy.changeThemeMode(ThemeMode.dark);
+      Fluxy.reset();
+      await tester.pumpWidget(app());
+      expect(Theme.of(ctx).brightness, Brightness.light);
+    });
+  });
 }
+
 
 class _Hi extends StatelessWidget {
   const _Hi();

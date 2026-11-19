@@ -334,6 +334,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
   @override
   void initState() {
     config = widget.config;
+    _applyPendingTheme();
     FluxyRootState._controller = this;
     Engine.instance.addObserver(this);
     onInit();
@@ -545,6 +546,11 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
   }
 
   void setTheme(ThemeData value) {
+    _putTheme(value);
+    update();
+  }
+
+  void _putTheme(ThemeData value) {
     if (config.darkTheme == null) {
       config = config.copyWith(theme: value);
     } else {
@@ -554,7 +560,50 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
         config = config.copyWith(darkTheme: value);
       }
     }
-    update();
+  }
+
+  // `Fluxy.changeTheme` / `changeThemeMode` called while no FluxyApp is
+  // mounted (during boot, or between an unmount and a remount), kept for the
+  // next one, as GetX 4 kept them in a controller that outlived the app.
+  static final List<ThemeData> _pendingThemes = [];
+  static ThemeMode? _pendingThemeMode;
+
+  /// Changes the theme of the mounted app, or keeps it for the next one.
+  static void changeTheme(ThemeData value) {
+    final root = _controller;
+    if (root == null) {
+      _pendingThemes.add(value);
+    } else {
+      root.setTheme(value);
+    }
+  }
+
+  /// Changes the theme mode of the mounted app, or keeps it for the next one.
+  static void changeThemeMode(ThemeMode value) {
+    final root = _controller;
+    if (root == null) {
+      _pendingThemeMode = value;
+    } else {
+      root.setThemeMode(value);
+    }
+  }
+
+  /// Forgets theme choices kept for an app not mounted yet (`Fluxy.reset`).
+  static void clearPendingTheme() {
+    _pendingThemes.clear();
+    _pendingThemeMode = null;
+  }
+
+  /// A kept choice is the latest intent, so it wins over the config the app
+  /// mounts with; like `changeTheme` on a mounted app, it stays until the
+  /// app passes a different theme.
+  void _applyPendingTheme() {
+    for (final theme in _pendingThemes) {
+      _putTheme(theme);
+    }
+    final mode = _pendingThemeMode;
+    if (mode != null) config = config.copyWith(themeMode: mode);
+    clearPendingTheme();
   }
 
   void setThemeMode(ThemeMode value) {

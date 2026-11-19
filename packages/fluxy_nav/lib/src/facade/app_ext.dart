@@ -48,16 +48,22 @@ extension FluxyAppExt on FluxyInterface {
   ///
   /// [ThemeData] is the type exported by
   /// `package:material_ui/material_ui.dart`.
+  ///
+  /// Called before a [FluxyApp] is mounted (during boot), the theme is kept
+  /// and applied when the app mounts.
   void changeTheme(ThemeData theme) {
-    rootController.setTheme(theme);
+    FluxyRootState.changeTheme(theme);
   }
 
   /// Changes whether the light or dark application theme is active.
   ///
   /// [ThemeMode] is the type exported by
   /// `package:material_ui/material_ui.dart`.
+  ///
+  /// Called before a [FluxyApp] is mounted (during boot), the mode is kept
+  /// and applied when the app mounts.
   void changeThemeMode(ThemeMode themeMode) {
-    rootController.setThemeMode(themeMode);
+    FluxyRootState.changeThemeMode(themeMode);
   }
 
   /// give access to currentContext

@@ -20,6 +20,9 @@ Apps:
 
 ## Done
 
+- Unreleased (v1.6.1), from Hesabak on v1.6.0:
+  - **15.** `Fluxy.changeTheme` / `changeThemeMode` called before a `FluxyApp` is mounted threw `FluxyRoot is not part of the tree`. Hesabak's `boot()` runs behind its `BootGate` and applied the saved dark mode (`AccountService._openPhone`) before `MainApp` built the app; GetX 4 kept the choice in a controller that existed from startup. Now the call is kept and applied when the app mounts (it wins over the mounted config, then stays until the app passes a different theme, like a call after mount); `Fluxy.reset()` forgets it. Hesabak worked around it with `mainCTRL.applyThemeMode()` (skips the call while `Fluxy.context == null`), which can stay or go back to calling `Fluxy.changeThemeMode` directly.
+
 - v1.6.0, from Hesabak and NestCut:
   - **1.** `tool/migrate.dart --material-ui` rewrites the `flutter/material` / `flutter/cupertino` imports; the README has the recipe for packages still on `flutter/material` ("Moving an app that uses flutter/material": bridge, localizations). `FluxyApp(legacyMaterialBridge:)` was not added: the bridge is one line in `builder:` and stays visible as deprecated.
   - **2.** `Fluxy.backToFirst()`: closes dialogs and sheets, then pops to the first page (Hesabak's `popUntil(route.isFirst)` and NestCut's `Get.until((route) => route.isFirst)` sign-out). A "Coming from GetX" row.
