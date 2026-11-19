@@ -173,6 +173,8 @@ fluxy_state:
   - Docs: README "Moving an app that uses flutter/material" (bridge, localizations); fluxy_state README "Changing state" (rows edited in place) and "A report over big lists" (`Computed`).
 - v1.6.1, from Hesabak on v1.6.0 ([APP-NOTES.md](APP-NOTES.md) note 15):
   - `Fluxy.changeTheme` / `changeThemeMode` before a `FluxyApp` is mounted (during boot, or between an unmount and a remount) no longer throw: the choice is kept and applied when the app mounts, as GetX 4 did. It wins over the config the app mounts with, then stays until the app passes a different theme. `Fluxy.reset()` forgets it.
+- Unreleased (v1.7.0, fluxy_i18n rebuilt per [I18N-PLAN.md](I18N-PLAN.md)):
+  - Phase 1, locale state and lookup: one `FluxyLocales` state; `Fluxy.locale` / `fallbackLocale` are reactive (an `Obx` or `Computed` reading them follows them). Dictionaries are kept as given, never copied: a custom `Map` that answers template keys (Hesabak's English dictionary) works again, as in GetX 4. Lookup order: exact `lang_Script_COUNTRY`, `lang_Script`, `lang_COUNTRY`, `lang`, then every other dictionary of the language (same script first) in the order added, then the fallback locale's exact and bare dictionaries. Before, only the last-added dictionary of the language was searched, script codes were ignored and the answer could depend on registration order. Keys may be written `en-US`. With no locale, the fallback locale is used (it was ignored). `Fluxy.reset()` also forgets the locale and fallback (`Fluxy.resetLocales()`). Setting the same locale again no longer notifies.
 
 ## Tests
 

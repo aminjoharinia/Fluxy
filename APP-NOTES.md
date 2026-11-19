@@ -21,6 +21,8 @@ Apps:
 
 ### For the apps
 
+18. **BOOFI needs one import when it moves past v1.5.0** (found 2026-11-19 checking I18N-PLAN phase 1 on a copy): `lib/Pages/FloorPlan/FloorPlanCreate.dart` uses `VoidCallback` without importing it; it came from fluxy_state's own typedef, removed in v1.6.0 (note 8). Add `import 'dart:ui' show VoidCallback;` (or `material_ui`). With it, BOOFI's 97 tests pass on the local Fluxy.
+
 13. **The secure storage packages depended on GetX itself** (Hesabak and NestCut). `get_secure_storage` 1.0.5 (NestCut) and `orca_secure_storage` up to v2.4.2 (our fork, Hesabak) depend on `get`, so Hesabak on Fluxy still resolves `get` and ships two state managers. **Fixed in Orca v2.5.0**, which no longer depends on `get` and keeps the 2.4.x file format (only `listenable`'s `ValueStorage` and the `queue` type changed; neither app uses them). **Apps:** Hesabak moves its pin from v2.4.2 to v2.5.0; NestCut switches from `get_secure_storage` to Orca v2.5.0 when it moves to Fluxy (Orca reads get_secure_storage 1.x files). After that, `get` should drop out of both lockfiles; check with `grep '^  get:' pubspec.lock`.
 
 ## Done

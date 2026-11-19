@@ -1,6 +1,6 @@
 # fluxy_i18n re-engineering plan
 
-Status: phase 0 done (2026-11-19), phase 1 next. Decisions at the end.
+Status: phases 0-1 done (2026-11-19), phase 2 next. Decisions at the end.
 
 ## Why
 
@@ -90,3 +90,10 @@ Decided 2026-11-19 (user's choice: the proposed defaults, with D2 changed).
 - `packages/fluxy_i18n/test/characterization_test.dart` (13): the apps' shapes (BOOFI / NestCut `persian_US` + `en_US` with a Persian fallback, Hesabak's Persian-as-key, `@name` params with Persian digits, dictionaries set in `main()`, a missing key) pass; B1, B2, B4-B9 skipped (each fails today when un-skipped; B1 uses a Hesabak-style template `MapBase`).
 - `packages/fluxy_nav/test/internationalization/characterization_test.dart` (10): `updateLocale` reaching `Obx`, plain and const widgets and a page under the top one, NestCut's app-in-`Obx` locale change, translations set before `runApp`, `persian_US` keeping the root left-to-right, `textDirection:` winning, `updateLocale` completing once pumped; B3, B10 and D2 / B12 (`fa_IR` keeps the root left-to-right) skipped, each failing today.
 - B11 withdrawn (see the table).
+
+### Phase 1 (2026-11-19): locale state and lookup
+
+- `lib/src/locales.dart`: `FluxyLocales` (one instance, not exported) holds `locale` / `fallbackLocale` as `Rxn<Locale>`, the dictionaries and the `version` counter; setting the same locale again doesn't notify. `LocalesIntl` (the `Fluxy.` facade) moved there; `addTranslations` keeps each map as given (B1), `appendTranslations` still builds a new plain map; new `Fluxy.resetLocales()`, called by `Fluxy.reset()` (B10). `intl.dart` keeps only the `.tr` extensions.
+- `lib/src/lookup.dart`: `LocaleKey` parses `lang[_-]Script[_-]COUNTRY` keys and locales (also a whole tag in `languageCode`); `buildChain` gives the order of target design item 2 (B2, B4-B6). Keys are parsed when the chain is built, so direct edits of `Fluxy.translations` with any spelling work after `notifyTranslationsChanged`.
+- Behaviour changes pinned by updated tests: a locale with no exact dictionary searches every dictionary of its language in the order added (before: only the last one, so `en_AU` missed keys only in `en_US`); with no locale, the fallback locale answers.
+- Tests: `lookup_test.dart` (12: key parsing, chain order, script siblings, fallback without siblings, identity, same-locale no-op, kept map objects, BCP 47 direct edit, reset, a `Computed` over `Fluxy.locale`); B1, B2, B4-B6, B9 (fluxy_i18n) and B10 (fluxy_nav) un-skipped. fluxy_i18n 39 + 2 skipped, fluxy_nav 250 + 2 skipped; every package, root and both examples analyze clean and pass. App copies on the local Fluxy (`pubspec_overrides.yaml`, copies in the session scratchpad, apps untouched): Hesabak analyze clean, 1,371 tests pass; BOOFI 97 tests pass and `lib` / `test` analyze clean once `FloorPlanCreate.dart` imports `VoidCallback` from `dart:ui` (a v1.6.0 change, not this phase: BOOFI is still on v1.5.0 and needs that one-line import when it moves).

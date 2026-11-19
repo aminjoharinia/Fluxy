@@ -32,11 +32,14 @@ void main() {
       expect('hello'.tr, 'Hello mate');
     });
 
-    test('then the same language in another country', () {
+    test('then every dictionary of the same language, in the order added',
+        () {
       Fluxy.locale = const Locale('en', 'AU');
-      // The last dictionary of that language wins (en_GB after en_US).
-      expect('hello'.tr, 'Hello mate');
-      expect('only_us'.tr, 'only_us');
+      // en_US was added before en_GB; both are searched (before v1.7 only
+      // the last one added was, so en_US-only keys were missed).
+      expect('hello'.tr, 'Hello');
+      expect('only_us'.tr, 'US only');
+      expect('colour'.tr, 'colour');
     });
 
     test('then the fallback locale, lang_country then lang', () {

@@ -33,7 +33,7 @@ void main() {
       Fluxy.locale = const Locale('en', 'US');
       expect('hello'.tr, 'Hello'); // en_US
       Fluxy.locale = const Locale('en', 'AU');
-      expect('colour'.tr, 'colour'); // same language (en_GB, the last en_*)
+      expect('colour'.tr, 'colour'); // another dictionary of the language (en_GB)
       expect('only_de'.tr, 'nur de'); // fallback language
       expect('missing'.tr, 'missing'); // the key
     });
@@ -49,8 +49,11 @@ void main() {
       expect('only_en'.tr, 'فقط');
     });
 
-    test('no locale returns the key', () {
+    test('no locale: the fallback locale, then the key', () {
       Fluxy.locale = null;
+      expect('hello'.tr, 'سلام'); // persian_US is the fallback
+      expect('only_en'.tr, 'only_en');
+      Fluxy.fallbackLocale = null;
       expect('hello'.tr, 'hello');
     });
   });

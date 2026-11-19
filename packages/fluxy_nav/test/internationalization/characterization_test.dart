@@ -164,7 +164,7 @@ void main() {
       Fluxy.reset();
       expect(Fluxy.locale, isNull);
       expect(Fluxy.fallbackLocale, isNull);
-    }, skip: 'I18N-PLAN phase 1');
+    });
 
     testWidgets('updateLocale completes once the frame is pumped',
         (tester) async {

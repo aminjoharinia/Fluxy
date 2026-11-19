@@ -112,7 +112,7 @@ void main() {
       Fluxy.locale = _english;
       expect('مانده'.tr, 'Balance');
       expect('مانده: ۱۲۰'.tr, 'Balance: ۱۲۰');
-    }, skip: 'I18N-PLAN phase 1');
+    });
 
     test('B2: no locale, a fallback locale: the fallback is used', () {
       Fluxy.addTranslations(const {
@@ -120,7 +120,7 @@ void main() {
       });
       Fluxy.fallbackLocale = const Locale('fa', 'IR');
       expect('k'.tr, 'FA');
-    }, skip: 'I18N-PLAN phase 1');
+    });
 
     test('B4: the script code picks the dictionary', () {
       Fluxy.addTranslations(const {
@@ -130,7 +130,7 @@ void main() {
       Fluxy.locale = const Locale.fromSubtags(
           languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW');
       expect('k'.tr, 'Traditional');
-    }, skip: 'I18N-PLAN phase 1');
+    });
 
     test('B5: a bare language wins over a sibling country, in any order', () {
       Fluxy.addTranslations(const {
@@ -141,7 +141,7 @@ void main() {
       });
       Fluxy.locale = const Locale('pt', 'BR');
       expect('k'.tr, 'bare');
-    }, skip: 'I18N-PLAN phase 1');
+    });
 
     test('B6: a BCP 47 key (en-US) is the same as en_US', () {
       Fluxy.addTranslations(const {
@@ -149,7 +149,7 @@ void main() {
       });
       Fluxy.locale = _english;
       expect('k'.tr, 'EN');
-    }, skip: 'I18N-PLAN phase 1');
+    });
 
     test('B7: trArgs does not scan inserted values again', () {
       Fluxy.addTranslations(const {
@@ -176,6 +176,6 @@ void main() {
       Fluxy.locale = const Locale('de');
       await tester.pump();
       expect(find.text('de'), findsOneWidget);
-    }, skip: true); // I18N-PLAN phase 1
+    });
   });
 }
