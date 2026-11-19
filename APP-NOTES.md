@@ -20,7 +20,7 @@ Apps:
 
 ## Done
 
-- Unreleased (v1.6.1), from Hesabak on v1.6.0:
+- v1.6.1, from Hesabak on v1.6.0:
   - **15.** `Fluxy.changeTheme` / `changeThemeMode` called before a `FluxyApp` is mounted threw `FluxyRoot is not part of the tree`. Hesabak's `boot()` runs behind its `BootGate` and applied the saved dark mode (`AccountService._openPhone`) before `MainApp` built the app; GetX 4 kept the choice in a controller that existed from startup. Now the call is kept and applied when the app mounts (it wins over the mounted config, then stays until the app passes a different theme, like a call after mount); `Fluxy.reset()` forgets it. Hesabak worked around it with `mainCTRL.applyThemeMode()` (skips the call while `Fluxy.context == null`), which can stay or go back to calling `Fluxy.changeThemeMode` directly.
 
 - v1.6.0, from Hesabak and NestCut:

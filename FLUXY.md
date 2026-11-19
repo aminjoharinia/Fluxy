@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.6.0
+    ref: v1.6.1
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.6.0
+    ref: v1.6.1
     path: packages/fluxy_state
 ```
 
@@ -171,7 +171,7 @@ fluxy_state:
   - Disposing a `FluxyApp` no longer closes every dependency: `Fluxy.put` / `lazyPut` registrations (the root scope) and translations stay, as in GetX 4, so an app widget unmounted and mounted again finds the controllers it put in `main()`. Its pages' scopes still close with it; `Fluxy.reset()` clears everything, for tests (DI-PLAN D5).
   - `tool/migrate.dart`: before the renames, drops a `refresh()` that follows a write to the same receiver that always notifies (in the same block, up to 5 statements apart when they only save it), turns deep `package:get/<path>` imports into the whole library, and prints a review list (other `refresh()` calls, strings naming GetX). `--keep-refresh` lists instead of dropping; `--material-ui` also rewrites the `flutter/material` / `flutter/cupertino` imports. `actions-runner` folders are skipped.
   - Docs: README "Moving an app that uses flutter/material" (bridge, localizations); fluxy_state README "Changing state" (rows edited in place) and "A report over big lists" (`Computed`).
-- Unreleased (v1.6.1), from Hesabak on v1.6.0 ([APP-NOTES.md](APP-NOTES.md) note 15):
+- v1.6.1, from Hesabak on v1.6.0 ([APP-NOTES.md](APP-NOTES.md) note 15):
   - `Fluxy.changeTheme` / `changeThemeMode` before a `FluxyApp` is mounted (during boot, or between an unmount and a remount) no longer throw: the choice is kept and applied when the app mounts, as GetX 4 did. It wins over the config the app mounts with, then stays until the app passes a different theme. `Fluxy.reset()` forgets it.
 
 ## Tests
