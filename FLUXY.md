@@ -21,7 +21,7 @@ Everything:
 fluxy:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.6.1
+    ref: v1.7.0
 ```
 
 Only one package (for example state management):
@@ -30,7 +30,7 @@ Only one package (for example state management):
 fluxy_state:
   git:
     url: https://github.com/aminjoharinia/Fluxy.git
-    ref: v1.6.1
+    ref: v1.7.0
     path: packages/fluxy_state
 ```
 
@@ -173,7 +173,7 @@ fluxy_state:
   - Docs: README "Moving an app that uses flutter/material" (bridge, localizations); fluxy_state README "Changing state" (rows edited in place) and "A report over big lists" (`Computed`).
 - v1.6.1, from Hesabak on v1.6.0 ([APP-NOTES.md](APP-NOTES.md) note 15):
   - `Fluxy.changeTheme` / `changeThemeMode` before a `FluxyApp` is mounted (during boot, or between an unmount and a remount) no longer throw: the choice is kept and applied when the app mounts, as GetX 4 did. It wins over the config the app mounts with, then stays until the app passes a different theme. `Fluxy.reset()` forgets it.
-- Unreleased (v1.7.0, fluxy_i18n rebuilt per [I18N-PLAN.md](I18N-PLAN.md)):
+- v1.7.0, fluxy_i18n rebuilt per [I18N-PLAN.md](I18N-PLAN.md):
   - Phase 1, locale state and lookup: one `FluxyLocales` state; `Fluxy.locale` / `fallbackLocale` are reactive (an `Obx` or `Computed` reading them follows them). Dictionaries are kept as given, never copied: a custom `Map` that answers template keys (Hesabak's English dictionary) works again, as in GetX 4. Lookup order: exact `lang_Script_COUNTRY`, `lang_Script`, `lang_COUNTRY`, `lang`, then every other dictionary of the language (same script first) in the order added, then the fallback locale's exact and bare dictionaries. Before, only the last-added dictionary of the language was searched, script codes were ignored and the answer could depend on registration order. Keys may be written `en-US`. With no locale, the fallback locale is used (it was ignored). `Fluxy.reset()` also forgets the locale and fallback (`Fluxy.resetLocales()`). Setting the same locale again no longer notifies.
   - Phase 2, arguments and plurals: `'items'.trCount(n, [params])` picks `items.one` / `items.few` / `items.many` / `items.two` / `items.zero` / `items.other` by the CLDR plural rules of the language (a built-in table, no new dependency), with `items.zero` also for 0 in any language and `@count` filled in. `trPlural` / `trPluralParams` choose the singular for the language's `one` category (0 is singular in French and Persian) and no longer throw without a plural key. `trArgs` fills `%s` in one pass (a value holding `%s` is no longer replaced again). `PluralCategory` / `pluralCategory()` are exported.
   - Phase 3, switch and direction: the language never sets the text direction by itself: a `FluxyApp` is left-to-right in every language (Persian included) unless it passes `textDirection:` or the new `directionFor: (Locale) => TextDirection`; `Fluxy.textDirection` reads the result and is reactive. Coming from GetX, an app that relied on `fa` / `ar` / `he` / `ps` / `ur` turning it right-to-left passes `directionFor: (l) => rtlLanguages.contains(l.languageCode) ? TextDirection.rtl : TextDirection.ltr`. Setting `Fluxy.locale` alone now updates the locale Material / Cupertino get; in debug, a locale outside `supportedLocales` is logged once. `updateLocale` / `forceAppUpdate` rebuild every widget by marking them, no longer through the hot-reload hook (`performReassemble`): no `State.reassemble` calls, about 2.4x faster on a large screen in a debug test. An app that follows the device starts in the device language (it showed keys until the device language changed).

@@ -1,6 +1,6 @@
 name: fluxy_core
 description: "Fluxy core: the Fluxy object, logging, engine access and equality helpers."
-version: 1.6.1
+version: 1.7.0
 publish_to: none
 repository: https://github.com/aminjoharinia/Fluxy
 

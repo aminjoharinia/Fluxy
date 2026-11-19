@@ -1,6 +1,6 @@
 # fluxy_i18n re-engineering plan
 
-Status: phases 0-5 done (2026-11-19), phase 6 (release v1.7.0) next. Decisions at the end.
+Status: done (2026-11-19); released as v1.7.0. Decisions at the end.
 
 ## Why
 
@@ -126,3 +126,7 @@ Decided 2026-11-19 (user's choice: the proposed defaults, with D2 changed).
 - Root README: package table, the Translations bullet, a "since v1.7.0" note on direction, two Coming from GetX rows (automatic right-to-left, `trPlural` / `trCount`). FLUXY.md was kept up to date per phase.
 - APP-NOTES: 16 marked fixed (nothing to do in Hesabak); 17 lists each app's optional steps after v1.7.0 (`persian_US` → `fa_IR` with file names, direction getters, NestCut's digits, the check tool's missing keys).
 - fluxy_i18n 67, fluxy_nav 266, tool 69, root analyze clean (docs and an internal rename only; the app copies were not re-run).
+
+### Phase 6 (2026-11-19): release
+
+- v1.7.0: versions bumped in every package, README / FLUXY.md refs, APP-NOTES 16 to Done (17's app steps stay open), tag `v1.7.0`. Hesabak's pubspec moved to v1.7.0 (uncommitted there, the user's to commit); BOOFI stays on v1.5.0 until it gets the `VoidCallback` import (APP-NOTES 18); NestCut is still on GetX.
