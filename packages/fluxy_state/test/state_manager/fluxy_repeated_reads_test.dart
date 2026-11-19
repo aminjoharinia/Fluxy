@@ -118,6 +118,7 @@ void main() {
       expect(rx.any((e) => e > 8), isTrue);
       expect(rx.every((e) => e > 0), isTrue);
       expect(rx.contains(5), isTrue);
+      // ignore: collection_methods_unrelated_type
       expect(rx.contains('5'), isFalse);
       expect(rx.indexOf(1), 1);
       expect(rx.indexOf(1, 2), 3);
