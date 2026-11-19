@@ -27,6 +27,20 @@ void main() {
     expect(find.text('first'), findsNothing);
   });
 
+  testWidgets('a FluxyApp replaced by a new one (new key) leaves it working',
+      (tester) async {
+    // The old app is disposed after the new one has mounted; it must not
+    // clear the root the new one registered.
+    await tester.pumpWidget(FluxyApp(key: UniqueKey(), home: const Text('a')));
+    await tester.pumpWidget(FluxyApp(key: UniqueKey(), home: const Text('b')));
+    expect(tester.takeException(), isNull);
+    expect(Fluxy.navigator, isNotNull);
+    Fluxy.to(() => const Text('next'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('next'), findsOneWidget);
+  });
+
   testWidgets('a home of the same type is updated in place (state kept)',
       (tester) async {
     await tester.pumpWidget(FluxyApp(home: const _Counter('a')));

@@ -6,7 +6,7 @@ Apps:
 
 - **BOOFI**: `~/Workspace/BOOFI/Application/boofi`. On Fluxy since v0.1.0 (it came from GetX 5). Uses no `refresh()`: in-place edits go through the rx_edit helpers (`patch`, `setIn`, …).
 - **Hesabak** (accounting): `~/Workspace/AnimooAPPs/accounting`. Moved from GetX 4.7.3 to Fluxy v1.5.0 on 2026-11-19 (branch `fluxy-migration`). About 99k lines. Each book is an untyped `RxList` / `RxMap` of maps, with large lists read inside `Obx`.
-- **NestCut** (panel and block cutting optimizer): `~/Workspace/AnimooAPPs/nestingapp`. Still on GetX 4.7.3 (checked 2026-11-19, not moved yet). About 38k lines in 66 files: 43 files import `get`, 51 `Obx`, 4 controllers put in `main()` as `permanent`, 692 `.tr` and 123 `.trParams`, no `GetBuilder`, routes or bindings. Its whole `GetMaterialApp` is built inside an `Obx` (language, dark mode, colours, font).
+- **NestCut** (panel and block cutting optimizer): `~/Workspace/AnimooAPPs/nestingapp`. Moved from GetX 4.7.3 to Fluxy v1.7.0 on 2026-11-19 (worktree `nestingapp-fluxy`, branch `fluxy-migration`, on top of a snapshot of the uncommitted work on main). About 38k lines in 66 files: 43 files import `get`, 51 `Obx`, 4 controllers put in `main()` as `permanent`, 692 `.tr` and 123 `.trParams`, no `GetBuilder`, routes or bindings. Its whole `GetMaterialApp` is built inside an `Obx` (language, dark mode, colours, font).
 
 ## Open
 
@@ -27,6 +27,17 @@ Apps:
 18. **BOOFI needs one import when it moves past v1.5.0** (found 2026-11-19 checking I18N-PLAN phase 1 on a copy): `lib/Pages/FloorPlan/FloorPlanCreate.dart` uses `VoidCallback` without importing it; it came from fluxy_state's own typedef, removed in v1.6.0 (note 8). Add `import 'dart:ui' show VoidCallback;` (or `material_ui`). With it, BOOFI's 97 tests pass on the local Fluxy.
 
 13. **The secure storage packages depended on GetX itself** (Hesabak and NestCut). `get_secure_storage` 1.0.5 (NestCut) and `orca_secure_storage` up to v2.4.2 (our fork, Hesabak) depend on `get`, so Hesabak on Fluxy still resolves `get` and ships two state managers. **Fixed in Orca v2.5.0**, which no longer depends on `get` and keeps the 2.4.x file format (only `listenable`'s `ValueStorage` and the `queue` type changed; neither app uses them). **Apps:** Hesabak moves its pin from v2.4.2 to v2.5.0; NestCut switches from `get_secure_storage` to Orca v2.5.0 when it moves to Fluxy (Orca reads get_secure_storage 1.x files). After that, `get` should drop out of both lockfiles; check with `grep '^  get:' pubspec.lock`.
+
+### Navigation
+
+19. **A `FluxyApp` replaced by a new one broke the new one** (NestCut's `block_project_screens_test`, found moving it to v1.7.0). The test pumps `FluxyApp(key: UniqueKey(), …)` for every screen and width. Flutter mounts the new app before it disposes the old one, and the old one's dispose set the shared `FluxyRootState._controller` to null and reset `FluxyOverlays`, so the new app's next page build (`defaultTransition`) threw `FluxyRoot is not part of the tree`. GetX 4 kept one global key and never hit it. **Fixed (unreleased):** the old app clears the root and overlays only while it is still the current one; test in `fluxy_nav/test/navigation/app_update_test.dart`. NestCut's test passes against local Fluxy; on v1.7.0 it fails until the next release.
+
+### NestCut migration (done 2026-11-19, for the record)
+
+- Codemod `--material-ui`: 302 changes in 100 files, 1 `refresh()` listed (`renameManual` edits a layout in place → `replaceItem(l, l)`).
+- `Get.until((route) => route.isFirst)` in sign-out → `if (Fluxy.navigator?.canPop() ?? false) Fluxy.backToFirst()` (the sign-out test runs without an app).
+- `GlassToast.navigatorKey = Get.key` before `runApp` (note 10) → `FluxyApp(navigatorKey: GlassToast.navigatorKey)`; `offcut_basket_test` did the same in `setUp`.
+- `get` is gone from its lockfile (Orca v2.5.0, note 13). Analyzer clean (the 90 `flutter/material` deprecation infos went too); 376 tests pass, 2 fail as on GetX (system-fonts timer in two width tests). No `MaterialUiCompatibilityBridge` added yet: `printing`'s `PdfPreview` (label screen) still reads `flutter/material`'s theme, check its colours in dark mode.
 
 ## Done
 

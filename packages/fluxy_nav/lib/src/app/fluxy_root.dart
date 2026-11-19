@@ -437,10 +437,15 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     _home.dispose();
     config.routerDelegate?.removeListener(_reportRouting);
     FluxyOverlays.changes.removeListener(_reportRouting);
-    FluxyOverlays.reset();
+    // A FluxyApp replaced by another one (a new key in the same place, as in
+    // a test pumping a fresh app) is disposed after the new one has mounted:
+    // the shared root and overlay count are the new app's by then.
+    if (identical(_controller, this)) {
+      FluxyOverlays.reset();
+      _controller = null;
+    }
     config.onDispose?.call();
     config.snackBarQueue.disposeControllers();
-    _controller = null;
     Engine.instance.removeObserver(this);
   }
 
