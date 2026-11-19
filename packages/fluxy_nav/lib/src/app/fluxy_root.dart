@@ -340,14 +340,29 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     super.initState();
   }
 
-  // @override
-  // void didUpdateWidget(covariant FluxyRoot oldWidget) {
-  //   if (oldWidget.config != widget.config) {
-  //     config = widget.config;
-  //   }
+  /// The app's `home`, read by the root page: a rebuilt [FluxyApp] with
+  /// another `home` shows it, as `MaterialApp(home:)` does.
+  late final ValueNotifier<Widget?> _home = ValueNotifier(widget.config.home);
 
-  //   super.didUpdateWidget(oldWidget);
-  // }
+  /// A rebuilt [FluxyApp] (a parent's build, or a test pumping another app
+  /// in the same place) keeps its navigation state but takes a new `home`
+  /// and new themes. A theme set with `Fluxy.changeTheme` / `changeThemeMode`
+  /// stays until the app passes a different one.
+  @override
+  void didUpdateWidget(covariant FluxyRoot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.config, previous = oldWidget.config;
+    _home.value = next.home;
+    if (next.theme != previous.theme ||
+        next.darkTheme != previous.darkTheme ||
+        next.themeMode != previous.themeMode) {
+      config = config.copyWith(
+        theme: next.theme != previous.theme ? next.theme : null,
+        darkTheme: next.darkTheme != previous.darkTheme ? next.darkTheme : null,
+        themeMode: next.themeMode != previous.themeMode ? next.themeMode : null,
+      );
+    }
+  }
 
   void _reportRouting() {
     final delegate = config.routerDelegate;
@@ -355,6 +370,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
   }
 
   void onClose() {
+    _home.dispose();
     config.routerDelegate?.removeListener(_reportRouting);
     FluxyOverlays.changes.removeListener(_reportRouting);
     FluxyOverlays.reset();
@@ -384,7 +400,10 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
               FluxyPage(
                 // The home page is the root of the app.
                 name: '/',
-                page: () => config.home!,
+                page: () => ValueListenableBuilder<Widget?>(
+                  valueListenable: _home,
+                  builder: (_, home, _) => home ?? const SizedBox.shrink(),
+                ),
               ),
             ],
         notFoundRoute: config.unknownRoute,
@@ -446,7 +465,11 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
     // defaultTransitionDuration =
     //     config.transitionDuration ?? Duration(milliseconds: 300);
 
-    Future(() => onReady());
+    // After the first frame, as GetX did. A post-frame callback leaves no
+    // timer behind (a `Future` did, failing widget tests that pump once).
+    Engine.instance.addPostFrameCallback((_) {
+      if (mounted) onReady();
+    });
   }
 
   set parameters(Map<String, String?> newParameters) {
