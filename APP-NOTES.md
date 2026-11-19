@@ -7,6 +7,7 @@ Apps:
 - **BOOFI**: `~/Workspace/BOOFI/Application/boofi`. On Fluxy since v0.1.0 (it came from GetX 5). Uses no `refresh()`: in-place edits go through the rx_edit helpers (`patch`, `setIn`, …).
 - **Hesabak** (accounting): `~/Workspace/AnimooAPPs/accounting`. Moved from GetX 4.7.3 to Fluxy v1.5.0 on 2026-11-19 (branch `fluxy-migration`). About 99k lines. Each book is an untyped `RxList` / `RxMap` of maps, with large lists read inside `Obx`.
 - **NestCut** (panel and block cutting optimizer): `~/Workspace/AnimooAPPs/nestingapp`. Moved from GetX 4.7.3 to Fluxy v1.7.0 on 2026-11-19, pinned to v1.7.1 (worktree `nestingapp-fluxy`, branch `fluxy-migration`, on top of a snapshot of the uncommitted work on main). About 38k lines in 66 files: 43 files import `get`, 51 `Obx`, 4 controllers put in `main()` as `permanent`, 692 `.tr` and 123 `.trParams`, no `GetBuilder`, routes or bindings. Its whole `GetMaterialApp` is built inside an `Obx` (language, dark mode, colours, font).
+- **IELTS Turtle** (English learning app, package `ieltsturtle`): `~/Workspace/AnimooAPPs/EnglishAPP/englishapp`. Moved from GetX 4.7.2 and get_storage 2.1.1 to Fluxy v1.7.1 and Orca v2.5.0 on 2026-11-19 (worktree `englishapp-fluxy`, branch `fluxy-migration`, on top of a snapshot of the uncommitted work on main). About 50k lines in 135 files: 25 files import `get`, 38 `Obx`, 23 `Get.find`, 10 `Get.snackbar`, a few `Get.put` in `main()`; no `.tr`, routes, bindings or `refresh()`.
 
 ## Open
 
@@ -22,11 +23,26 @@ Apps:
     - NestCut's `localDigits()` (14 calls) can become `'…'.localDigits()`; input parsing can use `.westernDigits`.
     - Run `dart run tool/i18n_check.dart <app> --locale en_US`: BOOFI has 10 keys missing in English (mostly `OrderFirmware.dart`), Hesabak 2 (`'—'`, `'Money Unit'`).
 
+### Tooling
+
+20. **The codemod leaves GetX 4's upper-case enum values** (IELTS Turtle: 10 analyzer errors after the codemod). Fluxy has GetX 5's lower-case enums, GetX 4 apps write `SnackPosition.BOTTOM`. Not mapped in `tool/renames.txt` or `lib/fix_data.yaml`, and no "Coming from GetX" row: `SnackPosition.TOP/BOTTOM`, `SnackStyle.FLOATING/GROUNDED`, `SnackbarStatus.OPEN/CLOSED/OPENING/CLOSING`. Hesabak and NestCut had none in code, which is why it showed up only now. **Fix:** add the pairs to `renames.txt` (member pairs with a non-`Get` receiver; check the matcher takes them), `fix_data.yaml` (enum constant renames) and the README table; a codemod test.
+
+21. **`--material-ui` leaves imports that become unnecessary** (IELTS Turtle, `lib/Pages/HomePage.dart`): `package:flutter/rendering.dart` / `services.dart` / `foundation.dart` next to the new `material_ui` import give `unnecessary_import` infos (they were already redundant with `flutter/material`, but apps often ignore that one). **Option:** list them in the Review output, or drop a plain `import 'package:flutter/rendering.dart';` when the file now imports `material_ui` and the analyzer agrees (needs resolution, so listing is the cheap version).
+
 ### For the apps
 
 18. **BOOFI needs one import when it moves past v1.5.0** (found 2026-11-19 checking I18N-PLAN phase 1 on a copy): `lib/Pages/FloorPlan/FloorPlanCreate.dart` uses `VoidCallback` without importing it; it came from fluxy_state's own typedef, removed in v1.6.0 (note 8). Add `import 'dart:ui' show VoidCallback;` (or `material_ui`). With it, BOOFI's 97 tests pass on the local Fluxy.
 
 13. **The secure storage packages depended on GetX itself** (Hesabak and NestCut). `get_secure_storage` 1.0.5 (NestCut) and `orca_secure_storage` up to v2.4.2 (our fork, Hesabak) depend on `get`, so Hesabak on Fluxy still resolves `get` and ships two state managers. **Fixed in Orca v2.5.0**, which no longer depends on `get` and keeps the 2.4.x file format (only `listenable`'s `ValueStorage` and the `queue` type changed; neither app uses them). **Apps:** Hesabak moves its pin from v2.4.2 to v2.5.0; NestCut switches from `get_secure_storage` to Orca v2.5.0 when it moves to Fluxy (Orca reads get_secure_storage 1.x files). After that, `get` should drop out of both lockfiles; check with `grep '^  get:' pubspec.lock`.
+
+22. **Moving from get_storage to Orca: the container has to be named `GetStorage`** (IELTS Turtle). Orca reads a GetStorage file only as `<container>.gs` (web: `localStorage[<container>]`), so keeping the learners' settings and the full-version unlock meant naming the app's encrypted container `GetStorage`, plus `migrateUnencrypted: true`. Two Orca-side ideas (not Fluxy): an `importFrom: 'GetStorage'` (legacy container name) option, so the new container can have its own name; and `OrcaSecureStorage(container: x)` with no password, called before `init`, silently opens that container unencrypted — the app wraps it in `appStorage` behind `initAppStorage()`, but an assert / error for "a container is opened without arguments that is not open yet, while another was opened with a password" would catch the slip. Fluxy itself has no storage module and does not need one: the README's "Coming from GetX" could point get_storage users at Orca (one line).
+
+### IELTS Turtle migration (done 2026-11-19, for the record)
+
+- Codemod `--material-ui`: 182 changes in 87 files, no `refresh()` and nothing to review. Then `SnackPosition.BOTTOM` → `.bottom` by hand (note 20).
+- get_storage → Orca v2.5.0 (note 22): `lib/services/app_storage.dart` (`initAppStorage()` in `main()`, `appStorage` getter used by settings, premium and vocabulary-practice services). New `test/app_storage_test.dart` checks an old `GetStorage.gs` is read and re-stored encrypted. The macOS debug build converted the local `GetStorage.gs` to `GetStorage.oss` and left the old file.
+- `get` and `get_storage` are gone from its lockfile. Analyzer clean (the `flutter/material` infos went too); 299 tests pass (297 on GetX + 2 new).
+- Not changed: `MainApp` reads the settings' `.value` in `build` without `Obx` and calls `Fluxy.forceAppUpdate()` after a font change; it works, and since v1.5.0 the `FluxyApp` could sit in an `Obx` instead (NestCut does).
 
 ### NestCut migration (done 2026-11-19, for the record)
 
