@@ -2,4 +2,5 @@ library;
 
 export 'src/intl.dart';
 export 'src/locales.dart' show LocalesIntl;
+export 'src/plural.dart' show PluralCategory, pluralCategory;
 export 'src/translations.dart';

@@ -157,7 +157,7 @@ void main() {
       });
       Fluxy.locale = _english;
       expect('k'.trArgs(['50%s', 'B']), '50%s and B');
-    }, skip: 'I18N-PLAN phase 2');
+    });
 
     test('B8: trPlural without a plural key does not throw', () {
       Fluxy.addTranslations(const {
@@ -166,7 +166,7 @@ void main() {
       Fluxy.locale = _english;
       expect('k'.trPlural(null, 2), 'one item');
       expect('k'.trPluralParams(null, 2), 'one item');
-    }, skip: 'I18N-PLAN phase 2');
+    });
 
     testWidgets('B9: an Obx that reads Fluxy.locale rebuilds', (tester) async {
       await tester.pumpWidget(Directionality(

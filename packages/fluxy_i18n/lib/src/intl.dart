@@ -1,4 +1,6 @@
+import 'args.dart';
 import 'locales.dart';
+import 'plural.dart';
 
 extension Trans on String {
   /// The translation of this key in the current locale, falling back to
@@ -9,69 +11,54 @@ extension Trans on String {
   /// change.
   String get tr => FluxyLocales.instance.lookup(this) ?? this;
 
-  /// Replaces each `%s` in the translation with the next of [args].
-  String trArgs([List<String> args = const []]) {
-    var key = tr;
-    for (final arg in args) {
-      key = key.replaceFirst('%s', arg);
-    }
-    return key;
-  }
+  /// Replaces each `%s` in the translation with the next of [args], in one
+  /// pass (inserted values are not scanned again).
+  String trArgs([List<String> args = const []]) => fillArgs(tr, args);
 
-  String trPlural([String? pluralKey, int? i, List<String> args = const []]) {
-    return i == 1 ? trArgs(args) : pluralKey!.trArgs(args);
-  }
+  /// Replaces `@name` placeholders in the translation with [params]: whole
+  /// names only, the longest first, in one pass. Names may contain `-`.
+  String trParams([Map<String, String> params = const {}]) =>
+      fillParams(tr, params);
 
-  /// Replaces `@name` placeholders in the translation with [params].
+  /// The translation in the plural form for [count], chosen by the CLDR
+  /// rules of the language it is translated into.
   ///
-  /// One pass over the text: a placeholder only matches a whole name (so
-  /// `@admin` does not eat the start of `@admin_email`; the longest matching
-  /// name wins), and inserted values are never scanned again (a value that
-  /// contains `@other` stays as it is). Names may contain `-`.
-  String trParams([Map<String, String> params = const {}]) {
-    final text = tr;
-    if (params.isEmpty || !text.contains('@')) return text;
-    final names = params.keys.toList()
-      ..sort((a, b) => b.length.compareTo(a.length));
-    final out = StringBuffer();
-    var i = 0;
-    while (i < text.length) {
-      final at = text.indexOf('@', i);
-      if (at < 0) break;
-      out.write(text.substring(i, at));
-      String? matched;
-      for (final name in names) {
-        final end = at + 1 + name.length;
-        if (text.startsWith(name, at + 1) &&
-            (end == text.length || !_isNameChar(text.codeUnitAt(end)))) {
-          matched = name;
-          break;
-        }
-      }
-      if (matched == null) {
-        out.write('@');
-        i = at + 1;
-      } else {
-        out.write(params[matched]);
-        i = at + 1 + matched.length;
-      }
-    }
-    out.write(text.substring(i));
-    return out.toString();
+  /// The forms are entries next to the key: `'items.one'`, `'items.other'`,
+  /// and for languages that have them `'items.two'`, `'items.few'`,
+  /// `'items.many'`, `'items.zero'`. `'items.zero'` is also used for a count
+  /// of 0 in any language ("No items"). A missing form falls back to
+  /// `'items.other'`, then to `'items'` itself. `@count` is replaced with
+  /// [count], and `@name` placeholders with [params].
+  ///
+  /// ```dart
+  /// 'en_US': {'items.one': '@count item', 'items.other': '@count items'},
+  /// 'ru_RU': {'items.one': '@count файл', 'items.few': '@count файла',
+  ///           'items.many': '@count файлов', 'items.other': '@count файла'},
+  /// 'items'.trCount(3) // "3 items"
+  /// ```
+  String trCount(num count, [Map<String, String> params = const {}]) {
+    final text = FluxyLocales.instance.lookupPlural(this, count) ?? tr;
+    return fillParams(text, {'count': '$count', ...params});
   }
 
+  /// This key's translation when [i] is in the language's `one` category,
+  /// else [pluralKey]'s (CLDR rules: in French and Persian 0 is `one` too).
+  /// With no [pluralKey], always this key's. `%s` is filled from [args].
+  ///
+  /// For languages with more than two forms use [trCount].
+  String trPlural([String? pluralKey, int? i, List<String> args = const []]) =>
+      _singular(pluralKey, i) ? trArgs(args) : pluralKey!.trArgs(args);
+
+  /// [trPlural] with `@name` placeholders filled from [params].
   String trPluralParams([
     String? pluralKey,
     int? i,
     Map<String, String> params = const {},
-  ]) {
-    return i == 1 ? trParams(params) : pluralKey!.trParams(params);
-  }
-}
+  ]) =>
+      _singular(pluralKey, i) ? trParams(params) : pluralKey!.trParams(params);
 
-/// ASCII letters, digits and `_`: characters that continue a placeholder name.
-bool _isNameChar(int c) =>
-    (c >= 0x30 && c <= 0x39) || // 0-9
-    (c >= 0x41 && c <= 0x5A) || // A-Z
-    (c >= 0x61 && c <= 0x7A) || // a-z
-    c == 0x5F; // _
+  bool _singular(String? pluralKey, int? i) =>
+      pluralKey == null ||
+      (i != null &&
+          FluxyLocales.instance.categoryFor(this, i) == PluralCategory.one);
+}

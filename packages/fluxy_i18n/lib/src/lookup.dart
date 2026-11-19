@@ -51,6 +51,10 @@ class LocaleKey {
   static String? _nonEmpty(String? s) => (s == null || s.isEmpty) ? null : s;
 }
 
+/// One dictionary in the lookup order, with the key it was added under (its
+/// language, for plural rules).
+typedef ChainEntry = ({String key, Map<String, String> dict});
+
 /// The dictionaries `.tr` looks in, in order, for [locale] then
 /// [fallbackLocale]:
 ///
@@ -62,26 +66,27 @@ class LocaleKey {
 /// Then the fallback locale's steps 1-2. With no locale, only the fallback.
 /// Each dictionary appears once; dictionaries are used as given (a custom
 /// `Map` keeps answering through its `[]`).
-List<Map<String, String>> buildChain(
+List<ChainEntry> buildChain(
   Map<String, Map<String, String>> translations,
   Locale? locale,
   Locale? fallbackLocale,
 ) {
   final entries = [
-    for (final e in translations.entries) (LocaleKey.parse(e.key), e.value),
+    for (final e in translations.entries)
+      (LocaleKey.parse(e.key), (key: e.key, dict: e.value)),
   ];
-  final result = <Map<String, String>>[];
+  final result = <ChainEntry>[];
 
-  void add(Map<String, String> dict) {
-    for (final d in result) {
-      if (identical(d, dict)) return;
+  void add(ChainEntry entry) {
+    for (final r in result) {
+      if (identical(r.dict, entry.dict)) return;
     }
-    result.add(dict);
+    result.add(entry);
   }
 
   void addWhere(bool Function(LocaleKey key) test) {
-    for (final (key, dict) in entries) {
-      if (test(key)) add(dict);
+    for (final (key, entry) in entries) {
+      if (test(key)) add(entry);
     }
   }
 

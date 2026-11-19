@@ -10,7 +10,7 @@ List<String> _order(Map<String, Map<String, String>> dicts, Locale? locale,
   final chain = buildChain(dicts, locale, fallback);
   return [
     for (final d in chain)
-      dicts.entries.firstWhere((e) => identical(e.value, d)).key,
+      d.key,
   ];
 }
 
