@@ -1,6 +1,6 @@
 name: fluxy_ui
 description: "Fluxy UI: responsive views, screen-percent sizing and widget animation extensions."
-version: 1.7.0
+version: 1.7.1
 publish_to: none
 repository: https://github.com/aminjoharinia/Fluxy
 
