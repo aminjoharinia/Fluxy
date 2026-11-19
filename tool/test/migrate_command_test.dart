@@ -156,6 +156,29 @@ void f() {
     );
   });
 
+  test('the shipped renames.txt lower-cases GetX 4 enum values (APP-NOTES 20)',
+      () async {
+    write('lib/s.dart', '''
+void f() {
+  Get.snackbar('a', 'b', snackPosition: SnackPosition.BOTTOM,
+      snackStyle: SnackStyle.FLOATING);
+  if (s == SnackbarStatus.CLOSED || p == SnackPosition.TOP) {}
+  final keep = MySnackPosition.BOTTOM; // not the enum
+}
+''');
+    final shipped = File('renames.txt');
+    expect(
+      await run([project.path, '--map', shipped.path, '--format', 'never']),
+      0,
+    );
+    final out = read('lib/s.dart');
+    expect(out, contains('Fluxy.snackbar('));
+    expect(out, contains('snackPosition: SnackPosition.bottom'));
+    expect(out, contains('snackStyle: SnackStyle.floating'));
+    expect(out, contains('SnackbarStatus.closed || p == SnackPosition.top'));
+    expect(out, contains('MySnackPosition.BOTTOM'));
+  });
+
   group('clean-ups (APP-NOTES 1, 3, 4, 12)', () {
     const app = '''
 import 'package:get/get.dart';

@@ -25,8 +25,6 @@ Apps:
 
 ### Tooling
 
-20. **The codemod leaves GetX 4's upper-case enum values** (IELTS Turtle: 10 analyzer errors after the codemod). Fluxy has GetX 5's lower-case enums, GetX 4 apps write `SnackPosition.BOTTOM`. Not mapped in `tool/renames.txt` or `lib/fix_data.yaml`, and no "Coming from GetX" row: `SnackPosition.TOP/BOTTOM`, `SnackStyle.FLOATING/GROUNDED`, `SnackbarStatus.OPEN/CLOSED/OPENING/CLOSING`. Hesabak and NestCut had none in code, which is why it showed up only now. **Fix:** add the pairs to `renames.txt` (member pairs with a non-`Get` receiver; check the matcher takes them), `fix_data.yaml` (enum constant renames) and the README table; a codemod test.
-
 21. **`--material-ui` leaves imports that become unnecessary** (IELTS Turtle, `lib/Pages/HomePage.dart`): `package:flutter/rendering.dart` / `services.dart` / `foundation.dart` next to the new `material_ui` import give `unnecessary_import` infos (they were already redundant with `flutter/material`, but apps often ignore that one). **Option:** list them in the Review output, or drop a plain `import 'package:flutter/rendering.dart';` when the file now imports `material_ui` and the analyzer agrees (needs resolution, so listing is the cheap version).
 
 ### For the apps
@@ -39,7 +37,7 @@ Apps:
 
 ### IELTS Turtle migration (done 2026-11-19, for the record)
 
-- Codemod `--material-ui`: 182 changes in 87 files, no `refresh()` and nothing to review. Then `SnackPosition.BOTTOM` → `.bottom` by hand (note 20).
+- Codemod `--material-ui`: 182 changes in 87 files, no `refresh()` and nothing to review. Then `SnackPosition.BOTTOM` → `.bottom` by hand (note 20, now done by the codemod).
 - get_storage → Orca v2.5.0 (note 22): `lib/services/app_storage.dart` (`initAppStorage()` in `main()`, `appStorage` getter used by settings, premium and vocabulary-practice services). New `test/app_storage_test.dart` checks an old `GetStorage.gs` is read and re-stored encrypted. The macOS debug build converted the local `GetStorage.gs` to `GetStorage.oss` and left the old file.
 - `get` and `get_storage` are gone from its lockfile. Analyzer clean (the `flutter/material` infos went too); 299 tests pass (297 on GetX + 2 new).
 - Not changed: `MainApp` reads the settings' `.value` in `build` without `Obx` and calls `Fluxy.forceAppUpdate()` after a font change; it works, and since v1.5.0 the `FluxyApp` could sit in an `Obx` instead (NestCut does).
@@ -52,6 +50,9 @@ Apps:
 - `get` is gone from its lockfile (Orca v2.5.0, note 13). Analyzer clean (the 90 `flutter/material` deprecation infos went too); 376 tests pass, 2 fail as on GetX (system-fonts timer in two width tests). No `MaterialUiCompatibilityBridge` added yet: `printing`'s `PdfPreview` (label screen) still reads `flutter/material`'s theme, check its colours in dark mode.
 
 ## Done
+
+- Unreleased (on main), from moving IELTS Turtle:
+  - **20.** **The codemod left GetX 4's upper-case enum values** (IELTS Turtle: 10 analyzer errors after the codemod, fixed by hand there). Fluxy has GetX 5's lower-case enums. **Fixed:** `tool/renames.txt` maps `SnackPosition.TOP/BOTTOM`, `SnackStyle.FLOATING/GROUNDED` and `SnackbarStatus.OPEN/CLOSED/OPENING/CLOSING`; test in `tool/test/migrate_command_test.dart`; README row. On IELTS Turtle's GetX code the codemod now makes 192 changes (was 182) and the result matches the hand-fixed branch. `dart fix` cannot do it: the analyzer has no data-driven fix for `undefined_enum_constant` (tried `constant`/`field`/`getter` with `inEnum`/`inClass` on Dart 3.14), so `lib/fix_data.yaml` has no entries for them.
 
 - v1.7.1, from moving NestCut:
   - **19.** **A `FluxyApp` replaced by a new one broke the new one** (NestCut's `block_project_screens_test`, found moving it to v1.7.0). The test pumps `FluxyApp(key: UniqueKey(), …)` for every screen and width. Flutter mounts the new app before it disposes the old one, and the old one's dispose set the shared `FluxyRootState._controller` to null and reset `FluxyOverlays`, so the new app's next page build (`defaultTransition`) threw `FluxyRoot is not part of the tree`. GetX 4 kept one global key and never hit it. **Fixed:** the old app clears the root and overlays only while it is still the current one; test in `fluxy_nav/test/navigation/app_update_test.dart`. NestCut's test passes on v1.7.1.

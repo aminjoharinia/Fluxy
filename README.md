@@ -56,7 +56,7 @@ Obx(() => Text('${cart.items.length} items, ${'total'.tr}: ${cart.total}'));
 
 Fluxy keeps GetX's API under its own names (no deprecated aliases): every `Get` prefix became `Fluxy`. Member names did not change (`Fluxy.to`, `Fluxy.back`, `Fluxy.put`, `getPages:` …), nor did the short idioms: `.obs`, `Rx…`, `Obx`, `ObxValue`, `StateMixin`, `.tr`, `Bindings`, the `FluxyStatus` cases (`LoadingStatus`, `SuccessStatus`, `ErrorStatus`, `EmptyStatus`).
 
-To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, then run the codemod from a Fluxy checkout (`dart run tool/migrate.dart <app>`, see [tool/README.md](tool/README.md)). Or rewrite the imports (`package:get/` → `package:fluxy/`) and run `dart fix --apply`: the root package ships the type renames in `lib/fix_data.yaml`. The codemod also drops `refresh()` calls that follow a write that already notifies (`refresh()` is `@protected` in Fluxy), fixes deep `package:get/<path>` imports, and lists what to review: the other `refresh()` calls and strings that still name GetX.
+To move an app: in `pubspec.yaml`, rename the `get:` dependency to `fluxy:`, then run the codemod from a Fluxy checkout (`dart run tool/migrate.dart <app>`, see [tool/README.md](tool/README.md)). Or rewrite the imports (`package:get/` → `package:fluxy/`) and run `dart fix --apply`: the root package ships the type renames in `lib/fix_data.yaml` (`dart fix` cannot rename GetX 4's upper-case enum values such as `SnackPosition.BOTTOM`; the codemod does). The codemod also drops `refresh()` calls that follow a write that already notifies (`refresh()` is `@protected` in Fluxy), fixes deep `package:get/<path>` imports, and lists what to review: the other `refresh()` calls and strings that still name GetX.
 
 Behaviour to know: as in GetX 4, `Fluxy.put` / `lazyPut` and translations registered in `main()` survive the `FluxyApp` being disposed and mounted again (since v1.6.0); only a page's own `bindings` close with it. `Fluxy.reset()` clears everything, for tests.
 
@@ -87,6 +87,7 @@ Since v1.7.0 a language never turns the app right-to-left by itself (GetX flippe
 | `GetPageRouteTransitionMixin` | `FluxyPageRouteTransitionMixin` |
 | `GetSnackBar` | `FluxySnackBar` |
 | `GetSnackBarState` | `FluxySnackBarState` |
+| `SnackPosition.BOTTOM`, `SnackStyle.FLOATING`, `SnackbarStatus.OPEN` … (GetX 4) | lower case: `SnackPosition.bottom`, `SnackStyle.floating`, `SnackbarStatus.open` … (codemod only: `dart fix` has no fix for enum values) |
 | `GetHeroScope` | `FluxyHeroScope` |
 | `GetBackGestureController` | `FluxyBackGestureController` |
 | `GetBackGestureDetector` | `FluxyBackGestureDetector` |
