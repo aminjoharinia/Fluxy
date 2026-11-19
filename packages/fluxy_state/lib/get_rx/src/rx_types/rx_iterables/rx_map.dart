@@ -88,6 +88,39 @@ class RxMap<K, V> extends FluxyListenable<Map<K, V>>
   @override
   Iterable<K> get keys => value.keys;
 
+  // Reads below would otherwise come from MapMixin, which looks every key
+  // up through `this[key]`: one tracked read per entry inside an Obx or a
+  // Computed. Each one here reads the map once.
+
+  @override
+  Iterable<V> get values => value.values;
+
+  @override
+  Iterable<MapEntry<K, V>> get entries => value.entries;
+
+  @override
+  int get length => value.length;
+
+  @override
+  bool get isEmpty => value.isEmpty;
+
+  @override
+  bool get isNotEmpty => value.isNotEmpty;
+
+  @override
+  bool containsKey(Object? key) => value.containsKey(key);
+
+  @override
+  bool containsValue(Object? value) => this.value.containsValue(value);
+
+  @override
+  void forEach(void Function(K key, V value) action) => value.forEach(action);
+
+  @override
+  Map<K2, V2> map<K2, V2>(
+    MapEntry<K2, V2> Function(K key, V value) transform,
+  ) => value.map(transform);
+
   @override
   V? remove(Object? key) {
     final val = peek.remove(key);

@@ -204,6 +204,111 @@ class RxList<E> extends FluxyListenable<List<E>>
     return value.whereType<T>();
   }
 
+  // Reads below would otherwise come from ListMixin, which reads `length`
+  // and `this[i]` for every item: two tracked reads per item inside an
+  // Obx or a Computed. Each one here reads the list once. (`cast` is left
+  // to ListMixin: writes through it must notify.)
+
+  @override
+  bool get isEmpty => value.isEmpty;
+
+  @override
+  bool get isNotEmpty => value.isNotEmpty;
+
+  @override
+  E get first => value.first;
+
+  @override
+  E get last => value.last;
+
+  @override
+  E get single => value.single;
+
+  @override
+  E elementAt(int index) => value.elementAt(index);
+
+  @override
+  void forEach(void Function(E element) action) => value.forEach(action);
+
+  @override
+  bool any(bool Function(E element) test) => value.any(test);
+
+  @override
+  bool every(bool Function(E element) test) => value.every(test);
+
+  @override
+  bool contains(Object? element) => value.contains(element);
+
+  @override
+  int indexOf(Object? element, [int start = 0]) =>
+      element is E ? value.indexOf(element, start) : -1;
+
+  @override
+  int lastIndexOf(Object? element, [int? start]) =>
+      element is E ? value.lastIndexOf(element, start) : -1;
+
+  @override
+  int indexWhere(bool Function(E element) test, [int start = 0]) =>
+      value.indexWhere(test, start);
+
+  @override
+  int lastIndexWhere(bool Function(E element) test, [int? start]) =>
+      value.lastIndexWhere(test, start);
+
+  @override
+  E firstWhere(bool Function(E element) test, {E Function()? orElse}) =>
+      value.firstWhere(test, orElse: orElse);
+
+  @override
+  E lastWhere(bool Function(E element) test, {E Function()? orElse}) =>
+      value.lastWhere(test, orElse: orElse);
+
+  @override
+  E singleWhere(bool Function(E element) test, {E Function()? orElse}) =>
+      value.singleWhere(test, orElse: orElse);
+
+  @override
+  T fold<T>(T initialValue, T Function(T previousValue, E element) combine) =>
+      value.fold(initialValue, combine);
+
+  @override
+  E reduce(E Function(E value, E element) combine) => value.reduce(combine);
+
+  @override
+  String join([String separator = '']) => value.join(separator);
+
+  @override
+  Iterable<T> map<T>(T Function(E e) f) => value.map(f);
+
+  @override
+  Iterable<T> expand<T>(Iterable<T> Function(E element) f) => value.expand(f);
+
+  @override
+  Iterable<E> skip(int count) => value.skip(count);
+
+  @override
+  Iterable<E> skipWhile(bool Function(E element) test) =>
+      value.skipWhile(test);
+
+  @override
+  Iterable<E> take(int count) => value.take(count);
+
+  @override
+  Iterable<E> takeWhile(bool Function(E element) test) =>
+      value.takeWhile(test);
+
+  @override
+  Iterable<E> getRange(int start, int end) => value.getRange(start, end);
+
+  @override
+  List<E> sublist(int start, [int? end]) => value.sublist(start, end);
+
+  @override
+  List<E> toList({bool growable = true}) => value.toList(growable: growable);
+
+  @override
+  Set<E> toSet() => value.toSet();
+
   @override
   void sort([int Function(E a, E b)? compare]) {
     peek.sort(compare);

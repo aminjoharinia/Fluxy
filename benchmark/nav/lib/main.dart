@@ -1,5 +1,6 @@
-// Navigation and dependency benchmark: route matching, push / pop, deep
-// stacks, deep links, dialogs, find / put / delete and pages with bindings,
+// Navigation, dependency and reactive-read benchmark: route matching, push /
+// pop, deep stacks, deep links, dialogs, find / put / delete, pages with
+// bindings and Computed reads over large RxList / RxMap,
 // in a release (AOT) macOS build. Only API shared by v1.0.0
 // and v1.2.0 is used here; the rest is in adapter.dart.
 //
@@ -27,6 +28,38 @@ FluxyPage _page(String name, {List<FluxyPage> children = const []}) =>
     );
 
 class _Ctrl extends FluxyController {}
+
+final _rows = RxList<Map>(List.generate(5000, (i) => {'p': i}));
+final _groups = RxMap<int, int>({for (var i = 0; i < 2000; i++) i: i});
+final _settings = List.generate(6, (_) => 0.obs);
+
+int _settingsSum() {
+  var s = 0;
+  for (final r in _settings) {
+    s += r.value;
+  }
+  return s;
+}
+
+/// Builds a Computed over [read] and recomputes it 200 times, each after an
+/// in-place edit + refresh() of the rows and the groups. True when every
+/// result was the expected 0 + 1 + ... + 4999.
+bool _recompute(int Function() read) {
+  final c = Computed(read);
+  c.addListener(() {});
+  var ok = true;
+  for (var i = 0; i < 200; i++) {
+    _rows[0]['p'] = 0;
+    // The edit is in place, as an app that mutates rows then refreshes.
+    // ignore: invalid_use_of_protected_member
+    _rows.refresh();
+    // ignore: invalid_use_of_protected_member
+    _groups.refresh();
+    if (c.value != 12497500) ok = false;
+  }
+  c.dispose();
+  return ok;
+}
 
 class _PageCtrl extends FluxyController {}
 
@@ -186,6 +219,37 @@ Future<void> main() async {
         await _frame();
       }
       _check(!Fluxy.isRegistered<_PageCtrl>(), 'page dependencies closed');
+    }),
+    // Reactive reads shaped like an accounting app's report: a Computed
+    // over a 5,000-row RxList of maps (plus 6 settings it reads first),
+    // recomputed after each in-place edit + refresh().
+    _Scenario('rx list loop [i] 5k', 200, () async {
+      _check(_recompute(() {
+        var s = _settingsSum();
+        for (var i = 0; i < _rows.length; i++) {
+          s += _rows[i]['p'] as int;
+        }
+        return s;
+      }), 'sum');
+    }),
+    _Scenario('rx list fold 5k', 200, () async {
+      _check(_recompute(() => _rows.fold<int>(
+          _settingsSum(), (a, m) => a + (m['p'] as int))), 'sum');
+    }),
+    _Scenario('rx list any + firstWhere 5k', 200, () async {
+      _check(_recompute(() {
+        final s = _settingsSum();
+        final hit = _rows.any((m) => m['p'] == -1) ? 1 : 0;
+        final last = _rows.firstWhere((m) => m['p'] == 4999)['p'] as int;
+        return s + hit + last + 12497500 - 4999;
+      }), 'sum');
+    }),
+    _Scenario('rx map forEach 2k', 200, () async {
+      _check(_recompute(() {
+        var s = _settingsSum();
+        _groups.forEach((_, v) => s += v);
+        return s + 12497500 - 1999000;
+      }), 'sum');
     }),
   ];
 

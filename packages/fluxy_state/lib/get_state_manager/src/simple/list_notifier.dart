@@ -997,6 +997,11 @@ class TrackedSources extends ReadTracker {
           return;
         }
       }
+      // The source just matched, read again (a loop over a list's items):
+      // already recorded this run.
+      if (cursor > 0 && identical(list[cursor - 1].notifier, notifier)) {
+        return;
+      }
     }
     _read(notifier, _ignore);
   }
@@ -1005,6 +1010,10 @@ class TrackedSources extends ReadTracker {
   void _read(ListNotifierSingleMixin notifier, FluxyStateUpdate updater) {
     if (!_tracking) return;
     var next = _next;
+    if (next != null && next.isNotEmpty &&
+        identical(next[next.length - 1].notifier, notifier)) {
+      return; // the source just read, read again
+    }
     if (next == null) {
       // Same order as the last run so far.
       final list = _list;

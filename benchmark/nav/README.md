@@ -1,6 +1,6 @@
-# Navigation and dependency benchmark
+# Navigation, dependency and reactive-read benchmark
 
-Release (AOT) macOS app timing fluxy_nav and fluxy_state's dependency injection, compared with an older Fluxy version built from a temporary git worktree. Only API both versions share is used; `lib/adapter.dart` holds the version-specific calls (`adapter_v1_0.dart.txt` for versions before v1.2.0).
+Release (AOT) macOS app timing fluxy_nav, fluxy_state's dependency injection and reactive reads over large collections, compared with an older Fluxy version built from a temporary git worktree. Only API both versions share is used; `lib/adapter.dart` holds the version-specific calls (`adapter_v1_0.dart.txt` for versions before v1.2.0).
 
 | Scenario | One op |
 |---|---|
@@ -13,12 +13,27 @@ Release (AOT) macOS app timing fluxy_nav and fluxy_state's dependency injection,
 | di put + delete | `Fluxy.put` of a controller (started) + `Fluxy.delete(force: true)` (closed) |
 | di lazyPut + find + delete | `Fluxy.lazyPut`, `find` (built, started), `delete(force: true)` |
 | page with bindings push + pop | `toNamed` to a page whose `Binding` lazily registers a controller it finds, + frame, `back` + two frames (dependencies closed) |
+| rx list loop [i] 5k | recompute a `Computed` that reads 6 `RxInt`s then loops `rows[i]` over a 5,000-row `RxList<Map>`, after an in-place edit + `refresh()` |
+| rx list fold 5k | the same with `rows.fold` |
+| rx list any + firstWhere 5k | the same with `rows.any` (no hit) + `rows.firstWhere` (last row) |
+| rx map forEach 2k | the same with `forEach` over a 2,000-entry `RxMap` |
 
 Pages have no transition, so each frame finishes its route changes. Each scenario: one warm-up, 15 samples, median; the table keeps the lowest median of the runs, which alternate old / new builds.
 
 ```bash
 benchmark/nav/run.sh          # this checkout against v1.0.0
 ```
+
+## Results (2026-11-19, unreleased against v1.4.0, 4 runs each, Apple silicon)
+
+| Scenario | v1.4.0 | this checkout | speed-up |
+|---|---|---|---|
+| rx list loop [i] 5k | 81.64 µs | 38.66 µs | 2.11× |
+| rx list fold 5k | 85.03 µs | 30.77 µs | 2.76× |
+| rx list any + firstWhere 5k | 175.31 µs | 65.78 µs | 2.67× |
+| rx map forEach 2k | 28.49 µs | 4.07 µs | 7.00× |
+
+Navigation and DI rows unchanged (0.97–1.05×). A repeated read of the same list is one identity check, and the collection read methods read the list once.
 
 ## Results (2026-11-18, v1.4.0 against v1.3.0, 4 runs each, Apple silicon)
 
