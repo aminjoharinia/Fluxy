@@ -46,6 +46,9 @@ class ConfigData {
   /// The text direction for a locale. Without it (and without
   /// [textDirection]) the app is left-to-right whatever the language.
   final TextDirection Function(Locale locale)? directionFor;
+
+  /// See `Fluxy.onMissingTranslation`.
+  final void Function(String key, Locale? locale)? onMissingTranslation;
   final String? initialRoute;
   final CustomTransition? customTransition;
   final Widget? home;
@@ -91,6 +94,7 @@ class ConfigData {
     this.followDeviceLocale,
     this.textDirection,
     this.directionFor,
+    this.onMissingTranslation,
     required this.initialRoute,
     required this.customTransition,
     required this.home,
@@ -136,6 +140,7 @@ class ConfigData {
     bool? followDeviceLocale,
     TextDirection? textDirection,
     TextDirection Function(Locale locale)? directionFor,
+    void Function(String key, Locale? locale)? onMissingTranslation,
     String? initialRoute,
     CustomTransition? customTransition,
     Widget? home,
@@ -182,6 +187,7 @@ class ConfigData {
       followDeviceLocale: followDeviceLocale ?? this.followDeviceLocale,
       textDirection: textDirection ?? this.textDirection,
       directionFor: directionFor ?? this.directionFor,
+      onMissingTranslation: onMissingTranslation ?? this.onMissingTranslation,
       initialRoute: initialRoute ?? this.initialRoute,
       customTransition: customTransition ?? this.customTransition,
       home: home ?? this.home,
@@ -236,6 +242,7 @@ class ConfigData {
         other.followDeviceLocale == followDeviceLocale &&
         other.textDirection == textDirection &&
         other.directionFor == directionFor &&
+        other.onMissingTranslation == onMissingTranslation &&
         other.initialRoute == initialRoute &&
         other.customTransition == customTransition &&
         other.home == home &&
@@ -283,6 +290,7 @@ class ConfigData {
         followDeviceLocale.hashCode ^
         textDirection.hashCode ^
         directionFor.hashCode ^
+        onMissingTranslation.hashCode ^
         initialRoute.hashCode ^
         customTransition.hashCode ^
         home.hashCode ^
@@ -395,6 +403,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
       fixed: next.textDirection,
       directionFor: next.directionFor,
     );
+    Fluxy.onMissingTranslation = next.onMissingTranslation;
     var languageChanged = false;
     if (next.locale != previous.locale && next.locale != null) {
       Fluxy.locale = next.locale;
@@ -500,6 +509,7 @@ class FluxyRootState extends State<FluxyRoot> with WidgetsBindingObserver {
       Fluxy.locale = Fluxy.deviceLocale;
     }
     _applyDirectionRule();
+    Fluxy.onMissingTranslation = config.onMissingTranslation;
 
     if (config.fallbackLocale != null) {
       Fluxy.fallbackLocale = config.fallbackLocale;

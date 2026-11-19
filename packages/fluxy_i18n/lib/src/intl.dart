@@ -9,7 +9,13 @@ extension Trans on String {
   ///
   /// Inside an `Obx`, the `Obx` rebuilds when the locale or the dictionaries
   /// change.
-  String get tr => FluxyLocales.instance.lookup(this) ?? this;
+  String get tr {
+    final host = FluxyLocales.instance;
+    final value = host.lookup(this);
+    if (value != null) return value;
+    host.reportMissing(this);
+    return this;
+  }
 
   /// Replaces each `%s` in the translation with the next of [args], in one
   /// pass (inserted values are not scanned again).

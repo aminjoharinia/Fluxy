@@ -56,3 +56,20 @@ cd tool && dart pub get && dart test
 Checked in phase 0 (Flutter 3.50 / Dart 3.14): a `lib/fix_data.yaml` with `rename` transforms for a deprecated typedef alias (`typedef GetxController = FluxController`) does work with `dart fix`, if the element's `uris` list the library the app imports (`package:get/get.dart`), not only the package that declares it. The analyzer reads `fix_data.yaml` from every package in the app's dependency graph. The codemod stays the main tool: it also handles URIs and the facade member moves.
 
 The root package ships `lib/fix_data.yaml` with the type renames and `Get` → `Fluxy`, so after the pubspec and import switch `dart fix --apply` gives the same result as the codemod (checked on a copy of the app, with and without the old names still declared: identical files).
+
+## `i18n_check.dart`: missing and unused translation keys
+
+Compares the keys an app translates with its dictionaries.
+
+```bash
+dart run tool/i18n_check.dart <project-dir> [--locale en_US] [--ignore <regex>] [--dir lib] [--no-unused] [--fail]
+```
+
+For each dictionary (locale) it prints how many keys it holds, the keys used in code that it lacks (with `file:line`, the first three places) and the keys no code uses. `--fail` exits with 1 when a key is missing, for CI.
+
+- **Keys used:** string literals (adjacent ones joined) before `.tr`, `.trParams`, `.trArgs`, `.trCount` (any of its forms `key.zero` … `key.other` counts), `.trPlural` / `.trPluralParams` (and their plural-key argument). `.tr` on an interpolation (`'Total: $n'.tr`) or a variable is counted as "not checked".
+- **Dictionaries:** the map a `Translations` subclass returns from `keys`, the argument of `addTranslations` / `appendTranslations`, and `translationsKeys:`. Values may be map literals, spreads, top-level or static constants, or a constructor / `Map.of` call whose first argument is one of those (Hesabak's `EnglishTranslations(kEnglishDictionary)`).
+- **Persian-as-key apps** (Hesabak): check only the other language (`--locale en_US`); template keys (`'مانده: {0}'`) look unused, so leave them out with `--ignore '\{\d\}'`.
+
+On the three apps (2026-11-19): BOOFI en_US 10 missing / 279 unused; Hesabak en_US 2 missing (2,384 unused, mostly keys used through variables and templates: 1,073 uses not checked); NestCut none missing, 167 unused.
+

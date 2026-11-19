@@ -29,6 +29,20 @@ class FluxyLocales {
 
   List<ChainEntry>? _chain;
 
+  /// Called once per key (until the locale or the dictionaries change) when
+  /// `.tr` finds a key in no dictionary. For logging; see
+  /// `LocalesIntl.onMissingTranslation`.
+  void Function(String key, Locale? locale)? onMissing;
+  final Set<String> _reportedMissing = {};
+
+  /// Tells [onMissing] about [key], once.
+  void reportMissing(String key) {
+    final callback = onMissing;
+    if (callback != null && _reportedMissing.add(key)) {
+      callback(key, _locale.peek);
+    }
+  }
+
   /// The app's text-direction rule (D2: the language never sets it by
   /// itself). Set by the app (`FluxyApp(textDirection:, directionFor:)`).
   TextDirection? fixedDirection;
@@ -62,6 +76,7 @@ class FluxyLocales {
   /// Forgets the cached lookup order and tells `.tr` readers.
   void changed() {
     _chain = null;
+    _reportedMissing.clear();
     version.value = version.peek + 1;
   }
 
@@ -115,6 +130,7 @@ class FluxyLocales {
     translations.clear();
     fixedDirection = null;
     directionFor = null;
+    onMissing = null;
     _locale.value = null;
     _fallbackLocale.value = null;
     changed();
@@ -149,6 +165,20 @@ extension LocalesIntl on FluxyInterface {
       ..fixedDirection = fixed
       ..directionFor = directionFor;
   }
+
+  /// Called when `.tr` (or `trParams`, `trCount`…) finds a key in no
+  /// dictionary, once per key until the locale or the dictionaries change,
+  /// with the key and the current locale. Runs during a build: log or
+  /// collect, don't change state. `FluxyApp(onMissingTranslation:)` sets it.
+  ///
+  /// An app whose keys are the text of one language (Hesabak: Persian text
+  /// as the key) can ignore that locale:
+  /// `(key, locale) { if (locale?.languageCode != 'persian') log(key); }`.
+  void Function(String key, Locale? locale)? get onMissingTranslation =>
+      _host.onMissing;
+  set onMissingTranslation(
+          void Function(String key, Locale? locale)? callback) =>
+      _host.onMissing = callback;
 
   /// Setting it updates every `Obx` that shows `.tr` text. Widgets that read
   /// `.tr` outside an `Obx` need a rebuild; `Fluxy.updateLocale` does that.
@@ -195,8 +225,8 @@ extension LocalesIntl on FluxyInterface {
     _host.changed();
   }
 
-  /// Clears the dictionaries, the locale, the fallback locale and the
-  /// direction rule.
+  /// Clears the dictionaries, the locale, the fallback locale, the
+  /// direction rule and [onMissingTranslation].
   /// `Fluxy.reset()` calls it; for tests.
   void resetLocales() => _host.reset();
 }

@@ -44,6 +44,11 @@ class FluxyApp extends StatelessWidget {
   /// language, e.g. `(l) => rtlLanguages.contains(l.languageCode) ?
   /// TextDirection.rtl : TextDirection.ltr`.
   final TextDirection Function(Locale locale)? directionFor;
+
+  /// Called when `.tr` finds a key in no dictionary, once per key until the
+  /// locale or the dictionaries change. For logging (wrap it in `kDebugMode`
+  /// for debug only); see `Fluxy.onMissingTranslation`.
+  final void Function(String key, Locale? locale)? onMissingTranslation;
   final Locale? locale;
 
   /// Whether a change of the device language (system settings) switches
@@ -111,6 +116,7 @@ class FluxyApp extends StatelessWidget {
     this.builder,
     this.textDirection,
     this.directionFor,
+    this.onMissingTranslation,
     this.title = '',
     this.onGenerateTitle,
     this.color,
@@ -199,6 +205,7 @@ class FluxyApp extends StatelessWidget {
     this.translations,
     this.textDirection,
     this.directionFor,
+    this.onMissingTranslation,
     this.fallbackLocale,
     this.routingCallback,
     this.defaultTransition,
@@ -241,6 +248,7 @@ class FluxyApp extends StatelessWidget {
         followDeviceLocale: followDeviceLocale,
         textDirection: textDirection,
         directionFor: directionFor,
+        onMissingTranslation: onMissingTranslation,
         logWriterCallback: logWriterCallback,
         navigatorKey: navigatorKey,
         navigatorObservers: navigatorObservers,

@@ -229,6 +229,25 @@ void main() {
       expect(Fluxy.locale, const Locale('de', 'DE'));
     });
 
+    testWidgets('FluxyApp(onMissingTranslation:) hears missing keys',
+        (tester) async {
+      final missed = <String>[];
+      await tester.pumpWidget(FluxyApp(
+        locale: const Locale('en', 'US'),
+        translationsKeys: const {
+          'en_US': {'hi': 'Hi'},
+        },
+        onMissingTranslation: (key, _) => missed.add(key),
+        home: Scaffold(
+          body: Builder(
+            builder: (_) => Column(children: [Text('hi'.tr), Text('x'.tr)]),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(missed, ['x']);
+    });
+
     testWidgets('a locale set before runApp wins over the device',
         (tester) async {
       Fluxy.locale = const Locale('fa', 'IR');

@@ -1,6 +1,6 @@
 # fluxy_i18n re-engineering plan
 
-Status: phases 0-3 done (2026-11-19), phase 4 next. Decisions at the end.
+Status: phases 0-4 done (2026-11-19), phase 5 (files and docs) next. Decisions at the end.
 
 ## Why
 
@@ -111,3 +111,10 @@ Decided 2026-11-19 (user's choice: the proposed defaults, with D2 changed).
 - `Fluxy.forceAppUpdate()` (used by `updateLocale(rebuildAll: true)` and a rebuilt app's new locale) marks every element for a rebuild and completes after that frame, instead of `performReassemble` (no `State.reassemble`, no forced layout / paint of every render object; waits for the end of a frame when called during one). A rough timing on a 3,000-row screen in a debug widget test: 339 ms with reassemble, 139 ms marking (2.4x); release numbers not measured.
 - A device-following app (no `locale:`, or `followDeviceLocale: true` without one) starts in the device language unless `Fluxy.locale` was set before `runApp` (B3).
 - Tests: `locale_wiring_test.dart` (13: no rule = left-to-right for Persian and Arabic, `directionFor` following `Fluxy.locale`, `textDirection` winning, a rebuilt app's new rule, an `Obx` over `Fluxy.textDirection`, the Cupertino app, reset, Material locale following `Fluxy.locale`, the warning once / not with a callback, no `reassemble` on `updateLocale`, device language at start, a locale set before `runApp` kept); B3 and D2 / B12 un-skipped; no skipped tests left in either package. Every package (fluxy_nav 265), root and both examples pass; BOOFI (97) and Hesabak (1,371) copies analyze clean and pass.
+
+### Phase 4 (2026-11-19): missing keys, check tool, digits
+
+- `Fluxy.onMissingTranslation` / `FluxyApp(onMissingTranslation:)` (and `FluxyCupertinoApp`, through `ConfigData`): called when `.tr` (so `trParams`, `trCount`…) finds a key in no dictionary, once per key until the locale or the dictionaries change, with the key and the locale; a key the fallback has is not missing. Called in every mode when set (not debug-only as first planned): the app wraps it in `kDebugMode` if it wants. No cost when unset. `resetLocales` clears it.
+- `lib/src/digits.dart` (D5): `'12:30'.localDigits([locale])` / `n.localDigits([locale])` write Western digits in the language's CLDR default digits (Persian / `persian` / Pashto ۰-۹, Arabic and Sorani ٠-٩ except the Maghreb, Marathi / Nepali Devanagari, Bengali, Burmese; English, Urdu, Hindi and the rest unchanged), default `Fluxy.locale` (reactive); `'۱۲۳'.westernDigits` reads every native digit set back for parsing. `nativeZeroFor(locale)` exported. NestCut's `localDigits()` (14 calls) and `mainCTRL.language` checks can move to it.
+- `tool/i18n_check.dart` (D4) with `tool/src/dart_tokens.dart` (a small tokenizer, no analyzer dependency, like the codemod) and `tool/src/i18n_check_command.dart`: keys used (literals before `.tr` members, `trCount` forms, `trPlural` plural keys; interpolations and variables counted as not checked) against dictionaries (a `Translations` `keys` getter, `addTranslations` / `appendTranslations`, `translationsKeys:`, following constants, spreads and constructor / `Map.of` calls). `--locale`, `--ignore`, `--dir`, `--no-unused`, `--fail`. On the apps: BOOFI en_US 10 missing / 279 unused (spot-checked: real); Hesabak en_US 2 missing; NestCut none missing, 167 unused. `tool/README.md` section.
+- Tests: fluxy_i18n `digits_missing_test.dart` (10), fluxy_nav one more wiring test (`FluxyApp(onMissingTranslation:)`), tool `i18n_check_test.dart` (6). fluxy_i18n 67, fluxy_nav 266, tool 69; every package, root and both examples pass; BOOFI (97) and Hesabak (1,371) copies analyze clean and pass.
